@@ -1,0 +1,7 @@
+__pycache__/
+*.swp
+*.pyc
+*.pyo
+server-data.json
+migrations/
+db.sqlite3
