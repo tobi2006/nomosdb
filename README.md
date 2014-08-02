@@ -12,6 +12,10 @@ The aim of this system is to have an easy to use database application that relie
 
 This application is not trying to be a huge Virtual Learning Environment that allows you to post slides, videos, upload assessments or let the students create Wikis. Instead, it is supposed to stay focused on its main goal - to make the teacher's life easier by automating repetetive tasks, offering a quick way to access records for modules and students and a simple solution to share assessment feedback and marks with the students.
 
+# Development
+
+Contrary to its predecessor, MySDS, NomosDB is supposed to be heavily based on Test Driven Development. Contributions to the projects should therefore have reliable and understandable tests to make sure that the data is safe. In production use, NomosDB is supposed to deal with highly sensitive information, so it is important that data integrity and security is at the heart of any addition, no matter how cool the proposed new feature is... In my testing structure, I am relying heavily on Harry Percival's book [Test Driven Development with Python](http://www.obeythetestinggoat.com/). If you have no experience with test driven development and would like to contribute, I strongly recommend to have a look.
+
 <!---
 # Installation
 
