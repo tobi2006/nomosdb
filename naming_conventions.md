@@ -1,0 +1,3 @@
+After long thought, I decided for a Lord of the Rings theme when naming the different people for testing, as it is easier to avoid raising the impression of real life students or colleagues on the Live Test site where people can have a go, and as there are a lot of characters with a lot of different categories. And it's possible to bulk order 5,000 Hobbit names from (the Fake Name Generator)[http://www.fakenamegenerator.com/order.php]...
+
+In the tests, students are always hobbits (Frodo Baggins, Samwise Gamgee etc), admin staff are wizards (Gandalf Grey, Saruman White etc) and teachers are other characters from the fellowship (Gimli Sonofgloin, Legolas Elf, Aragorn Sonofarathorn etc).
