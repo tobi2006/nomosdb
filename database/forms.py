@@ -22,7 +22,8 @@ class StudentForm(forms.ModelForm):
                 'since',
                 'qld',
                 'tier_4',
-                'nalp'
+                'nalp',
+                'active',
             ),
             Tab(
                 'Contact Information',
