@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 {% block content %}
-<h1>Add Student(s)</h1>
+<h1>Add Student</h1>
+<br>
+{% crispy form %}
 {% endblock %}
