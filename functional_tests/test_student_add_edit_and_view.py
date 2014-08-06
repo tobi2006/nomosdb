@@ -33,6 +33,6 @@ class AddStudentTest(FunctionalTest):
         # Gandalf then goes to Frodo's page and checks whether all the
         # data is there.
 
-#        self.browser.get(self.live_server_url + '/student/fb101')
-#        self.check_for_entry_in_table('programme-table', 'fb101')
-#        self.check_for_entry_in_table('programme-table', 'f.baggins@myuni.com')
+        self.browser.get(self.live_server_url + '/student/fb101')
+        self.check_for_entry_in_table('programme-table', 'fb101')
+        self.check_for_entry_in_table('programme-table', 'f.baggins@myuni.com')

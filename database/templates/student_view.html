@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>{{student.first_name}} {{student.last_name}} {% if not student.active %}(Inactive){% endif %}</h1>
+
+
+<div class="panel-group" id="accordion">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseProgramme">
+                    Programme Details
+                </a>
+            </h4>
+        </div>
+        <div id="collapseProgramme" class="panel-collapse collapse in">
+            <div class="panel-body">
+                <table class="table" id="programme-table">
+                    <tr>
+                        <td><strong>ID</strong></td>
+                        <td>{{student.student_id}}</td>
+                        <td><strong>Course</strong></td>
+                        <td>{{ student.course }}{% if student.qld %} (QLD{% if student.is_part_time %}, part time{% endif %}){% elif student.is_part_time %} (part time){% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email</strong></td>
+                        <td><a href="mailto:{{ student.email }}">{{ student.email }}</a></td>
+                        <td><strong>Tutor</strong></td>
+                        <td><a href="mailto:{{ student.tutor.email }}?Subject={{ student }}">{{ student.tutor.first_name }} {{ student.tutor.last_name }}</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Year</strong></td>
+                        <td>{{ student.year }} {% if student.since %} (Since {{ student.since }}/{{ student.since|add:"1" }}) {% endif %}</td>
+                        <td><strong>LSP</strong></td>
+                        <td>{% if student.lsp %}<a href="{{ student.get_lsp_view_url }}">View</a> / <a href="{{ student.get_lsp_edit_url }}">Edit</a>{% else %}No LSP - <a href="{{ student.get_lsp_edit_url }}">Add</a>{% endif %}</a></td>
+                    </tr>
+                </table>
+                <!--
+                <p align="right">
+                     <a class="btn btn-default btn-sm" href="{{ student.get_edit_url }}">
+                        Edit
+                    </a>
+                </p>
+                -->
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseAddress">
+                    Address
+                </a>
+            </h4>
+        </div>
+        <div id="collapseAddress" class="panel-collapse collapse">
+            <div class="panel-body">
+                {% if student.phone_no %}
+                <p>
+                    <strong>Phone No:</strong> {{ student.phone_no }}
+                </p>
+                {% else %}
+                <p><em>No phone number in the database</em></p>
+                {% endif %}
+                {% if student.home_address and student.address %}
+                <table cellpadding="10">
+                    <tr>
+                        <td>
+                            <strong>Home Address</strong><br>
+                            {{ student.html_home_address|safe }}
+                        </td>
+                        <td>
+                            <strong>Term Address</strong><br>
+                            {{ student.html_address|safe }}
+                        </td>
+                    </tr>
+                </table>
+                {% elif student.home_address %}
+                <table cellpadding="10">
+                    <tr>
+                        <td>
+                            <strong>Home Address</strong><br>
+                            {{ student.html_home_address|safe }}
+                        </td>
+                    </tr>
+                </table>
+                <p><em>No term time address in the database</em></p>
+                {% elif student.address %}
+                <table cellpadding="10">
+                    <tr>
+                        <td>
+                            <strong>Term Address</strong><br>
+                            {{ student.html_address|safe }}
+                        </td>
+                    </tr>
+                </table cellpadding="10">
+                <p><em>No home address in the database</em></p>
+                {% else %}
+                <p><em>No addresses in the database</em></p>
+                {% endif %}
+                <!--
+                <p align="right">
+                     <a class="btn btn-default btn-sm" href="{{ student.get_edit_url }}">
+                        Edit
+                    </a>
+                </p>
+                -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

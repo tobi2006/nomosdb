@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.urlresolvers import reverse
 
 DEGREES = (
     (1, 'First'),
@@ -94,3 +95,6 @@ class Student(models.Model):
     )
     achieved_degree = models.IntegerField(
         choices=DEGREES, blank=True, null=True)
+
+    def get_absolute_url(self):
+        return reverse('student_view', args=[self.student_id])
