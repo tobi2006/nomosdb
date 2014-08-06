@@ -9,15 +9,23 @@ def home(request):
     return render(request, 'home.html', {})
 
 
-def add_student(request):
-    """The form to manually add a student"""
+def add_or_edit_student(request, student_id=None):
+    """The form to manually add or edit a student"""
+    if student_id:
+        student = Student.objects.get(student_id=student_id)
     if request.method == 'POST':
-        form = StudentForm(data=request.POST)
+        if student_id:
+            form = StudentForm(instance=student, data=request.POST)
+        else:
+            form = StudentForm(data=request.POST)
         if form.is_valid():
             student = form.save()
             return redirect(student.get_absolute_url())
     else:
-        form = StudentForm()
+        if student_id:
+            form = StudentForm(instance=student)
+        else:
+            form = StudentForm()
     return render(request, 'add_student.html', {'form': form})
 
 

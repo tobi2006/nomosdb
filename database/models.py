@@ -98,3 +98,6 @@ class Student(models.Model):
 
     def get_absolute_url(self):
         return reverse('student_view', args=[self.student_id])
+
+    def get_edit_url(self):
+        return reverse('edit_student', args=[self.student_id])

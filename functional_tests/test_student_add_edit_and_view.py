@@ -23,16 +23,31 @@ class AddStudentTest(FunctionalTest):
         # Now, he enters some detail about the first student.
 
         self.browser.find_element_by_id('id_first_name').send_keys('Frodo')
-        self.browser.find_element_by_id('id_last_name').send_keys('Baggins')
+        self.browser.find_element_by_id('id_last_name').send_keys('Baggin')
         self.browser.find_element_by_name('student_id').send_keys('fb101')
         self.browser.find_element_by_id('id_email').send_keys(
             'f.baggins@myuni.com'
         )
         self.browser.find_element_by_id('submit-id-save').click()
 
-        # Gandalf then goes to Frodo's page and checks whether all the
+        # Gandalf is then directed to Frodo's page and checks whether all the
         # data is there.
 
-        self.browser.get(self.live_server_url + '/student/fb101')
         self.check_for_entry_in_table('programme-table', 'fb101')
         self.check_for_entry_in_table('programme-table', 'f.baggins@myuni.com')
+
+        # Alas, Gandalf sees that he made a mistake and clicks on the edit
+        # button to be taken to an edit form with Frodo's details
+
+        self.browser.find_element_by_id('edit').click()
+        
+        # Here, he changes the last name, sees it is in Frodo's page
+        # and is happy again.
+
+        self.browser.find_element_by_id('id_last_name').clear()
+        self.browser.find_element_by_id('id_last_name').send_keys('Baggins\n')
+        sleep(3)
+        self.assertIn(
+            ' Baggins',
+            self.browser.find_element_by_tag_name('h1').text
+        )

@@ -40,3 +40,7 @@ class StudentTest(TestCase):
     def test_student_returns_correct_url(self):
         student = Student.objects.create(student_id="FB4223")
         self.assertEqual(student.get_absolute_url(), '/student/FB4223/')
+    
+    def test_edit_student_returns_correct_url(self):
+        student = Student.objects.create(student_id="FB4223")
+        self.assertEqual(student.get_edit_url(), '/edit_student/FB4223/')
