@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1>{% if edit %}Edit{% else %}Add{% endif %} Module</h1>
+<br>
+{% crispy form %}
+{% endblock %}
+
+{% comment %}
+<script type="text/javascript">
+$('#assessment_2').hide()
+$('#assessment_3').hide()
+$('#assessment_4').hide()
+$('#assessment_5').hide()
+$('#assessment_6').hide()
+</script>
+{% endcomment %}

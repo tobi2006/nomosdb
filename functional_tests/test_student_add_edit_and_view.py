@@ -2,7 +2,7 @@ from .base import FunctionalTest
 from time import sleep
 
 
-class AddStudentTest(FunctionalTest):
+class AddAndEditStudentTest(FunctionalTest):
 
     def test_students_can_be_added_manually_and_have_their_own_pages(self):
         self.browser.get(self.live_server_url)
@@ -46,7 +46,6 @@ class AddStudentTest(FunctionalTest):
 
         self.browser.find_element_by_id('id_last_name').clear()
         self.browser.find_element_by_id('id_last_name').send_keys('Baggins\n')
-        sleep(3)
         self.assertIn(
             ' Baggins',
             self.browser.find_element_by_tag_name('h1').text

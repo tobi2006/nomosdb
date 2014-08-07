@@ -39,7 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crispy_forms',
-    'database',
+    'main',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -87,7 +87,7 @@ STATIC_URL = '/static/'
 
 
 TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS + (
-    'database.context_processors.constants',
+    'main.context_processors.constants',
 )
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
