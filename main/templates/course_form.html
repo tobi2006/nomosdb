@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1>{% if edit %}Edit{% else %}Add{% endif %} Course</h1>
+<br>
+{% crispy form %}
+{% endblock %}

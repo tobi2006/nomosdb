@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1>Subject Areas</h1>
+
+{% if subject_areas %}
+    <ul>
+        {% for subject_area in subject_areas %}
+        <li>
+            {{ subject_area.name }}
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No subject areas entered yet.</p>
+{% endif %}
+
+<br><hr><br>
+
+{% crispy form %}
+
+
+{% endblock %}

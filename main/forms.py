@@ -7,6 +7,28 @@ from crispy_forms.bootstrap import TabHolder, Tab, FormActions
 NO_STUDENT_ID_ERROR = "You need to specify a unique student ID number"
 
 
+class SubjectAreaForm(forms.ModelForm):
+    """The modelform for the subject area - very simple"""
+
+    class Meta:
+        model = SubjectArea
+
+
+class CourseForm(forms.ModelForm):
+    """the modelform for the course model, using crispy forms"""
+    helper = FormHelper()
+    helper.layout = Layout(
+        'title',
+        'short_title'
+    )
+    helper.form_class = "form-horizontal"
+    helper.label_class = "col-lg-2"
+    helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+
+    class Meta:
+        model = Course
+
+
 class StudentForm(forms.ModelForm):
     """The modelform for the student model, using crispy forms"""
     helper = FormHelper()

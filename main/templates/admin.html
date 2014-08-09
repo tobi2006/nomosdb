@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Admin Dashboard</h1>
+
+<h2>Courses</h2>
+<ul>
+    <li><a href="{% url "course_overview" %}" id="edit_courses">Edit Courses</a></li>
+    <li><a href="#">Show Course and Subject Overview (not ready yet)</a></li>
+    <li><a href="{% url "subject_areas" %}" id="subject_areas">Subject Areas</a></li>
+</ul>
+{% endblock %}

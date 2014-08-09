@@ -70,13 +70,13 @@ class AddEditStudentTest(TestCase):
             #        response = self.client.get('/add_module/')
             #        self.assertTemplateUsed(response, 'module_form.html')
 
-#class ModuleViewTest(TestCase):
-#
-#    def test_module_view_renders_module_view_template(self):
-#        module = Module.objects.create(
-#            title="History of Swordfighting",
-#            code="HoS101",
-#            year=2014
-#        )
-#        response = self.client.get(module.get_absolute_url())
-#        self.assertTemplateUsed(response, 'module_view.html')
+class ModuleViewTest(TestCase):
+
+    def test_module_view_renders_module_view_template(self):
+        module = Module.objects.create(
+            title="History of Swordfighting",
+            code="HoS101",
+            year=2014
+        )
+        response = self.client.get(module.get_absolute_url())
+        self.assertTemplateUsed(response, 'module_view.html')

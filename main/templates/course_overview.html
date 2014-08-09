@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Courses</h1>
+
+{% if courses %}
+    <ul>
+        {% for course in courses %}
+        <li>
+            {{ course.title }}{% if course.short_title %} ({{ course.short_title }}){% endif %}
+            {% if course.subject_areas %}
+                <ul>
+                    {% for subject_area in course.subject_areas %}
+                        <li>{{ subject_area }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No courses entered yet.</p>
+{% endif %}
+<a href="{% url "add_course" %}" class="btn btn-primary"><span class="glyphicon glyphicon-plus"> Add a course</a>
+
+
+
+{% endblock %}
