@@ -55,7 +55,7 @@ def add_or_edit_module(request, code=None, year=None):
             return redirect(module.get_absolute_url())
     else:
         if edit:
-            form = ModuleForm(instance=Module)
+            form = ModuleForm(instance=module)
         else:
             form = ModuleForm()
     return render(request, 'module_form.html', {'form': form, 'edit': edit})

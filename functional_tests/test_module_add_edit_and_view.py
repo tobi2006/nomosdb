@@ -45,3 +45,9 @@ class AddAndEditModuleTest(FunctionalTest):
         # and wants to change the nature of the assessment by clicking on the
         # Edit button
 
+        self.browser.find_element_by_id('edit').click()
+
+        self.browser.find_element_by_link_text('Assessment').click()
+        self.browser.find_element_by_name('assessment_1_title').clear()
+        self.browser.find_element_by_name('assessment_1_title').send_keys(
+            'Essay on theory\n')

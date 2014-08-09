@@ -427,3 +427,6 @@ class Module(models.Model):
 
     def get_absolute_url(self):
         return reverse('module_view', args=[self.code, self.year])
+
+    def get_edit_url(self):
+        return reverse('edit_module', args=[self.code, self.year])
