@@ -4,7 +4,7 @@
 <h1>Subject Areas</h1>
 
 {% if subject_areas %}
-    <ul>
+    <ul id="areas">
         {% for subject_area in subject_areas %}
         <li>
             {{ subject_area.name }}
@@ -17,7 +17,12 @@
 
 <br><hr><br>
 
-{% crispy form %}
+<form method="post">
+    {% csrf_token %}
+    <div class="col-md-3">
+        {{ form }}
+    </div>
+</form>
 
 
 {% endblock %}

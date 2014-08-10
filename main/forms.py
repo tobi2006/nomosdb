@@ -12,6 +12,7 @@ class SubjectAreaForm(forms.ModelForm):
 
     class Meta:
         model = SubjectArea
+        widgets = {'name': forms.TextInput(attrs={'class': 'form-control'})}
 
 
 class CourseForm(forms.ModelForm):
@@ -19,7 +20,11 @@ class CourseForm(forms.ModelForm):
     helper = FormHelper()
     helper.layout = Layout(
         'title',
-        'short_title'
+        'short_title',
+        Field('subject_areas', css_class='chosen-select'),
+        FormActions(
+            Submit('save', 'Save Course', css_class="btn btn-primary")
+        )
     )
     helper.form_class = "form-horizontal"
     helper.label_class = "col-lg-2"

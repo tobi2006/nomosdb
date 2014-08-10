@@ -3,10 +3,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 def create_subject_area(save=True):
-    subject = SubjectArea(
-        name="Alchemy",
-        short_name="Alc"
-    )
+    subject = SubjectArea(name="Alchemy")
     if save:
         subject.save()
     return subject
@@ -48,7 +45,6 @@ class SubjectAreaTest(TestCase):
         subject_in = create_subject_area()
         subject_out = SubjectArea.objects.first()
         self.assertEqual(subject_out.name, 'Alchemy')
-        self.assertEqual(subject_out.short_name, 'Alc')
 
     def test_subject_area_returns_name(self):
         subject = create_subject_area(save=False)
@@ -56,6 +52,13 @@ class SubjectAreaTest(TestCase):
             subject.__unicode__(),
             "Alchemy"
         )
+
+    def test_subject_area_name_cannot_be_created_twice(self):
+        subject1 = create_subject_area()
+        subject2 = SubjectArea(name=subject1.name)
+        with self.assertRaises(ValidationError):
+            subject2.full_clean()
+
 
 class CourseTest(TestCase):
 
