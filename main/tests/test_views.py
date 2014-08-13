@@ -1,6 +1,6 @@
 from django.test import TestCase
 from nomosdb.unisettings import UNI_NAME
-from main.models import Student, Module
+from main.models import Student, Module, Course, SubjectArea
 
 def create_student():
     student = Student.objects.create(
@@ -80,3 +80,52 @@ class ModuleViewTest(TestCase):
         )
         response = self.client.get(module.get_absolute_url())
         self.assertTemplateUsed(response, 'module_view.html')
+
+
+class AddStudentsToModuleTest(TestCase):
+
+    def test_add_students_to_module_uses_right_template(self):
+        module = Module.objects.create(
+            title="History of Swordfighting",
+            code="HoS101",
+            year=2014,
+            eligible="1"
+        )
+        response = self.client.get(module.get_add_students_url())
+        self.assertTemplateUsed(response, 'add_students_to_module.html')
+
+
+    def test_only_students_from_the_same_subject_areas_are_shown(self):
+        subject_area1 = SubjectArea.objects.create(name="Warrior Studies")
+        subject_area2 = SubjectArea.objects.create(name="Alchemy")
+        course = Course.objects.create(title="BA in Warrior Studies")
+        course.subject_areas.add(subject_area1)
+        course.save()
+        course2 = Course.objects.create(title="BA in Wizard Stuff")
+        course2.subject_areas.add(subject_area2)
+        course2.save()
+        module = Module.objects.create(
+            title="History of Swordfighting",
+            code="HoS101",
+            year=2014,
+            eligible="1"
+        )
+        module.subject_areas.add(subject_area1)
+        module.save()
+        student1 = Student.objects.create(
+            last_name="Baggins",
+            first_name="Frodo",
+            student_id="FB4223",
+            course=course,
+            year=1
+        )
+        student2 = Student.objects.create(
+            last_name="Gamgee",
+            first_name="Samwise",
+            student_id="SG2342",
+            course=course2,
+            year=1
+        )
+        response = self.client.get(module.get_add_students_url())
+        self.assertContains(response, 'Baggins')
+        self.assertNotContains(response, 'Gamgee')

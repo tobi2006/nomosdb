@@ -34,6 +34,7 @@ class AddAndEditCourseTest(FunctionalTest):
 
         self.browser.find_element_by_id('menu-admin').click()
         self.browser.find_element_by_id('edit_courses').click()
+        self.browser.find_element_by_id('add_course').click()
 
         # Here, he enters his new course.
 

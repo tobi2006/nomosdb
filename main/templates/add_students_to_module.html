@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table id="sortable_table" class="table table-hover table-sortable">
+    <thead>
+        <tr>
+            <th>
+            </th>
+            {% if more_than_one_year %}
+            <th>
+                Year
+            </th>
+            {% endif %}
+            <th>
+                Student
+            </th>
+            <th>
+                ID
+            </th>
+            <th>
+                Course
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+            <tr>
+                <td>
+                    <input type="checkbox" name="selected_student_id" value="{{ student.student_id }}">
+                </td>
+                {% if more_than_one_year %}
+                <td>
+                    {{ student.year }}
+                </td>
+                {% endif %}
+                <td>
+                    {{ student }}
+                </td>
+                <td>
+                    {{ student.student_id }}
+                </td>
+                <td>
+                    {{ student.course }}{% if student.is_part_time %} (part time){% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<input type="submit" value="Add students" class="btn btn-default">
+{% endblock %}

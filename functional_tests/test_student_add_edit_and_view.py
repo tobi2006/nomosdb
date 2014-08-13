@@ -1,5 +1,4 @@
 from .base import FunctionalTest
-from time import sleep
 
 
 class AddAndEditStudentTest(FunctionalTest):

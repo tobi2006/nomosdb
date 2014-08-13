@@ -124,8 +124,12 @@ def add_students_to_module(request, code, year):
     else:
         more_than_one_year = False
     students = []
-    eligible = []
     years = []
+    for number in module.eligible:
+        year = int(number)
+        students_this_year = Student.objects.filter(
+
+    return render(request, 'add_students_to_module.html', {})
 
 
 #

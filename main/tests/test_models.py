@@ -158,8 +158,14 @@ class ModuleTest(TestCase):
         with self.assertRaises(ValidationError):
             module2.full_clean()
 
+    def test_module_returns_correct_add_students_url(self):
+        module = create_module(save=False)
+        self.assertEqual(
+            module.get_add_students_url(),
+            '/add_students_to_module/MT23/2013/')
 
-#class PerformanceTest(TestCase):
+
+        #class PerformanceTest(TestCase):
 #
 #    def test_enlisting_a_student_in_a_module_creates_performance_item(self):
 #        student = create_student()

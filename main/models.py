@@ -87,6 +87,7 @@ class Module(models.Model):
         choices=ACADEMIC_YEARS,
         default=this_year()
     )
+    subject_areas = models.ManyToManyField(SubjectArea, blank=True)
     # successor_of = models.ForeignKey('self', blank=True, null=True)
     foundational = models.BooleanField(
         verbose_name="Foundational Module",
@@ -343,6 +344,9 @@ class Module(models.Model):
 
     def get_edit_url(self):
         return reverse('edit_module', args=[self.code, self.year])
+
+    def get_add_students_url(self):
+        return reverse('add_students_to_module', args=[self.code, self.year])
 
 
 class Student(models.Model):
