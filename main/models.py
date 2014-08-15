@@ -354,6 +354,55 @@ class Module(models.Model):
     def get_add_students_url(self):
         return reverse('add_students_to_module', args=[self.code, self.year])
 
+    def return_all_assessments(self):
+        returnlist = []
+        if self.assessment_1_title:
+            if self.assessment_1_value:
+                returnlist.append(
+                    (self.assessment_1_title, self.assessment_1_value))
+            else:
+                returnlist.append(
+                    (self.assessment_1_title, None))
+        if self.assessment_2_title:
+            if self.assessment_2_value:
+                returnlist.append(
+                    (self.assessment_2_title, self.assessment_2_value))
+            else:
+                returnlist.append(
+                    (self.assessment_1_title, None))
+        if self.assessment_3_title:
+            if self.assessment_3_value:
+                returnlist.append(
+                    (self.assessment_3_title, self.assessment_3_value))
+            else:
+                returnlist.append(
+                    (self.assessment_1_title, None))
+        if self.assessment_4_title:
+            if self.assessment_4_value:
+                returnlist.append(
+                    (self.assessment_4_title, self.assessment_4_value))
+            else:
+                returnlist.append(
+                    (self.assessment_1_title, None))
+        if self.assessment_5_title:
+            if self.assessment_5_value:
+                returnlist.append(
+                    (self.assessment_5_title, self.assessment_5_value))
+            else:
+                returnlist.append(
+                    (self.assessment_1_title, None))
+        if self.assessment_6_title:
+            if self.assessment_6_value:
+                returnlist.append(
+                    (self.assessment_6_title, self.assessment_6_value))
+            else:
+                returnlist.append(
+                    (self.assessment_1_title, None))
+        if self.exam_value:
+            returnlist.append(
+                ('Exam', self.exam_value))
+        return returnlist
+
 
 class Student(models.Model):
     """The class representing a student"""
@@ -552,6 +601,15 @@ class Performance(models.Model):
     class Meta:
         unique_together = ('student', 'module')
         ordering = ['module', 'student']
+
+    def get_assessment_results(self):
+        return_list = []
+        if self.module.assessment_1_title:
+            if self.assessment_1:
+                assessment_string = str(self.assessment_1)
+                if self.r_assessment_1:
+                    pass
+
 
 #    def safe(self, *args, **kwargs):
 #        marks = 0

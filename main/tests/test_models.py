@@ -2,11 +2,13 @@ from main.models import Student, Module, SubjectArea, Course, Performance
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
+
 def create_subject_area(save=True):
     subject = SubjectArea(name="Alchemy")
     if save:
         subject.save()
     return subject
+
 
 def create_course(save=True):
     course = Course(
@@ -16,6 +18,7 @@ def create_course(save=True):
     if save:
         course.save()
     return course
+
 
 def create_student(save=True):
     student = Student(
@@ -74,6 +77,7 @@ class CourseTest(TestCase):
             course.__unicode__(),
             "BA in Wizard Studies"
         )
+
 
 class StudentTest(TestCase):
 
@@ -164,6 +168,37 @@ class ModuleTest(TestCase):
             module.get_add_students_url(),
             '/add_students_to_module/MT23/2013/')
 
+    def test_module_returns_all_assessment_titles_in_list(self):
+        module1 = create_module(save=False)
+        module1.assessment_1_title = "Practical Exercise"
+        module1.assessment_1_value = 40
+        module1.exam_value = 60
+        module2 = Module(
+            title="A different title",
+            code="MT23",
+            year="2013",
+            assessment_1_title="Assessment 1",
+            assessment_1_value=20,
+            assessment_2_title="Assessment 2",
+            assessment_2_value=20,
+            assessment_3_title="Assessment 3",
+            assessment_3_value=60,
+            exam_value=0
+        )
+        list_of_assessments_1 = [
+            ("Practical Exercise", 40),
+            ("Exam", 60)
+        ]
+        list_of_assessments_2 = [
+            ("Assessment 1", 20),
+            ("Assessment 2", 20),
+            ("Assessment 3", 60)
+        ]
+        self.assertEqual(
+            module1.return_all_assessments(), list_of_assessments_1)
+        self.assertEqual(
+            module2.return_all_assessments(), list_of_assessments_2)
+
 
 class PerformanceTest(TestCase):
 
@@ -171,8 +206,8 @@ class PerformanceTest(TestCase):
         student = create_student()
         module = create_module()
         response = self.client.post(
-            '/add_students_to_module/%s/%s/' %(module.code, module.year),
-            data={'student_ids': [student.student_id,]}
+            '/add_students_to_module/%s/%s/' % (module.code, module.year),
+            data={'student_ids': [student.student_id, ]}
         )
         performance = Performance.objects.first()
         self.assertEqual(performance.module, module)

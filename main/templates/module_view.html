@@ -31,4 +31,70 @@
     </p>
 </div>
 
+<div class="btn-group" id="module_control_buttons">
+    <a class="btn btn-default" id="add_students_to_module" href="{{ module.get_add_students_url }}">
+        Add Student(s)
+    </a>
+</div>
+
+<table id ="sortable_table" class="table table-striped table-sortable">
+    <thead>
+        <tr>
+            <th>
+                Seminar Group
+            </th>
+            <th>
+                Student
+            </th>
+            <th>
+                LSP
+            </th>
+            <th>
+                Attendance
+            </th>
+            {% for assessment in module.get_assessment_titles %}
+                <th>
+                    {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
+                </th>
+            {% endfor %}
+            <th>
+                Module Mark
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for performance in performances %}
+            <tr>
+                <td>
+                    {{ performance.seminar_group|default_if_none:"" }}
+                </td>
+                <td>
+                    <a href="{% performance.student.get_absolute_url %}">{{ performance.student.last_name }}, {{ performance.student.first_name|only_first_word }}</a>
+                </td>
+                <td>
+                    {% if performance.student.lsp %}<span class="glyphicon glyphicon-warning-sign"></span>{% endif %}
+                </td>
+                <td>
+                    {% performance.student.get_attendance %}
+                </td>
+                <td>
+                    {% for assessment_result in performance.get_assessment_results %}
+                        <td>
+                            {{ assessment_result }}
+                        </td>
+                    {% endfor %}
+                </td>
+                <td>
+                    {{ performance.average|default_if_none="" }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+
+
+
 {% endblock %}
