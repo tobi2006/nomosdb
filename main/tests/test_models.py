@@ -165,15 +165,15 @@ class ModuleTest(TestCase):
             '/add_students_to_module/MT23/2013/')
 
 
-        #class PerformanceTest(TestCase):
-#
-#    def test_enlisting_a_student_in_a_module_creates_performance_item(self):
-#        student = create_student()
-#        module = create_module()
-#        response = self.client.post(
-#            '/add_students_to_module/%s/%s' %(module.code, module.year),
-#            data={'student_ids': [student.student_id,]}
-#        )
-#        performance = Performance.objects.first()
-#        self.assertEqual(performance.module, module)
-#        self.assertEqual(performance.student, student)
+class PerformanceTest(TestCase):
+
+    def test_enlisting_a_student_in_a_module_creates_performance_item(self):
+        student = create_student()
+        module = create_module()
+        response = self.client.post(
+            '/add_students_to_module/%s/%s' %(module.code, module.year),
+            data={'student_ids': [student.student_id,]}
+        )
+        performance = Performance.objects.first()
+        self.assertEqual(performance.module, module)
+        self.assertEqual(performance.student, student)

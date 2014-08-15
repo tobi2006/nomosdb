@@ -95,7 +95,7 @@ class AddStudentsToModuleTest(TestCase):
         self.assertTemplateUsed(response, 'add_students_to_module.html')
 
 
-    def test_only_students_from_the_same_subject_areas_are_shown(self):
+    def test_only_students_from_same_subject_areas_and_year_are_shown(self):
         subject_area1 = SubjectArea.objects.create(name="Warrior Studies")
         subject_area2 = SubjectArea.objects.create(name="Alchemy")
         course = Course.objects.create(title="BA in Warrior Studies")
@@ -126,6 +126,27 @@ class AddStudentsToModuleTest(TestCase):
             course=course2,
             year=1
         )
+        student3 = Student.objects.create(
+            last_name="Wurst",
+            first_name="Hans",
+            student_id="HW2323",
+            course=course,
+            year=2
+        )
         response = self.client.get(module.get_add_students_url())
         self.assertContains(response, 'Baggins')
         self.assertNotContains(response, 'Gamgee')
+        self.assertNotContains(response, 'Wurst')
+
+    def test_submitting_an_empty_form_does_not_break_it(self):
+        module = Module.objects.create(
+            title="History of Swordfighting",
+            code="HoS101",
+            year=2014,
+            eligible="1"
+        )
+        response = self.client.post(
+            '/add_students_to_module/%s/%s' %(module.code, module.year),
+            data={}
+        )
+        self.assertEqual(response.status_code, 301)

@@ -48,7 +48,7 @@ def add_or_edit_course(request, course_id=None):
             form = CourseForm(data=request.POST)
         if form.is_valid():
             course = form.save()
-            return redirect(course.get_absolute_url())
+            return redirect()
     else:
         if edit:
             form = CourseForm(instance=course)
@@ -118,6 +118,16 @@ def module_view(request, code, year):
 def add_students_to_module(request, code, year):
     """Simple form to add students to a module and create Performance items"""
     module = Module.objects.get(code=code, year=year)
+    if request.method == 'POST':
+        students_to_add = request.POST.getlist('student_ids')
+        print(students_to_add)
+        for student_id in students_to_add:
+            print(student_id)
+            student = Student.objects.get(student_id=student_id)
+            student.modules.add(module)
+            student.save()
+            Performance.objects.create(module=module, student=student)
+        return redirect(module.get_absolute_url())
     students_in_module = module.student_set.all()
     if len(module.eligible) > 1:
         more_than_one_year = True
@@ -127,9 +137,17 @@ def add_students_to_module(request, code, year):
     years = []
     for number in module.eligible:
         year = int(number)
-        students_this_year = Student.objects.filter(
-
-    return render(request, 'add_students_to_module.html', {})
+        students_this_year = Student.objects.filter(year=year)
+        for student in students_this_year:
+            for subject_area in module.subject_areas.all():
+                if subject_area in student.course.subject_areas.all():
+                    if student not in students:
+                        students.append(student)
+    return render(
+        request,
+        'add_students_to_module.html',
+        {'students': students}
+    )
 
 
 #

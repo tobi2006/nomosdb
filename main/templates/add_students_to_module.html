@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block formstart %}
+<form method="post">
+{% endblock %}
+
 {% block content %}
 
 <table id="sortable_table" class="table table-hover table-sortable">
@@ -27,7 +31,7 @@
         {% for student in students %}
             <tr>
                 <td>
-                    <input type="checkbox" name="selected_student_id" value="{{ student.student_id }}">
+                    <input type="checkbox" name="student_ids" value="{{ student.student_id }}">
                 </td>
                 {% if more_than_one_year %}
                 <td>
@@ -49,4 +53,9 @@
 </table>
 
 <input type="submit" value="Add students" class="btn btn-default">
+{% endblock %}
+
+{% block formend %}
+{% csrf_token %}
+</form>
 {% endblock %}

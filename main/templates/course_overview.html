@@ -3,25 +3,52 @@
 <h1>Courses</h1>
 
 {% if courses %}
-    <ul>
-        {% for course in courses %}
-        <li>
-            {{ course.title }}{% if course.short_title %} ({{ course.short_title }}){% endif %}
-            {% if course.subject_areas %}
-                <ul>
-                    {% for subject_area in course.subject_areas %}
-                        <li>{{ subject_area }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Course
+                </th>
+                <th>
+                    Short Title
+                </th>
+                <th>
+                    Subject Areas
+                </th>
+                <th>
+                    &nbsp;
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in courses %}
+                <tr>
+                    <td>
+                        {{ course.title }}
+                    </td>
+                    <td>
+                        {% if course.short_title %}{{ course.short_title }}{% endif %}
+                    </td>
+                    <td>
+                        {% if course.subject_areas %}
+                            <ul>
+                                {% for subject_area in course.subject_areas.all %}
+                                    <li>{{ subject_area }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ course.get_edit_url }}">Edit</a>
+                    </td>
+                </tr> 
+            {% endfor %}
+        </tbody>
+    </table>
 {% else %}
     <p>No courses entered yet.</p>
 {% endif %}
+
 <a href="{% url "add_course" %}" id="add_course" class="btn btn-primary">Add a course</a>
-
-
 
 {% endblock %}

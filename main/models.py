@@ -51,6 +51,12 @@ class Course(models.Model):
     def __unicode__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('course_overview')
+
+    def get_edit_url(self):
+        return reverse('edit_course', args=[self.id])
+
 
 class Module(models.Model):
     """Modules are the subjects - eg "Law of Contracts".

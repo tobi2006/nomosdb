@@ -7,3 +7,4 @@ class AddStudentsToModules(FunctionalTest):
         self.set_up_test_conditions()
         self.browser.get(self.live_server_url + '/module/hoa101/2014')
         self.browser.find_element_by_id('add_students_to_module').click()
+        #self.browser.find_element_by_name(

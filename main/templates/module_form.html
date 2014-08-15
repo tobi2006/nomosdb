@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+{% block style %}
+.help-block {
+    visibility: hidden
+}
+{% endblock %}
 {% block content %}
 <h1>{% if edit %}Edit{% else %}Add{% endif %} Module</h1>
 <br>
@@ -15,3 +20,19 @@ $('#assessment_5').hide()
 $('#assessment_6').hide()
 </script>
 {% endcomment %}
+
+{% block scripts %}
+
+<script type="text/javascript" 
+src="{{ STATIC_URL }}js/chosen/chosen.jquery.min.js">
+</script>
+
+<link rel="stylesheet" href="{{ STATIC_URL }}js/chosen/chosen.css" type="text/css" media="screen" />
+
+<script type="text/javascript">
+
+$(".chosen-select").chosen()
+
+</script>
+
+{% endblock %}
