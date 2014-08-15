@@ -212,3 +212,31 @@ class PerformanceTest(TestCase):
         performance = Performance.objects.first()
         self.assertEqual(performance.module, module)
         self.assertEqual(performance.student, student)
+
+    def test_performance_returns_all_assessment_results(self):
+        module = Module.objects.create(
+            title="A different title",
+            code="MT23",
+            year="2013",
+            assessment_1_title="Assessment 1",
+            assessment_1_value=20,
+            assessment_2_title="Assessment 2",
+            assessment_2_value=20,
+            assessment_3_title="Assessment 3",
+            assessment_3_value=20,
+            exam_value=40
+        )
+        student = create_student()
+        performance = Performance(
+            module=module,
+            student=student,
+            assessment_1=20,
+            assessment_2=30,
+            assessment_3=40,
+            assessment_4=50,
+            exam=60
+        )
+        # Assessment 4 should not show up, as it is not in the module
+        # (it might have been deleted from the module later)
+        expected_list = ['20', '30', '40', '60']
+        self.assertEqual(performance.get_assessment_results(), expected_list)
