@@ -171,7 +171,7 @@ class PerformanceTest(TestCase):
         student = create_student()
         module = create_module()
         response = self.client.post(
-            '/add_students_to_module/%s/%s' %(module.code, module.year),
+            '/add_students_to_module/%s/%s/' %(module.code, module.year),
             data={'student_ids': [student.student_id,]}
         )
         performance = Performance.objects.first()

@@ -120,9 +120,7 @@ def add_students_to_module(request, code, year):
     module = Module.objects.get(code=code, year=year)
     if request.method == 'POST':
         students_to_add = request.POST.getlist('student_ids')
-        print(students_to_add)
         for student_id in students_to_add:
-            print(student_id)
             student = Student.objects.get(student_id=student_id)
             student.modules.add(module)
             student.save()
