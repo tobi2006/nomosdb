@@ -7,7 +7,7 @@
     <p>
         <table class="table">
             <tr>
-                <td><strong>ID</strong></td>
+                <td><strong>Code</strong></td>
                 <td>{{module.code}}</td>
                 <td><strong>Year</strong></td>
                 <td>{{module.year}}/{{module.year|add:"1"}}</td>
@@ -32,10 +32,18 @@
 </div>
 
 <div class="btn-group" id="module_control_buttons">
+    <div class="btn-group dropdown">
+        <a class = "btn btn-default dropdown-toggle" data-toggle="dropdown">Seminar Groups / Attendance <span class="caret"></span></a>
+        <ul class="dropdown-menu" role="menu">
+            <li><a href="{{ module.get_seminar_groups_url }}">Assign Seminar Groups</a></li>
+        </ul>
+    </div>
     <a class="btn btn-default" id="add_students_to_module" href="{{ module.get_add_students_url }}">
         Add Student(s)
     </a>
 </div>
+
+<br><br>
 
 <table id ="sortable_table" class="table table-striped table-sortable">
     <thead>
@@ -52,7 +60,7 @@
             <th>
                 Attendance
             </th>
-            {% for assessment in module.get_assessment_titles %}
+            {% for assessment in module.all_assessment_titles %}
                 <th>
                     {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
                 </th>
@@ -69,32 +77,29 @@
                     {{ performance.seminar_group|default_if_none:"" }}
                 </td>
                 <td>
-                    <a href="{% performance.student.get_absolute_url %}">{{ performance.student.last_name }}, {{ performance.student.first_name|only_first_word }}</a>
+                    <a href="{{ performance.student.get_absolute_url }}">{{ performance.student.short_name }}</a>
                 </td>
                 <td>
                     {% if performance.student.lsp %}<span class="glyphicon glyphicon-warning-sign"></span>{% endif %}
                 </td>
                 <td>
-                    {% performance.student.get_attendance %}
+                    {% comment %}
+                    {{ performance.student.get_attendance }}
+                    {% endcomment %}
                 </td>
                 <td>
-                    {% for assessment_result in performance.get_assessment_results %}
+                    {% for assessment_result in performance.all_assessment_results_as_strings %}
                         <td>
                             {{ assessment_result }}
                         </td>
                     {% endfor %}
                 </td>
                 <td>
-                    {{ performance.average|default_if_none="" }}
+                    {{ performance.average|default_if_none:"" }}
                 </td>
             </tr>
         {% endfor %}
     </tbody>
 </table>
-
-
-
-
-
 
 {% endblock %}

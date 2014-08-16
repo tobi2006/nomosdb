@@ -354,7 +354,10 @@ class Module(models.Model):
     def get_add_students_url(self):
         return reverse('add_students_to_module', args=[self.code, self.year])
 
-    def return_all_assessments(self):
+    def get_seminar_groups_url(self):
+        return reverse('assign_seminar_groups', args=[self.code, self.year])
+
+    def all_assessment_titles(self):
         returnlist = []
         if self.assessment_1_title:
             if self.assessment_1_value:
@@ -497,6 +500,13 @@ class Student(models.Model):
     def __unicode__(self):
         return "%s, %s" % (self.last_name, self.first_name)
 
+    def short_first_name(self):
+        first_names = self.first_name.split(" ")
+        return first_names[0]
+
+    def short_name(self):
+        return "%s, %s" % (self.last_name, self.short_first_name())
+
     def get_absolute_url(self):
         return reverse('student_view', args=[self.student_id])
 
@@ -505,6 +515,7 @@ class Student(models.Model):
 
 
 class Performance(models.Model):
+    """The Performance class connects a student with a module"""
     NO_CONCESSIONS = 'N'
     PENDING = 'P'
     GRANTED = 'G'
@@ -602,22 +613,154 @@ class Performance(models.Model):
         unique_together = ('student', 'module')
         ordering = ['module', 'student']
 
-    def get_assessment_results(self):
+    def assessment_result_as_string(self, assessment):
+        assessment = str(assessment)
+        if assessment == '1':
+            if self.assessment_1 is not None:
+                returnstring = str(self.assessment_1)
+                if self.r_assessment_1:
+                    if self.assessment_1_concessions == self.GRANTED:
+                        resit_type = 'Submission'
+                    else:
+                        resit_type = 'Resubmission'
+                    returnstring += " (%s: %s" % (
+                        resit_type, self.r_assessment_1)
+                    if self.s_assessment_1:
+                        returnstring += (
+                            ", Second resubmission: %s" % (
+                                self.s_assessment_1))
+                    returnstring += ")"
+            else:
+                returnstring = ''
+        elif assessment == '2':
+            if self.assessment_2 is not None:
+                returnstring = str(self.assessment_2)
+                if self.r_assessment_2:
+                    if self.assessment_2_concessions == self.GRANTED:
+                        resit_type = 'Submission'
+                    else:
+                        resit_type = 'Resubmission'
+                    returnstring += " (%s: %s" % (
+                        resit_type, self.r_assessment_2)
+                    if self.s_assessment_2:
+                        returnstring += (
+                            ", Second resubmission: %s" % (
+                                self.s_assessment_2))
+                    returnstring += ")"
+            else:
+                returnstring = ''
+        elif assessment == '3':
+            if self.assessment_3 is not None:
+                returnstring = str(self.assessment_3)
+                if self.r_assessment_3:
+                    if self.assessment_3_concessions == self.GRANTED:
+                        resit_type = 'Submission'
+                    else:
+                        resit_type = 'Resubmission'
+                    returnstring += " (%s: %s" % (
+                        resit_type, self.r_assessment_3)
+                    if self.s_assessment_3:
+                        returnstring += (
+                            ", Second resubmission: %s" % (
+                                self.s_assessment_3))
+                    returnstring += ")"
+            else:
+                returnstring = ''
+        elif assessment == '4':
+            if self.assessment_4 is not None:
+                returnstring = str(self.assessment_4)
+                if self.r_assessment_4:
+                    if self.assessment_4_concessions == self.GRANTED:
+                        resit_type = 'Submission'
+                    else:
+                        resit_type = 'Resubmission'
+                    returnstring += " (%s: %s" % (
+                        resit_type, self.r_assessment_4)
+                    if self.s_assessment_4:
+                        returnstring += (
+                            ", Second resubmission: %s" % (
+                                self.s_assessment_4))
+                    returnstring += ")"
+            else:
+                returnstring = ''
+        elif assessment == '5':
+            if self.assessment_5 is not None:
+                returnstring = str(self.assessment_5)
+                if self.r_assessment_5:
+                    if self.assessment_5_concessions == self.GRANTED:
+                        resit_type = 'Submission'
+                    else:
+                        resit_type = 'Resubmission'
+                    returnstring += " (%s: %s" % (
+                        resit_type, self.r_assessment_5)
+                    if self.s_assessment_5:
+                        returnstring += (
+                            ", Second resubmission: %s" % (
+                                self.s_assessment_5))
+                    returnstring += ")"
+            else:
+                returnstring = ''
+        elif assessment == '6':
+            if self.assessment_6 is not None:
+                returnstring = str(self.assessment_6)
+                if self.r_assessment_6:
+                    if self.assessment_6_concessions == self.GRANTED:
+                        resit_type = 'Submission'
+                    else:
+                        resit_type = 'Resubmission'
+                    returnstring += " (%s: %s" % (
+                        resit_type, self.r_assessment_6)
+                    if self.s_assessment_6:
+                        returnstring += (
+                            ", Second resubmission: %s" % (
+                                self.s_assessment_6))
+                    returnstring += ")"
+            else:
+                returnstring = ''
+        elif assessment == 'exam':
+            if self.exam is not None:
+                returnstring = str(self.exam)
+                if self.r_exam:
+                    if self.exam_concessions == self.GRANTED:
+                        resit_type = 'Sit'
+                    else:
+                        resit_type = 'Resit'
+                    returnstring += " (%s: %s" % (
+                        resit_type, self.r_exam)
+                    if self.s_exam:
+                        returnstring += (
+                            ", Second resit: %s" % (
+                                self.s_exam))
+                    returnstring += ")"
+            else:
+                returnstring = ''
+        return returnstring
+
+    def all_assessment_results_as_strings(self):
         return_list = []
         if self.module.assessment_1_title:
-            if self.assessment_1:
-                assessment_string = str(self.assessment_1)
-                if self.r_assessment_1:
-                    pass
+            return_list.append(self.assessment_result_as_string(1))
+        if self.module.assessment_2_title:
+            return_list.append(self.assessment_result_as_string(2))
+        if self.module.assessment_3_title:
+            return_list.append(self.assessment_result_as_string(3))
+        if self.module.assessment_4_title:
+            return_list.append(self.assessment_result_as_string(4))
+        if self.module.assessment_5_title:
+            return_list.append(self.assessment_result_as_string(5))
+        if self.module.assessment_6_title:
+            return_list.append(self.assessment_result_as_string(6))
+        if self.module.exam_value:
+            return_list.append(self.assessment_result_as_string('exam'))
+        return return_list
 
-
-#    def safe(self, *args, **kwargs):
-#        marks = 0
-#        cap = False
-#        if self.assessment_1:
-#            if self.r_assessment_1:
-#                if self.r_assessment_1 > self.assessment_1:
-#                    marks =
-#            else:
-#                all += self.assessment_1
-# after: super(Performance, self).save(*args, **kwargs)
+    # def safe(self, *args, **kwargs):
+    #    marks = 0
+    #        cap = False
+    #        if self.assessment_1:
+    #            if self.r_assessment_1:
+    #                if self.r_assessment_1 > self.assessment_1:
+    #                    marks =
+    #            else:
+    #                all += self.assessment_1
+    # after: super(Performance, self).save(*args, **kwargs)

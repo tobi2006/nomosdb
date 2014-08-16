@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block formstart %}
+    <form action="{{ action_url }}" id="assessmentGroupForm" method="post">
+    {% csrf_token %}
+{% endblock %}
+
+{% block style %}
+
+    .connectedLists .panel 
+    {
+        cursor: move;
+    }
+    /* Without the min-height, it is impossible to move stuff into empty panels */
+    .connectedLists
+    {
+        min-height:100px;
+    }
+
+    @media (min-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: 51px;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        padding: 20px;
+        overflow:hidden;
+      }
+    }
+
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-4 col-md-3 sidebar" id="side">
+        <div class="unsortedList panel panel-default">
+            <div class="panel-heading">
+                Not assigned
+                <span class="glyphicon glyphicon-info-sign pull-right" id="help" data-placement="bottom" title="Start moving students into the groups. New groups will appear once you fill the last empty group, empty groups will disappear. After you have divided the groups, press the Save button at the bottom of the page."></span>
+                <span class="badge pull-right" id="badge_0">10</span>
+            </div>
+            <div class="panel-body">
+                <ul id="0" class="list-unstyled connectedLists">
+                {% for performance in dictionary.0 %}
+                    <li class="panel panel-primary innerpanel" id="{{ performance.student.student_id }}">
+                        <input type="hidden" name="{{ performance.student.student_id }}" value="0">
+                        <div class="panel-body">
+                            {{ performance.student.short_first_name }} {{ performance.student.last_name }}
+                        </div>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-8 col-sm-offset-4 col-md-9 col-md-offset-3 main">
+
+        {% for i in max_groups|get_range %}
+        <div class="col-md-4 col-sm-4 col-xs-5" id="panel_{{ i|add:"1" }}">
+            <div class="panel panel-default outerpanel">
+                <div class="panel-heading">
+                    Group {{ i|add:"1" }}
+                    <span class="badge pull-right" id="badge_{{ i|add:"1" }}">{{ i|add:"1" }}</span>
+                </div>
+                <div class="panel-body">
+                    <ul id="{{ i|add:"1" }}" class="list-unstyled connectedLists">
+                    {% for performance in dictionary|get_item_p_1:i %}
+                        <li class="panel panel-primary innerpanel" id="{{ performance.student.student_id }}">
+                            <input type="hidden" name="{{ performance.student.student_id }}" value="{{ i|add:"1" }}">
+                            <div class="panel-body">
+                                {{ performance.student.short_first_name }} {{ performance.student.last_name }}
+                            </div>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <input type="submit" value="Save Groups" class="btn btn-default" align=right>
+        <p id="test"></p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block formend %}
+</form>
+{% endblock %}
+
+
+{% block scripts %}
+
+<script src="{{ STATIC_URL }}js/jquery-ui-1.10.4.custom.min.js"></script>
+
+<script type="text/javascript">
+
+    $(document).ready(function(){
+
+        $('.sidebar').css('overflow-y','scroll');
+
+        $('#help').tooltip()
+
+        function countAll(){
+            var last_panel = 0;
+//            var biggest_panel = 0;
+            $(".connectedLists").each(function(){
+                var count = $(this).find("li").length;
+                var group_no = $(this).attr('id');
+                var badge = "#badge_" + group_no;
+                $(badge).text(count);
+//                var panel = $(this).closest(".outerpanel");
+//                var height = panel.height();
+//                if (height > biggest_panel)
+//                {
+//                    biggest_panel = height;
+//                };
+                if (count > 0)
+                {
+                    panel_no = parseInt(group_no);
+                    if (panel_no > last_panel)
+                    {
+                        last_panel = panel_no;
+                    }
+                };
+            });
+            last_panel += 2;
+            for (var i = 1; i < last_panel; i++)
+            {
+                div_id = "#panel_" + i;
+                $(div_id).show();
+            };
+            for (var i = last_panel; i <= {{ max_groups }}; i++)
+            {
+                div_id = "#panel_" + i;
+                $(div_id).hide();
+            };
+//            alert(biggest_panel);
+//            $(".outerpanel").each(function(){
+//                $(this).height(biggest_panel)
+//                $(this).height(359);
+//            });
+        };
+
+        countAll();
+
+        jQuery(function(event, ui) {
+            $('.connectedLists').sortable({
+                connectWith: ".connectedLists",
+                stop: function(event, ui) {          
+                    item = ui.item;
+                    var newList = item.closest("ul");
+                    var group = newList.attr('id');
+                    var formField = item.find("input");
+                    formField.val(group);
+                    countAll();
+                },
+                appendTo: 'body',
+                helper:  function(e, elt) {
+                    $(elt).css('list-style-type','none');
+                    return elt.clone(true);
+                }
+            });
+        });
+
+        $('.panel-body').mousedown(function(){
+        //    var scroll = $('#side').scrollTop();
+            //$("#test").text(scroll);
+            $('.sidebar').css('overflow-y','');
+            //$('#side').scrollTop(1458);
+            
+        });
+
+
+        $('.panel-body').mouseup(function(){
+            $('.sidebar').css('overflow-y','scroll');
+        });        
+
+    });
+</script>
+
+{% endblock %}

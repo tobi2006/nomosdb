@@ -112,7 +112,12 @@ def add_or_edit_module(request, code=None, year=None):
 def module_view(request, code, year):
     """Shows all information about a module"""
     module = Module.objects.get(code=code, year=year)
-    return render(request, 'module_view.html', {'module': module})
+    performances = Performance.objects.filter(module=module)
+    return render(
+        request,
+        'module_view.html',
+        {'module': module, 'performances': performances}
+    )
 
 
 def add_students_to_module(request, code, year):
@@ -137,10 +142,11 @@ def add_students_to_module(request, code, year):
         year = int(number)
         students_this_year = Student.objects.filter(year=year)
         for student in students_this_year:
-            for subject_area in module.subject_areas.all():
-                if subject_area in student.course.subject_areas.all():
-                    if student not in students:
-                        students.append(student)
+            if student not in students_in_module:
+                for subject_area in module.subject_areas.all():
+                    if subject_area in student.course.subject_areas.all():
+                        if student not in students:
+                            students.append(student)
     return render(
         request,
         'add_students_to_module.html',
@@ -148,41 +154,45 @@ def add_students_to_module(request, code, year):
     )
 
 
-#
-#    for number in module.eligible:
-#        year = int(number)  # Find out which students are eligible
-#        meta_stuff = MetaData.objects.get(data_id=1)
-#        current_year = meta_stuff.current_year
-#        time_difference = module.year - current_year
-#        year = year - time_difference
-#        years.append(year)
-#    for student in students_from_db:
-#        if student not in students_in_module:
-#            students.append(student)
-#        if student.year in years:
-#            eligible.append(student.student_id)
-#
-#    if request.method == 'POST':
-#        students_to_add = request.POST.getlist('selected_student_id')
-#        for student_id in students_to_add:
-#            student_to_add = Student.objects.get(student_id=student_id)
-#            student_to_add.modules.add(module)
-#            # Generate Performance entry for the student
-#            performance = Performance(
-#                student=student_to_add,
-#                module=module
-#                )
-#            performance.initial_save()
-#
-#        return HttpResponseRedirect(module.get_absolute_url())
-#    return render_to_response(
-#        'add_students_to_module.html',
-#        {
-#            'module': module,
-#            'more_than_one_year': more_than_one_year,
-#            'students': students,
-#            'llb': llb,
-#            'eligible': eligible
-#        },
-#        context_instance=RequestContext(request)
-#        )
+def assign_seminar_groups(request, code, year):
+    """Allows to assign the students to seminar groups graphically"""
+    module = Module.objects.get(code=code, year=year)
+    students = module.student_set.all()
+    if request.method == 'POST':
+        for student in students:
+            tmp = request.POST[student.student_id]
+            group = int(tmp)
+            performance = Performance.objects.get(
+                student=student, module=module)
+            if group == 0:
+                performance.seminar_group = None
+            else:
+                performance.seminar_group = group
+            performance.save()
+        return redirect(module.get_absolute_url())
+    dictionary = {}
+    for student in students:
+        performance = Performance.objects.get(student=student, module=module)
+        if performance.seminar_group is None:
+            group = "0"
+        else:
+            group = str(performance.seminar_group)
+        if group in dictionary:
+            dictionary[group].append(performance)
+        else:
+            dictionary[group] = [performance]
+    no_of_students = len(students)
+    max_groups = int(no_of_students / 2)
+    left = no_of_students % 2
+    if left == 1:
+        max_groups += 1
+
+    return render(
+        request,
+        'alternate_seminar_groups.html',
+        {
+            'module': module,
+            'dictionary': dictionary,
+            'max_groups': max_groups
+        }
+    )

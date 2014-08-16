@@ -128,6 +128,11 @@ class StudentTest(TestCase):
         student.save()
         self.assertEqual(student, module.student_set.first())
 
+    def test_student_short_names_return_correctly(self):
+        student = create_student(save=False)
+        self.assertEqual(student.short_name(), 'Baggins, Frodo')
+        self.assertEqual(student.short_first_name(), 'Frodo')
+
 
 class ModuleTest(TestCase):
 
@@ -195,9 +200,9 @@ class ModuleTest(TestCase):
             ("Assessment 3", 60)
         ]
         self.assertEqual(
-            module1.return_all_assessments(), list_of_assessments_1)
+            module1.all_assessment_titles(), list_of_assessments_1)
         self.assertEqual(
-            module2.return_all_assessments(), list_of_assessments_2)
+            module2.all_assessment_titles(), list_of_assessments_2)
 
 
 class PerformanceTest(TestCase):
@@ -215,9 +220,9 @@ class PerformanceTest(TestCase):
 
     def test_performance_returns_all_assessment_results(self):
         module = Module.objects.create(
-            title="A different title",
+            title="A module title",
             code="MT23",
-            year="2013",
+            year=2013,
             assessment_1_title="Assessment 1",
             assessment_1_value=20,
             assessment_2_title="Assessment 2",
@@ -226,8 +231,38 @@ class PerformanceTest(TestCase):
             assessment_3_value=20,
             exam_value=40
         )
+        module2 = Module.objects.create(
+            title="Another Module",
+            year=2013,
+            code="AM42",
+            assessment_1_title="Assessment 1",
+            assessment_1_value=30,
+            assessment_2_title="Assessment 2",
+            assessment_2_value=20,
+            assessment_3_title="Assessment 3",
+            assessment_3_value=50,
+            exam_value=0
+        )
+        module3 = Module.objects.create(
+            title="Yet Another Module",
+            year=2013,
+            code="YAM42",
+            assessment_1_title="Assessment 1",
+            assessment_1_value=20,
+            assessment_2_title="Assessment 2",
+            assessment_2_value=20,
+            assessment_3_title="Assessment 3",
+            assessment_3_value=10,
+            assessment_4_title="Assessment 4",
+            assessment_4_value=10,
+            assessment_5_title="Assessment 5",
+            assessment_5_value=10,
+            assessment_6_title="Assessment 6",
+            assessment_6_value=10,
+            exam_value=20
+        )
         student = create_student()
-        performance = Performance(
+        performance1 = Performance(
             module=module,
             student=student,
             assessment_1=20,
@@ -236,7 +271,62 @@ class PerformanceTest(TestCase):
             assessment_4=50,
             exam=60
         )
-        # Assessment 4 should not show up, as it is not in the module
-        # (it might have been deleted from the module later)
-        expected_list = ['20', '30', '40', '60']
-        self.assertEqual(performance.get_assessment_results(), expected_list)
+        expected_list_1 = ['20', '30', '40', '60']
+        performance2 = Performance(
+            module=module2,
+            student=student,
+            assessment_1=0,
+            r_assessment_1=50,
+            assessment_1_concessions='G',
+            assessment_2=40,
+            assessment_3=20,
+            assessment_3_concessions='N',
+            r_assessment_3=30,
+            s_assessment_3=40
+        )
+        expected_list_2 = [
+            '0 (Submission: 50)',
+            '40',
+            '20 (Resubmission: 30, Second resubmission: 40)'
+        ]
+        performance3 = Performance(
+            module=module3,
+            student=student,
+            assessment_1=40,
+            assessment_2=40,
+            assessment_3=40,
+            assessment_4=40,
+            assessment_5=30,
+            assessment_5_concessions='G',
+            r_assessment_5=40,
+            assessment_6=35,
+            assessment_6_concessions='N',
+            r_assessment_6=37,
+            s_assessment_6=40,
+            exam=35,
+            exam_concessions='G',
+            r_exam=37,
+            s_exam=40
+        )
+        expected_list_3 = [
+            '40',
+            '40',
+            '40',
+            '40',
+            '30 (Submission: 40)',
+            '35 (Resubmission: 37, Second resubmission: 40)',
+            '35 (Sit: 37, Second resit: 40)'
+        ]
+        self.assertEqual(performance1.assessment_result_as_string(1), '20')
+        self.assertEqual(
+            performance1.all_assessment_results_as_strings(),
+            expected_list_1
+        )
+        self.assertEqual(
+            performance2.all_assessment_results_as_strings(),
+            expected_list_2
+        )
+        self.assertEqual(
+            performance3.all_assessment_results_as_strings(),
+            expected_list_3
+        )

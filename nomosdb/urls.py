@@ -20,6 +20,11 @@ urlpatterns += patterns(
         name='add_students_to_module'
     ),
     url(r'^admin_dashboard/$', 'admin', name='admin'),
+    url(
+        r'^assign_seminar_groups/(\w+)/(\d{4})/$',
+        'assign_seminar_groups',
+        name='assign_seminar_groups'
+    ),
     url(r'^course_overview/$', 'course_overview', name='course_overview'),
     url(r'^edit_course/(\d+)/$', 'add_or_edit_course', name='edit_course'),
     url(
