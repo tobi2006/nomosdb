@@ -53,18 +53,21 @@ class FunctionalTest(LiveServerTestCase):
             last_name="Baggins",
             first_name="Frodo",
             student_id="FB4223",
+            year=1,
             course=course
         )
         student2 = Student.objects.create(
             last_name="Gamgee",
             first_name="Samwise",
             student_id="SG2342",
+            year=1,
             course=course2
         )
         module = Module.objects.create(
             title="History of Alchemy",
             code="hoa101",
-            year=2014
+            year=2014,
+            eligible="1"
         )
         module.subject_areas.add(subject2)
         module.save()

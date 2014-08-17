@@ -38,7 +38,7 @@
             <div class="panel-heading" data-toggle="collapse" data-target="#random">
                     Random Assignment
             </div>
-            <div id="random" class="collapse in panel-body">
+            <div id="random" class="collapse panel-body">
                 <select name="number_of_groups" class="form-control" id="select_groups">
                     {% for group in groups %}
                         {% if group.0 == 1 %}
@@ -184,8 +184,6 @@
         $('.panel-body').mouseup(function(){
             $('.sidebar').css('overflow-y','scroll');
         });        
-
-        $("#random").collapse();
 
     });
 </script>

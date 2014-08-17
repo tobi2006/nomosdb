@@ -51,3 +51,11 @@ class AddAndEditModuleTest(FunctionalTest):
         self.browser.find_element_by_name('assessment_1_title').clear()
         self.browser.find_element_by_name('assessment_1_title').send_keys(
             'Essay on theory\n')
+        all_ths = self.browser.find_elements_by_tag_name('th')
+        content = []
+        for th in all_ths:
+            content.append(th.text)
+        self.assertIn(
+            'Essay on theory (40 %)',
+            content
+        )
