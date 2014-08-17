@@ -172,7 +172,7 @@ class AddStudentsToModuleTest(TestCase):
 
 class SeminarGroupTest(TestCase):
 
-    def test_seminar_groups_can_be_saved(self):
+    def set_up_stuff(self):
         module = Module.objects.create(
             title="History of Swordfighting",
             code="HoS101",
@@ -196,12 +196,39 @@ class SeminarGroupTest(TestCase):
             student_id="HW2323",
         )
         student3.modules.add(module)
+        student4 = Student.objects.create(
+            last_name="Schweiss",
+            first_name="Axel",
+            student_id="AS444"
+        )
+        student4.modules.add(module)
+        student5 = Student.objects.create(
+            last_name="Baden",
+            first_name="Isolde",
+            student_id="IB2323"
+        )
+        student5.modules.add(module)
         Performance.objects.create(student=student1, module=module)
         Performance.objects.create(student=student2, module=module)
         Performance.objects.create(student=student3, module=module)
+        Performance.objects.create(student=student4, module=module)
+        Performance.objects.create(student=student5, module=module)
+        return((module, student1, student2, student3, student4, student5))
+
+    def test_seminar_groups_can_be_saved(self):
+        stuff = self.set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
         response = self.client.post(
             module.get_seminar_groups_url(),
-            data={'HW2323': '1', 'SG2342': '2', 'FB4223': '1'}
+            data={
+                'action': 'Save students',
+                student1.student_id: '1',
+                student2.student_id: '2',
+                student3.student_id: '1'
+            }
         )
         performance1 = Performance.objects.get(student=student1, module=module)
         performance2 = Performance.objects.get(student=student2, module=module)
@@ -209,3 +236,69 @@ class SeminarGroupTest(TestCase):
         self.assertEqual(performance1.seminar_group, 1)
         self.assertEqual(performance2.seminar_group, 2)
         self.assertEqual(performance3.seminar_group, 1)
+
+    def test_seminar_groups_can_be_randomized_ignoring_previous_values(self):
+        stuff = self.set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        student5 = stuff[5]
+        response = self.client.post(
+            module.get_seminar_groups_url(),
+            data={
+                'action': 'Randomly assign',
+                'ignore': True,
+                'number_of_groups': '3'
+            }
+        )
+        performance1 = Performance.objects.get(student=student1, module=module)
+        performance2 = Performance.objects.get(student=student2, module=module)
+        performance3 = Performance.objects.get(student=student3, module=module)
+        performance4 = Performance.objects.get(student=student4, module=module)
+        performance5 = Performance.objects.get(student=student5, module=module)
+        self.assertNotEqual(performance1.seminar_group, None)
+        self.assertNotEqual(performance2.seminar_group, None)
+        self.assertNotEqual(performance3.seminar_group, None)
+        self.assertNotEqual(performance4.seminar_group, None)
+        self.assertNotEqual(performance5.seminar_group, None)
+        list_of_seminar_groups = []
+        list_of_seminar_groups.append(performance1.seminar_group)
+        list_of_seminar_groups.append(performance2.seminar_group)
+        list_of_seminar_groups.append(performance3.seminar_group)
+        list_of_seminar_groups.append(performance4.seminar_group)
+        list_of_seminar_groups.append(performance5.seminar_group)
+        self.assertTrue(1 in list_of_seminar_groups)
+        self.assertTrue(2 in list_of_seminar_groups)
+        self.assertTrue(3 in list_of_seminar_groups)
+
+    def test_seminar_groups_can_be_randomized_leaving_previous_values(self):
+        stuff = self.set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        performance1 = Performance.objects.get(student=student1, module=module)
+        performance1.seminar_group = 1
+        performance1.save()
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        student5 = stuff[5]
+        response = self.client.post(
+            module.get_seminar_groups_url(),
+            data={
+                student2.student_id: '2',
+                'action': 'Randomly assign',
+                'number_of_groups': '3'
+            }
+        )
+        performance1 = Performance.objects.get(student=student1, module=module)
+        performance2 = Performance.objects.get(student=student2, module=module)
+        performance3 = Performance.objects.get(student=student3, module=module)
+        performance4 = Performance.objects.get(student=student4, module=module)
+        performance5 = Performance.objects.get(student=student5, module=module)
+        self.assertEqual(performance1.seminar_group, 1)
+        self.assertEqual(performance2.seminar_group, 2)
+        self.assertNotEqual(performance3.seminar_group, None)
+        self.assertNotEqual(performance4.seminar_group, None)
+        self.assertNotEqual(performance5.seminar_group, None)

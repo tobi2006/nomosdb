@@ -7,7 +7,6 @@
 {% endblock %}
 
 {% block style %}
-
     .connectedLists .panel 
     {
         cursor: move;
@@ -29,12 +28,32 @@
         overflow:hidden;
       }
     }
-
 {% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-sm-4 col-md-3 sidebar" id="side">
+        <h3>Seminar Groups</h3>
+        <div class="panel panel-default">
+            <div class="panel-heading" data-toggle="collapse" data-target="#random">
+                    Random Assignment
+            </div>
+            <div id="random" class="collapse in panel-body">
+                <select name="number_of_groups" class="form-control" id="select_groups">
+                    {% for group in groups %}
+                        {% if group.0 == 1 %}
+                            <option value="{{ group.0 }}">1 group with {{ group.1 }} students</option>
+                        {% else %}
+                            <option value="{{ group.0 }}">{{ group.0 }} groups ({{ group.1 }} students max)</option>
+                        {% endif %}
+                    {% endfor %}
+                </select><br>
+                <input type="checkbox" name="ignore"> Reassign all students (ignoring previous changes)<br><br>
+                <input type="submit" name="action" value="Go" class="btn btn-default">
+            </div>
+        </div>
+        <br>
+
         <div class="unsortedList panel panel-default">
             <div class="panel-heading">
                 Not assigned
@@ -47,7 +66,8 @@
                     <li class="panel panel-primary innerpanel" id="{{ performance.student.student_id }}">
                         <input type="hidden" name="{{ performance.student.student_id }}" value="0">
                         <div class="panel-body">
-                            {{ performance.student.short_first_name }} {{ performance.student.last_name }}
+                            {{ performance.student.short_first_name }} {{ performance.student.last_name }} ({{ performance.student.course.short_title }})
+
                         </div>
                     </li>
                 {% endfor %}
@@ -67,11 +87,11 @@
                 </div>
                 <div class="panel-body">
                     <ul id="{{ i|add:"1" }}" class="list-unstyled connectedLists">
-                    {% for performance in dictionary|get_item_p_1:i %}
+                    {% for performance in dictionary|get_item_plus_1:i %}
                         <li class="panel panel-primary innerpanel" id="{{ performance.student.student_id }}">
                             <input type="hidden" name="{{ performance.student.student_id }}" value="{{ i|add:"1" }}">
                             <div class="panel-body">
-                                {{ performance.student.short_first_name }} {{ performance.student.last_name }}
+                                {{ performance.student.short_first_name }} {{ performance.student.last_name }} ({{ performance.student.course.short_title }})
                             </div>
                         </li>
                     {% endfor %}
@@ -80,8 +100,7 @@
             </div>
         </div>
         {% endfor %}
-        <input type="submit" value="Save Groups" class="btn btn-default" align=right>
-        <p id="test"></p>
+        <input type="submit" name="action" value="Save Groups" class="btn btn-primary" align=right>
     </div>
 </div>
 
@@ -106,20 +125,12 @@
 
         function countAll(){
             var last_panel = 0;
-//            var biggest_panel = 0;
             $(".connectedLists").each(function(){
                 var count = $(this).find("li").length;
                 var group_no = $(this).attr('id');
                 var badge = "#badge_" + group_no;
                 $(badge).text(count);
-//                var panel = $(this).closest(".outerpanel");
-//                var height = panel.height();
-//                if (height > biggest_panel)
-//                {
-//                    biggest_panel = height;
-//                };
-                if (count > 0)
-                {
+                if (count > 0) {
                     panel_no = parseInt(group_no);
                     if (panel_no > last_panel)
                     {
@@ -128,21 +139,19 @@
                 };
             });
             last_panel += 2;
-            for (var i = 1; i < last_panel; i++)
-            {
+            for (var i = 1; i < last_panel; i++) {
                 div_id = "#panel_" + i;
                 $(div_id).show();
             };
-            for (var i = last_panel; i <= {{ max_groups }}; i++)
-            {
+            for (var i = last_panel; i <= {{ max_groups }}; i++) {
                 div_id = "#panel_" + i;
                 $(div_id).hide();
             };
-//            alert(biggest_panel);
-//            $(".outerpanel").each(function(){
-//                $(this).height(biggest_panel)
-//                $(this).height(359);
-//            });
+            var select_panel = last_panel - 2;
+            if (select_panel == 0) {
+                select_panel = 1;
+            };
+            $("#select_groups").val(select_panel);
         };
 
         countAll();
@@ -167,10 +176,7 @@
         });
 
         $('.panel-body').mousedown(function(){
-        //    var scroll = $('#side').scrollTop();
-            //$("#test").text(scroll);
             $('.sidebar').css('overflow-y','');
-            //$('#side').scrollTop(1458);
             
         });
 
@@ -178,6 +184,8 @@
         $('.panel-body').mouseup(function(){
             $('.sidebar').css('overflow-y','scroll');
         });        
+
+        $("#random").collapse();
 
     });
 </script>

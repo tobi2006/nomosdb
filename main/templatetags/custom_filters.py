@@ -27,8 +27,8 @@ def get_range(value):
     return range(value)
 
 @register.filter
-def get_item_p_1(dictionary, key):
-    """Returns the next dictionary item"""
+def get_item_plus_1(dictionary, key):
+    """Returns the next dictionary item, necessary for Group Assignment"""
     number = int(key)
     number += 1
     key = str(number)
