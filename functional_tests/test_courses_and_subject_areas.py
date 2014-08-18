@@ -53,3 +53,5 @@ class AddAndEditCourseTest(FunctionalTest):
 
         # Now, there is a brand new course, and I will look further into the
         # Course overview page at some point (low priority).
+        # At the moment, the last action creates a 500 error. This does not
+        # happen with manual testing!

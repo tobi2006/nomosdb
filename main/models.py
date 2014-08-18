@@ -354,6 +354,10 @@ class Module(models.Model):
     def get_add_students_url(self):
         return reverse('add_students_to_module', args=[self.code, self.year])
 
+    def get_attendance_url(self, group):
+        group = str(group)
+        return reverse('attendance', args=[self.code, self.year, group])
+
     def get_seminar_groups_url(self):
         return reverse('assign_seminar_groups', args=[self.code, self.year])
 
@@ -530,7 +534,6 @@ class Performance(models.Model):
     seminar_group = models.IntegerField(blank=True, null=True)
     group_assessment_group = models.IntegerField(blank=True, null=True)
     student_year = models.IntegerField(blank=True, null=True)
-    attendance = models.CharField(max_length=50, blank=True)
     notes = models.TextField(blank=True)
     # Marks
     assessment_1 = models.IntegerField(blank=True, null=True)
@@ -764,3 +767,20 @@ class Performance(models.Model):
     #            else:
     #                all += self.assessment_1
     # after: super(Performance, self).save(*args, **kwargs)
+
+
+class Session(models.Model):
+    """Simply a recorded session for attendance purposes"""
+    module = models.ForeignKey(Module)
+    group = models.IntegerField(blank=True, null=True)
+    date = models.DateField()
+
+class Attendance(models.Model):
+    """The attendance for one student at one session"""
+    ENTRIES = (
+        ('p', 'Present'),
+        ('a', 'Absent'),
+        ('e', 'Excused Absence')
+    )
+    performance = models.ForeignKey(Performance)
+    session = models.ForeignKey(Session)

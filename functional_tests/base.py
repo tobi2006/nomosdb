@@ -32,7 +32,7 @@ class FunctionalTest(LiveServerTestCase):
         rows = table.find_elements_by_tag_name('td')
         self.assertIn(row_text, [row.text for row in rows])
 
-    def set_up_test_conditions(self):
+    def set_up_test_conditions(self, enroll=False):
         subject1 = SubjectArea.objects.create(name="Witchcraft")
         subject2 = SubjectArea.objects.create(name="Alchemy")
         subject3 = SubjectArea.objects.create(name="Fighting")
@@ -71,3 +71,10 @@ class FunctionalTest(LiveServerTestCase):
         )
         module.subject_areas.add(subject2)
         module.save()
+        if enroll:
+            student1.module.add(module)
+            Performance.objects.create(module=module, student=student1)
+            student2.module.add(module)
+            Performance.objects.create(module=module, student=student2)
+            student3.module.add(module)
+            Performance.objects.create(module=module, student=student3)

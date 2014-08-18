@@ -45,6 +45,8 @@
 
 <br><br>
 
+{% if performances %}
+
 <table id ="sortable_table" class="table table-striped table-sortable">
     <thead>
         <tr>
@@ -101,5 +103,13 @@
         {% endfor %}
     </tbody>
 </table>
+
+{% else %}
+
+<p>
+    You need to <a href="{{ module.get_add_students_url }}">add students</a> to this module.
+</p>
+
+{% endif %}
 
 {% endblock %}

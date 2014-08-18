@@ -4,6 +4,7 @@ from main.models import Student, Module, Course, SubjectArea, Performance
 
 
 def create_student():
+    """Creates a student to be used by other tests"""
     student = Student.objects.create(
         student_id="fb4223",
         last_name="Baggins",
@@ -14,7 +15,53 @@ def create_student():
     return student
 
 
+def set_up_stuff():
+    """Sets up a module with five students, enrolls them"""
+    module = Module.objects.create(
+        title="History of Swordfighting",
+        code="HoS101",
+        year=2014,
+    )
+    student1 = Student.objects.create(
+        last_name="Baggins",
+        first_name="Frodo",
+        student_id="FB4223",
+    )
+    student1.modules.add(module)
+    student2 = Student.objects.create(
+        last_name="Gamgee",
+        first_name="Samwise",
+        student_id="SG2342",
+    )
+    student2.modules.add(module)
+    student3 = Student.objects.create(
+        last_name="Wurst",
+        first_name="Hans",
+        student_id="HW2323",
+    )
+    student3.modules.add(module)
+    student4 = Student.objects.create(
+        last_name="Schweiss",
+        first_name="Axel",
+        student_id="AS444"
+    )
+    student4.modules.add(module)
+    student5 = Student.objects.create(
+        last_name="Baden",
+        first_name="Isolde",
+        student_id="IB2323"
+    )
+    student5.modules.add(module)
+    Performance.objects.create(student=student1, module=module)
+    Performance.objects.create(student=student2, module=module)
+    Performance.objects.create(student=student3, module=module)
+    Performance.objects.create(student=student4, module=module)
+    Performance.objects.create(student=student5, module=module)
+    return((module, student1, student2, student3, student4, student5))
+
+
 class HomePageTest(TestCase):
+    """Simple tests for the home page"""
 
     def test_home_page_renders_home_template(self):
         response = self.client.get('/')
@@ -26,6 +73,7 @@ class HomePageTest(TestCase):
 
 
 class StudentViewTest(TestCase):
+    """Tests for the student view function"""
 
     def test_student_view_renders_student_view_template(self):
         student = create_student()
@@ -37,6 +85,7 @@ class StudentViewTest(TestCase):
 
 
 class AddEditStudentTest(TestCase):
+    """Tests for the student form function"""
 
     def send_form(self):
         response = self.client.post('/add_student/', data={
@@ -71,6 +120,7 @@ class AddEditStudentTest(TestCase):
 
 
 class ModuleViewTest(TestCase):
+    """Tests for the module view"""
 
     def test_module_view_renders_module_view_template(self):
         module = Module.objects.create(
@@ -103,6 +153,7 @@ class ModuleViewTest(TestCase):
 
 
 class AddStudentsToModuleTest(TestCase):
+    """Tests for the function to add students to a module"""
 
     def test_add_students_to_module_uses_right_template(self):
         module = Module.objects.create(
@@ -171,52 +222,11 @@ class AddStudentsToModuleTest(TestCase):
         self.assertEqual(response.status_code, 301)
 
 class SeminarGroupTest(TestCase):
+    """Tests involving the seminar group setup"""
 
-    def set_up_stuff(self):
-        module = Module.objects.create(
-            title="History of Swordfighting",
-            code="HoS101",
-            year=2014,
-        )
-        student1 = Student.objects.create(
-            last_name="Baggins",
-            first_name="Frodo",
-            student_id="FB4223",
-        )
-        student1.modules.add(module)
-        student2 = Student.objects.create(
-            last_name="Gamgee",
-            first_name="Samwise",
-            student_id="SG2342",
-        )
-        student2.modules.add(module)
-        student3 = Student.objects.create(
-            last_name="Wurst",
-            first_name="Hans",
-            student_id="HW2323",
-        )
-        student3.modules.add(module)
-        student4 = Student.objects.create(
-            last_name="Schweiss",
-            first_name="Axel",
-            student_id="AS444"
-        )
-        student4.modules.add(module)
-        student5 = Student.objects.create(
-            last_name="Baden",
-            first_name="Isolde",
-            student_id="IB2323"
-        )
-        student5.modules.add(module)
-        Performance.objects.create(student=student1, module=module)
-        Performance.objects.create(student=student2, module=module)
-        Performance.objects.create(student=student3, module=module)
-        Performance.objects.create(student=student4, module=module)
-        Performance.objects.create(student=student5, module=module)
-        return((module, student1, student2, student3, student4, student5))
 
     def test_seminar_groups_can_be_saved(self):
-        stuff = self.set_up_stuff()
+        stuff = set_up_stuff()
         module = stuff[0]
         student1 = stuff[1]
         student2 = stuff[2]
@@ -238,7 +248,7 @@ class SeminarGroupTest(TestCase):
         self.assertEqual(performance3.seminar_group, 1)
 
     def test_seminar_groups_can_be_randomized_ignoring_previous_values(self):
-        stuff = self.set_up_stuff()
+        stuff = set_up_stuff()
         module = stuff[0]
         student1 = stuff[1]
         student2 = stuff[2]
@@ -274,7 +284,7 @@ class SeminarGroupTest(TestCase):
         self.assertTrue(3 in list_of_seminar_groups)
 
     def test_seminar_groups_can_be_randomized_leaving_previous_values(self):
-        stuff = self.set_up_stuff()
+        stuff = set_up_stuff()
         module = stuff[0]
         student1 = stuff[1]
         performance1 = Performance.objects.get(student=student1, module=module)
@@ -302,3 +312,48 @@ class SeminarGroupTest(TestCase):
         self.assertNotEqual(performance3.seminar_group, None)
         self.assertNotEqual(performance4.seminar_group, None)
         self.assertNotEqual(performance5.seminar_group, None)
+
+class AttendanceTest(TestCase):
+    """Tests around the attendance function"""
+
+    def test_students_are_shown_according_to_parameter(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        student5 = stuff[5]
+        performance1 = Performance.objects.get(student=student1, module=module)
+        performance2 = Performance.objects.get(student=student2, module=module)
+        performance3 = Performance.objects.get(student=student3, module=module)
+        performance4 = Performance.objects.get(student=student4, module=module)
+        performance5 = Performance.objects.get(student=student5, module=module)
+        performance1.seminar_group = 1
+        performance1.save()
+        performance2.seminar_group = 1
+        performance2.save()
+        performance3.seminar_group = 1
+        performance3.save()
+        performance4.seminar_group = 2
+        performance4.save()
+        performance5.seminar_group = 2
+        performance5.save()
+        response = self.client.get(module.get_attendance_url(1))
+        self.assertContains(response, student1.last_name)
+        self.assertContains(response, student2.last_name)
+        self.assertContains(response, student3.last_name)
+        self.assertNotContains(response, student4.last_name)
+        self.assertNotContains(response, student5.last_name)
+        response = self.client.get(module.get_attendance_url(2))
+        self.assertNotContains(response, student1.last_name)
+        self.assertNotContains(response, student2.last_name)
+        self.assertNotContains(response, student3.last_name)
+        self.assertContains(response, student4.last_name)
+        self.assertContains(response, student5.last_name)
+        response = self.client.get(module.get_attendance_url(all))
+        self.assertContains(response, student1.last_name)
+        self.assertContains(response, student2.last_name)
+        self.assertContains(response, student3.last_name)
+        self.assertContains(response, student4.last_name)
+        self.assertContains(response, student5.last_name)

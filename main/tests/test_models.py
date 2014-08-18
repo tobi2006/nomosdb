@@ -173,6 +173,17 @@ class ModuleTest(TestCase):
             module.get_add_students_url(),
             '/add_students_to_module/MT23/2013/')
 
+    def test_module_returns_correct_attendance_url(self):
+        module = create_module(save=False)
+        self.assertEqual(
+            module.get_attendance_url('all'),
+            '/attendance/MT23/2013/all/'
+        )
+        self.assertEqual(
+            module.get_attendance_url(1),
+            '/attendance/MT23/2013/1/'
+        )
+
     def test_module_returns_all_assessment_titles_in_list(self):
         module1 = create_module(save=False)
         module1.assessment_1_title = "Practical Exercise"

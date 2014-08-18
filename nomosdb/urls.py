@@ -25,6 +25,7 @@ urlpatterns += patterns(
         'assign_seminar_groups',
         name='assign_seminar_groups'
     ),
+    url(r'^attendance/(\w+)/(\d{4})/(\w+)/$', 'attendance', name='attendance'),
     url(r'^course_overview/$', 'course_overview', name='course_overview'),
     url(r'^edit_course/(\d+)/$', 'add_or_edit_course', name='edit_course'),
     url(

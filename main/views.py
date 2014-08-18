@@ -256,3 +256,9 @@ def assign_seminar_groups(request, code, year):
             'groups': groups
         }
     )
+
+
+def attendance(request, code, year, group):
+    """The registers for the seminar groups or the whole module"""
+    module = Module.objects.get(code=code, year=year)
+    pass
