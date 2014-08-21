@@ -161,12 +161,23 @@ class AssessmentTest(TestCase):
             value=40
         )
         module.assessments.add(assessment)
-        print(assessment.get_absolute_url())
-
         self.assertEqual(
             assessment.get_absolute_url(),
             '/edit_assessment/hl23/2013/practical-hunting-exercise/'
         )
+
+    def test_assessment_returns_correct_delete_url(self):
+        module = create_module()
+        assessment = Assessment.objects.create(
+            title="Practical Hunting Exercise",
+            value=40,
+            module=module
+        )
+        self.assertEqual(
+            assessment.get_delete_url(),
+            '/delete_assessment/hl23/2013/practical-hunting-exercise/'
+        )
+
 
 
 class ModuleTest(TestCase):
@@ -304,9 +315,9 @@ class PerformanceTest(TestCase):
         module.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
+            part_of=performance1,
             mark=20
         )
-        performance1.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="Assessment 2",
             value=20
@@ -314,9 +325,9 @@ class PerformanceTest(TestCase):
         module.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
+            part_of=performance1,
             mark=30
         )
-        performance1.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="Assessment 3",
             value=20,
@@ -324,9 +335,9 @@ class PerformanceTest(TestCase):
         module.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
+            part_of=performance1,
             mark=40
         )
-        performance1.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="Exam",
             value=40
@@ -348,9 +359,9 @@ class PerformanceTest(TestCase):
         module2.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
+            part_of=performance2,
             mark=50
         )
-        performance2.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="And another assessment",
             value=20
@@ -358,12 +369,12 @@ class PerformanceTest(TestCase):
         module2.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
+            part_of=performance2,
             mark=35,
             resit_mark=38,
             concessions='G',
             second_resit_mark=40
         )
-        performance2.assessment_results.add(result)
         expected_list_2 = ['35 (Submission: 38, Second resubmission: 40)', '50']
         self.assertEqual(
             performance1.all_assessment_results_as_strings(),

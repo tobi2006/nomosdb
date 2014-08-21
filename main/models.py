@@ -231,7 +231,12 @@ class Assessment(models.Model):
             args=[self.module.code, self.module.year, self.slug]
         )
 
-        return reverse('module_view', args=[self.code, self.year])
+    def get_delete_url(self):
+        return reverse(
+            'delete_assessment',
+            args=[self.module.code, self.module.year, self.slug]
+        )
+
 
 class Student(models.Model):
     """The class representing a student"""
@@ -340,6 +345,47 @@ class Student(models.Model):
         return reverse('edit_student', args=[self.student_id])
 
 
+
+
+class Performance(models.Model):
+    """The Performance class connects a student with a module"""
+
+    student = models.ForeignKey(Student)
+    module = models.ForeignKey(Module)
+    seminar_group = models.IntegerField(blank=True, null=True)
+    student_year = models.IntegerField(blank=True, null=True)
+    # Average
+    average = models.IntegerField(blank=True, null=True)  # For display
+    real_average = models.FloatField(blank=True, null=True)  # For calculation
+
+    class Meta:
+        unique_together = ('student', 'module')
+        ordering = ['module', 'student']
+
+    def all_assessment_results_as_strings(self):
+        return_list = []
+        exam = False
+        for result in self.assessment_results.all():
+            if result.assessment.title != 'Exam':  # Make sure exam comes last
+                return_list.append(result.result_as_string())
+            else:
+                exam = result.result_as_string()
+        if exam:
+            return_list.append(exam)
+        return return_list
+
+    # def safe(self, *args, **kwargs):
+    #    marks = 0
+    #        cap = False
+    #        if self.assessment_1:
+    #            if self.r_assessment_1:
+    #                if self.r_assessment_1 > self.assessment_1:
+    #                    marks =
+    #            else:
+    #                all += self.assessment_1
+    # after: super(Performance, self).save(*args, **kwargs)
+
+
 class AssessmentResult(models.Model):
     """How a particular student does in an assessment"""
     NO_CONCESSIONS = 'N'
@@ -351,6 +397,7 @@ class AssessmentResult(models.Model):
         (GRANTED, 'Concession granted')
     )
     assessment = models.ForeignKey(Assessment)
+    part_of = models.ForeignKey(Performance, related_name="assessment_results")
     mark = models.IntegerField(blank=True, null=True)
     resit_mark = models.IntegerField(blank=True, null=True)
     concessions = models.CharField(
@@ -405,56 +452,12 @@ class AssessmentResult(models.Model):
         return False
 
 
-class Performance(models.Model):
-    """The Performance class connects a student with a module"""
-
-    student = models.ForeignKey(Student)
-    module = models.ForeignKey(Module)
-    seminar_group = models.IntegerField(blank=True, null=True)
-    student_year = models.IntegerField(blank=True, null=True)
-    assessment_results = models.ManyToManyField(
-        AssessmentResult,
-        blank=True,
-        null=True,
-        related_name="part_of"
-    )
-    # Average
-    average = models.IntegerField(blank=True, null=True)  # For display
-    real_average = models.FloatField(blank=True, null=True)  # For calculation
-
-    class Meta:
-        unique_together = ('student', 'module')
-        ordering = ['module', 'student']
-
-    def all_assessment_results_as_strings(self):
-        return_list = []
-        exam = False
-        for result in self.assessment_results.all():
-            if result.assessment.title != 'Exam':  # Make sure exam comes last
-                return_list.append(result.result_as_string())
-            else:
-                exam = result.result_as_string()
-        if exam:
-            return_list.append(exam)
-        return return_list
-
-    # def safe(self, *args, **kwargs):
-    #    marks = 0
-    #        cap = False
-    #        if self.assessment_1:
-    #            if self.r_assessment_1:
-    #                if self.r_assessment_1 > self.assessment_1:
-    #                    marks =
-    #            else:
-    #                all += self.assessment_1
-    # after: super(Performance, self).save(*args, **kwargs)
-
-
 class Session(models.Model):
     """Simply a recorded session for attendance purposes"""
     module = models.ForeignKey(Module)
     group = models.IntegerField(blank=True, null=True)
     date = models.DateField()
+
 
 class Attendance(models.Model):
     """The attendance for one student at one session"""

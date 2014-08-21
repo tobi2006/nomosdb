@@ -6,9 +6,9 @@ from main.models import *
 def create_student():
     """Creates a student to be used by other tests"""
     student = Student.objects.create(
-        student_id="fb4223",
-        last_name="Baggins",
-        first_name="Frodo",
+        student_id="bb23",
+        last_name="Bunny",
+        first_name="Bugs",
         year="1",
         qld=True
     )
@@ -29,38 +29,38 @@ def create_module(save=True):
 def set_up_stuff():
     """Sets up a module with five students, enrolls them"""
     module = Module.objects.create(
-        title="History of Swordfighting",
-        code="HoS101",
+        title="Hunting Practice",
+        code="hp23",
         year=2014,
     )
     student1 = Student.objects.create(
-        last_name="Baggins",
-        first_name="Frodo",
-        student_id="FB4223",
+        last_name="Bunny",
+        first_name="Bugs",
+        student_id="bb23",
     )
     student1.modules.add(module)
     student2 = Student.objects.create(
-        last_name="Gamgee",
-        first_name="Samwise",
-        student_id="SG2342",
+        last_name="Duck",
+        first_name="Daffy",
+        student_id="dd42",
     )
     student2.modules.add(module)
     student3 = Student.objects.create(
-        last_name="Wurst",
-        first_name="Hans",
-        student_id="HW2323",
+        last_name="Pig",
+        first_name="Porky",
+        student_id="pp2323",
     )
     student3.modules.add(module)
     student4 = Student.objects.create(
-        last_name="Schweiss",
-        first_name="Axel",
-        student_id="AS444"
+        last_name="Le Pew",
+        first_name="Pepe",
+        student_id="plp42"
     )
     student4.modules.add(module)
     student5 = Student.objects.create(
-        last_name="Baden",
-        first_name="Isolde",
-        student_id="IB2323"
+        last_name="Devil",
+        first_name="Tasmanian",
+        student_id="td2323"
     )
     student5.modules.add(module)
     Performance.objects.create(student=student1, module=module)
@@ -90,9 +90,9 @@ class StudentViewTest(TestCase):
         student = create_student()
         response = self.client.get(student.get_absolute_url())
         self.assertTemplateUsed(response, 'student_view.html')
-        self.assertContains(response, "fb4223")
-        self.assertContains(response, "Baggins")
-        self.assertContains(response, "Frodo")
+        self.assertContains(response, "bb23")
+        self.assertContains(response, "Bunny")
+        self.assertContains(response, "Bugs")
 
 
 class AddEditStudentTest(TestCase):
@@ -100,9 +100,9 @@ class AddEditStudentTest(TestCase):
 
     def send_form(self):
         response = self.client.post('/add_student/', data={
-            'student_id': 'fb4223',
-            'last_name': 'Bäggins',
-            'first_name': 'Frodo Middle Names'
+            'student_id': 'bb23',
+            'last_name': 'Bünny',
+            'first_name': 'Bugs Middle Names'
         })
         return response
 
@@ -112,22 +112,22 @@ class AddEditStudentTest(TestCase):
 
     def test_add_student_redirects_to_student_view(self):
         response = self.send_form()
-        self.assertRedirects(response, '/student/fb4223/')
+        self.assertRedirects(response, '/student/bb23/')
 
     def test_add_student_adds_student_to_database(self):
         self.send_form()
         student = Student.objects.first()
-        self.assertEqual(student.student_id, 'fb4223')
-        self.assertEqual(student.last_name, 'Bäggins')
-        self.assertEqual(student.first_name, 'Frodo Middle Names')
+        self.assertEqual(student.student_id, 'bb23')
+        self.assertEqual(student.last_name, 'Bünny')
+        self.assertEqual(student.first_name, 'Bugs Middle Names')
 
     def test_edit_student_shows_correct_data(self):
         student = create_student()
         response = self.client.get(student.get_edit_url())
         self.assertTemplateUsed(response, 'student_form.html')
-        self.assertContains(response, 'Baggins')
-        self.assertContains(response, 'Frodo')
-        self.assertContains(response, 'fb4223')
+        self.assertContains(response, 'Bunny')
+        self.assertContains(response, 'Bugs')
+        self.assertContains(response, 'bb23')
 
 
 class ModuleViewTest(TestCase):
@@ -135,8 +135,8 @@ class ModuleViewTest(TestCase):
 
     def test_module_view_renders_module_view_template(self):
         module = Module.objects.create(
-            title="History of Swordfighting",
-            code="HoS101",
+            title="Hunting Practice",
+            code="hp23",
             year=2014
         )
         response = self.client.get(module.get_absolute_url())
@@ -144,15 +144,15 @@ class ModuleViewTest(TestCase):
 
     def test_performances_in_a_module_are_shown(self):
         module = Module.objects.create(
-            title="History of Swordfighting",
-            code="HoS101",
+            title="Hunting Practice",
+            code="hp23",
             year=2014,
             eligible="1"
         )
         student = Student.objects.create(
-            last_name="Wurst",
-            first_name="Hans",
-            student_id="HW2323",
+            last_name="Pig",
+            first_name="Porky",
+            student_id="pp2323",
             year=2
         )
         self.client.post(
@@ -160,7 +160,7 @@ class ModuleViewTest(TestCase):
             data={'student_ids': [student.student_id]}
         )
         response = self.client.get(module.get_absolute_url())
-        self.assertContains(response, "Wurst, Hans")
+        self.assertContains(response, "Pig, Porky")
 
 
 class AddStudentsToModuleTest(TestCase):
@@ -168,8 +168,8 @@ class AddStudentsToModuleTest(TestCase):
 
     def test_add_students_to_module_uses_right_template(self):
         module = Module.objects.create(
-            title="History of Swordfighting",
-            code="HoS101",
+            title="Hunting Practice",
+            code="hp23",
             year=2014,
             eligible="1"
         )
@@ -186,43 +186,43 @@ class AddStudentsToModuleTest(TestCase):
         course2.subject_areas.add(subject_area2)
         course2.save()
         module = Module.objects.create(
-            title="History of Swordfighting",
-            code="HoS101",
+            title="Hunting Practice",
+            code="hp23",
             year=2014,
             eligible="1"
         )
         module.subject_areas.add(subject_area1)
         module.save()
         student1 = Student.objects.create(
-            last_name="Baggins",
-            first_name="Frodo",
-            student_id="FB4223",
+            last_name="Bunny",
+            first_name="Bugs",
+            student_id="bb23",
             course=course,
             year=1
         )
         student2 = Student.objects.create(
-            last_name="Gamgee",
-            first_name="Samwise",
-            student_id="SG2342",
+            last_name="Duck",
+            first_name="Daffy",
+            student_id="dd42",
             course=course2,
             year=1
         )
         student3 = Student.objects.create(
-            last_name="Wurst",
-            first_name="Hans",
-            student_id="HW2323",
+            last_name="Pig",
+            first_name="Porky",
+            student_id="pp2323",
             course=course,
             year=2
         )
         response = self.client.get(module.get_add_students_url())
-        self.assertContains(response, 'Baggins')
-        self.assertNotContains(response, 'Gamgee')
-        self.assertNotContains(response, 'Wurst')
+        self.assertContains(response, 'Bunny')
+        self.assertNotContains(response, 'Duck')
+        self.assertNotContains(response, 'Pig')
 
     def test_submitting_an_empty_form_does_not_break_it(self):
         module = Module.objects.create(
-            title="History of Swordfighting",
-            code="HoS101",
+            title="Hunting Practice",
+            code="hp23",
             year=2014,
             eligible="1"
         )
@@ -326,7 +326,7 @@ class SeminarGroupTest(TestCase):
 
 
 class AssessmentTest(TestCase):
-    """Tests involving setting of assessments"""
+    """Tests involving setting and deleting of assessments"""
 
     def test_assessments_page_uses_right_template(self):
         module = set_up_stuff()[0]
@@ -345,6 +345,26 @@ class AssessmentTest(TestCase):
         assessment = Assessment.objects.first()
         self.assertEqual(assessment.title, 'Hunting Exercise')
         self.assertEqual(assessment.value, 40)
+
+    def test_assessment_can_be_deleted(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        performance = Performance.objects.first()
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Hunting Exercise",
+            value=40
+        )
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            part_of=performance,
+            mark=40
+        )
+        self.assertEqual(Assessment.objects.count(), 1)
+        self.assertEqual(AssessmentResult.objects.count(), 1)
+        self.client.get(assessment.get_delete_url())
+        self.assertEqual(Assessment.objects.count(), 0)
+        self.assertEqual(AssessmentResult.objects.count(), 0)
 
 
 # class AttendanceTest(TestCase):

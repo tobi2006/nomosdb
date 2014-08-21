@@ -29,6 +29,11 @@ urlpatterns += patterns(
     url(r'^attendance/(\w+)/(\d{4})/(\w+)/$', 'attendance', name='attendance'),
     url(r'^course_overview/$', 'course_overview', name='course_overview'),
     url(
+        r'^delete_assessment/(\w+)/(\d{4})/([-\w]+)/$',
+        'delete_assessment',
+        name='delete_assessment'
+    ),
+    url(
         r'^edit_assessment/(\w+)/(\d{4})/([-\w]+)/$',
         'assessment',
         name='edit_assessment'

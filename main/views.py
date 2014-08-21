@@ -1,6 +1,7 @@
 from django.shortcuts import redirect, render
 from nomosdb.unisettings import *
 from main.forms import *
+from main.models import *
 from random import shuffle
 
 
@@ -308,3 +309,15 @@ def assessment(request, code, year, slug=None):
         }
     )
 
+
+def delete_assessment(request, code, year, slug):
+    """Deletes an assessment and all connected results.
+
+    The confirmation is done with JQuery"""
+    module = Module.objects.get(code=code, year=year)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    results = AssessmentResult.objects.filter(assessment=assessment)
+    for result in results:
+        result.delete()
+    assessment.delete()
+    return redirect(module.get_absolute_url())
