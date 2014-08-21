@@ -38,6 +38,12 @@
             <li><a href="{{ module.get_seminar_groups_url }}">Assign Seminar Groups</a></li>
         </ul>
     </div>
+    <div class="btn-group dropdown">
+        <a class = "btn btn-default dropdown-toggle" data-toggle="dropdown">Assessment <span class="caret"></span></a>
+        <ul class="dropdown-menu" role="menu">
+            <li><a href="{{ module.get_assessment_url }}">Set assessments for the module</a></li>
+        </ul>
+    </div>
     <a class="btn btn-default" id="add_students_to_module" href="{{ module.get_add_students_url }}">
         Add Student(s)
     </a>
@@ -45,7 +51,11 @@
 
 <br><br>
 
-{% comment %}
+{% if no_assessments %}
+    <p>You need to <a href="{{ module.get_assessment_url }}"set some assessments for this module</p>
+{% endif %}
+
+
 {% if performances %}
 
 <table id ="sortable_table" class="table table-striped table-sortable">
@@ -110,6 +120,5 @@
 </p>
 
 {% endif %}
-{% endcomment%}
 
 {% endblock %}

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from nomosdb.unisettings import UNI_NAME
-from main.models import Student, Module, Course, SubjectArea, Performance
+from main.models import *
 
 
 def create_student():
@@ -13,6 +13,17 @@ def create_student():
         qld=True
     )
     return student
+
+
+def create_module(save=True):
+    module = Module(
+        title='Hunting Laws',
+        code="hl23",
+        year="2013",
+    )
+    if save:
+        module.save()
+    return module
 
 
 def set_up_stuff():
@@ -221,9 +232,9 @@ class AddStudentsToModuleTest(TestCase):
         )
         self.assertEqual(response.status_code, 301)
 
+
 class SeminarGroupTest(TestCase):
     """Tests involving the seminar group setup"""
-
 
     def test_seminar_groups_can_be_saved(self):
         stuff = set_up_stuff()
@@ -258,7 +269,7 @@ class SeminarGroupTest(TestCase):
         response = self.client.post(
             module.get_seminar_groups_url(),
             data={
-                'action': 'Randomly assign',
+                'action': 'Go',
                 'ignore': True,
                 'number_of_groups': '3'
             }
@@ -298,7 +309,7 @@ class SeminarGroupTest(TestCase):
             module.get_seminar_groups_url(),
             data={
                 student2.student_id: '2',
-                'action': 'Randomly assign',
+                'action': 'Go',
                 'number_of_groups': '3'
             }
         )
@@ -313,7 +324,30 @@ class SeminarGroupTest(TestCase):
         self.assertNotEqual(performance4.seminar_group, None)
         self.assertNotEqual(performance5.seminar_group, None)
 
-#class AttendanceTest(TestCase):
+
+class AssessmentTest(TestCase):
+    """Tests involving setting of assessments"""
+
+    def test_assessments_page_uses_right_template(self):
+        module = set_up_stuff()[0]
+        response = self.client.get(module.get_assessment_url())
+        self.assertTemplateUsed(response, 'assessment.html')
+
+    def test_assessments_can_be_added_to_module(self):
+        module = set_up_stuff()[0]
+        self.client.post(
+            module.get_assessment_url(),
+            data = {
+                'title': 'Hunting Exercise',
+                'value': 40,
+            }
+        )
+        assessment = Assessment.objects.first()
+        self.assertEqual(assessment.title, 'Hunting Exercise')
+        self.assertEqual(assessment.value, 40)
+
+
+# class AttendanceTest(TestCase):
 #    """Tests around the attendance function"""
 #
 #    def test_students_are_shown_according_to_parameter(self):
@@ -324,11 +358,11 @@ class SeminarGroupTest(TestCase):
 #        student3 = stuff[3]
 #        student4 = stuff[4]
 #        student5 = stuff[5]
-#        performance1 = Performance.objects.get(student=student1, module=module)
-#        performance2 = Performance.objects.get(student=student2, module=module)
-#        performance3 = Performance.objects.get(student=student3, module=module)
-#        performance4 = Performance.objects.get(student=student4, module=module)
-#        performance5 = Performance.objects.get(student=student5, module=module)
+#       performance1 = Performance.objects.get(student=student1, module=module)
+#       performance2 = Performance.objects.get(student=student2, module=module)
+#       performance3 = Performance.objects.get(student=student3, module=module)
+#       performance4 = Performance.objects.get(student=student4, module=module)
+#       performance5 = Performance.objects.get(student=student5, module=module)
 #        performance1.seminar_group = 1
 #        performance1.save()
 #        performance2.seminar_group = 1

@@ -4,16 +4,18 @@ from django.test import TestCase
 
 
 def create_subject_area(save=True):
-    subject = SubjectArea(name="Alchemy")
+    """Creates one subject area"""
+    subject = SubjectArea(name="Law")
     if save:
         subject.save()
     return subject
 
 
 def create_course(save=True):
+    """Creates a course"""
     course = Course(
-        title="BA in Wizard Studies",
-        short_title="WS"
+        title="BA in Cartoon Studies",
+        short_title="CS"
     )
     if save:
         course.save()
@@ -21,10 +23,11 @@ def create_course(save=True):
 
 
 def create_student(save=True):
+    """Creates a student"""
     student = Student(
-        student_id='FB4223',
-        last_name='Baggins',
-        first_name='Frodo Middle Names'
+        student_id='bb23',
+        last_name='Bunny',
+        first_name='Bugs Middle Names'
     )
     if save:
         student.save()
@@ -32,9 +35,10 @@ def create_student(save=True):
 
 
 def create_module(save=True):
+    """Creates a module"""
     module = Module(
-        title="Module Title",
-        code="MT23",
+        title='Hunting Laws',
+        code="hl23",
         year="2013",
     )
     if save:
@@ -43,17 +47,18 @@ def create_module(save=True):
 
 
 class SubjectAreaTest(TestCase):
+    """Tests for the Subject Area class"""
 
     def test_subject_area_can_be_saved(self):
         subject_in = create_subject_area()
         subject_out = SubjectArea.objects.first()
-        self.assertEqual(subject_out.name, 'Alchemy')
+        self.assertEqual(subject_out.name, 'Law')
 
     def test_subject_area_returns_name(self):
         subject = create_subject_area(save=False)
         self.assertEqual(
             subject.__unicode__(),
-            "Alchemy"
+            "Law"
         )
 
     def test_subject_area_name_cannot_be_created_twice(self):
@@ -64,35 +69,37 @@ class SubjectAreaTest(TestCase):
 
 
 class CourseTest(TestCase):
+    """Tests for the Course class"""
 
     def test_course_can_be_saved(self):
         course_in = create_course()
         course_out = Course.objects.first()
-        self.assertEqual(course_out.title, 'BA in Wizard Studies')
-        self.assertEqual(course_out.short_title, 'WS')
+        self.assertEqual(course_out.title, 'BA in Cartoon Studies')
+        self.assertEqual(course_out.short_title, 'CS')
 
     def test_course_returns_name(self):
         course = create_course(save=False)
         self.assertEqual(
             course.__unicode__(),
-            "BA in Wizard Studies"
+            "BA in Cartoon Studies"
         )
 
 
 class StudentTest(TestCase):
+    """Tests for the Student class"""
 
     def test_student_can_be_saved_to_database_with_basic_attributes(self):
         student_in = create_student()
         student_out = Student.objects.first()
-        self.assertEqual(student_out.last_name, 'Baggins')
-        self.assertEqual(student_out.first_name, 'Frodo Middle Names')
-        self.assertEqual(student_out.student_id, 'FB4223')
+        self.assertEqual(student_out.last_name, 'Bunny')
+        self.assertEqual(student_out.first_name, 'Bugs Middle Names')
+        self.assertEqual(student_out.student_id, 'bb23')
         self.assertEqual(student_out.nalp, False)
         self.assertEqual(student_out.active, True)
         self.assertEqual(student_out.qld, True)
 
     def test_student_without_student_id_cannot_be_saved(self):
-        student = Student(last_name="Baggins")
+        student = Student(last_name="Bunny")
         with self.assertRaises(ValidationError):
             student.save()
             student.full_clean()
@@ -101,7 +108,7 @@ class StudentTest(TestCase):
         create_student()
         with self.assertRaises(ValidationError):
             student_2 = Student(
-                student_id="FB4223",
+                student_id="bb23",
                 last_name="Buffins"
             )
             student_2.full_clean()
@@ -110,58 +117,87 @@ class StudentTest(TestCase):
         student = create_student(save=False)
         self.assertEqual(
             student.__unicode__(),
-            'Baggins, Frodo Middle Names'
+            'Bunny, Bugs Middle Names'
         )
 
     def test_student_returns_correct_url(self):
         student = create_student(save=False)
-        self.assertEqual(student.get_absolute_url(), '/student/FB4223/')
+        self.assertEqual(student.get_absolute_url(), '/student/bb23/')
 
     def test_edit_student_returns_correct_url(self):
         student = create_student(save=False)
-        self.assertEqual(student.get_edit_url(), '/edit_student/FB4223/')
+        self.assertEqual(student.get_edit_url(), '/edit_student/bb23/')
 
     def test_student_can_be_enlisted_in_module(self):
         student = create_student()
-        module = Module.objects.create(code="MT23", year="2013")
+        module = Module.objects.create(code="hl23", year="2013")
         student.modules.add(module)
         student.save()
         self.assertEqual(student, module.student_set.first())
 
     def test_student_short_names_return_correctly(self):
         student = create_student(save=False)
-        self.assertEqual(student.short_name(), 'Baggins, Frodo')
-        self.assertEqual(student.short_first_name(), 'Frodo')
+        self.assertEqual(student.short_name(), 'Bunny, Bugs')
+        self.assertEqual(student.short_first_name(), 'Bugs')
+
+
+class AssessmentTest(TestCase):
+    """Tests for the Assessment class"""
+
+    def test_assessment_can_be_saved_and_slug_gets_created(self):
+        assessment_in = Assessment.objects.create(
+            title="Practical Hunting Exercise",
+            value=40
+        )
+        assessment_out = Assessment.objects.first()
+        self.assertEqual(assessment_out.title, 'Practical Hunting Exercise')
+        self.assertEqual(assessment_out.value, 40)
+        self.assertEqual(assessment_out.slug, 'practical-hunting-exercise')
+
+    def test_assessment_returns_correct_url(self):
+        module = create_module()
+        assessment = Assessment.objects.create(
+            title="Practical Hunting Exercise",
+            value=40
+        )
+        module.assessments.add(assessment)
+        print(assessment.get_absolute_url())
+
+        self.assertEqual(
+            assessment.get_absolute_url(),
+            '/edit_assessment/hl23/2013/practical-hunting-exercise/'
+        )
 
 
 class ModuleTest(TestCase):
+    """Tests for the Module class"""
 
     def test_module_can_be_saved_to_database_with_basic_attributes(self):
         module_in = create_module()
         module_out = Module.objects.first()
-        self.assertEqual(module_out.title, "Module Title")
-        self.assertEqual(module_out.code, "MT23")
+        self.assertEqual(module_out.title, "Hunting Laws")
+        self.assertEqual(module_out.code, "hl23")
         self.assertEqual(module_out.year, 2013)
 
     def test_module_name_returns_correctly(self):
         module = create_module(save=False)
         self.assertEqual(
             module.__unicode__(),
-            'Module Title (2013/14)'
+            'Hunting Laws (2013/14)'
         )
 
     def test_module_returns_correct_url(self):
         module = create_module(save=False)
         self.assertEqual(
             module.get_absolute_url(),
-            '/module/MT23/2013/'
+            '/module/hl23/2013/'
         )
 
     def test_second_module_with_identical_code_and_year_cannot_be_saved(self):
         module1 = create_module()
         module2 = Module(
             title="A different title",
-            code="MT23",
+            code="hl23",
             year="2013"
         )
         with self.assertRaises(ValidationError):
@@ -171,18 +207,26 @@ class ModuleTest(TestCase):
         module = create_module(save=False)
         self.assertEqual(
             module.get_add_students_url(),
-            '/add_students_to_module/MT23/2013/')
+            '/add_students_to_module/hl23/2013/')
 
     def test_module_returns_correct_attendance_url(self):
         module = create_module(save=False)
         self.assertEqual(
             module.get_attendance_url('all'),
-            '/attendance/MT23/2013/all/'
+            '/attendance/hl23/2013/all/'
         )
         self.assertEqual(
             module.get_attendance_url(1),
-            '/attendance/MT23/2013/1/'
+            '/attendance/hl23/2013/1/'
         )
+
+    def test_module_returns_correct_assessment_url(self):
+        module = create_module(save=False)
+        self.assertEqual(
+            module.get_assessment_url(),
+            '/assessment/hl23/2013/'
+        )
+
 
     def test_module_returns_all_assessment_titles_in_list(self):
         module1 = create_module()
@@ -232,6 +276,7 @@ class ModuleTest(TestCase):
 
 
 class PerformanceTest(TestCase):
+    """Tests for the Performance class"""
 
     def test_enlisting_a_student_in_a_module_creates_performance_item(self):
         student = create_student()
@@ -247,11 +292,7 @@ class PerformanceTest(TestCase):
     def test_performance_returns_all_assessment_results(self):
         student = create_student()
         # First module with all marks
-        module = Module.objects.create(
-            title="A module title",
-            code="MT23",
-            year=2013,
-        )
+        module = create_module()
         performance1 = Performance.objects.create(
             module=module,
             student=student

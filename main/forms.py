@@ -34,6 +34,28 @@ class CourseForm(forms.ModelForm):
         model = Course
 
 
+class AssessmentForm(forms.ModelForm):
+    """The modelform for assessments, using crispy forms"""
+    helper = FormHelper()
+    helper.layout = Layout(
+        'title',
+        'value',
+        HTML('<div id="error" class="has-error"></div>'),
+        'submission_date',
+        'max_word_count',
+        # 'marksheet_type',
+        FormActions(
+            Submit('save', 'Save Assessment', css_class="btn btn-primary")
+        )
+    )
+    helper.form_class = "form-horizontal"
+    helper.label_class = "col-lg-2"
+    helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+
+    class Meta:
+        model = Assessment
+
+
 class StudentForm(forms.ModelForm):
     """The modelform for the student model, using crispy forms"""
     helper = FormHelper()
@@ -89,7 +111,7 @@ class ModuleForm(forms.ModelForm):
     helper = FormHelper()
     helper.layout = Layout(
         Fieldset(
-            'Module Information',
+            '',
             'title',
             'code',
             'year',

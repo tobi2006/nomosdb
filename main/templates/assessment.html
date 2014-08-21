@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1>{{ module }} - Assessment</h1>
+
+<br><a class="btn btn-default" href="{{ module.get_absolute_url }}">Back to module</a><br><br>
+
+{% if assessments %}
+    {% for assessment in assessments %}
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h4>{{ assessment.title }}</h4>
+                {{ assessment.value }} % of the module mark<br>
+                {% if assessment.submission_date %}
+                    Deadline: {{ assessment.submission_date }}
+                {% endif %}
+                {% if assessment.max_word_count %}
+                    Word Count: {{ assessment.max_word_count }}
+                {% endif %}
+                <br>
+                <div class="btn-group">
+                    <a href="{{ assessment.get_delete_url }}" class="btn btn-default">Remove</a>
+                    <a href="{{ assessment.get_absolute_url }}" class="btn btn-default">Edit</a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<br>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h4 class="panel-title">{% if edit %}{{ edit }}{% else %}Add{% endif %}</h4>
+    </div>
+    <div class="panel-body">
+        {% crispy form %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+    $('#id_value').val({{ value_left }});
+    $('#id_value').keyup(function() {
+        if ($(this).val() > {{ value_left }}){
+            $('input[type="submit"]').attr('disabled', 'disabled');
+            $('#error').text('Your assessments exceed 100 % in their values!');
+        }
+        else {
+            $('input[type="submit"]').removeAttr('disabled');
+            $('#error').text('');
+        }
+   });
+});
+
+
+</script>
+
+{% endblock %}

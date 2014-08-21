@@ -49,7 +49,7 @@ def add_or_edit_course(request, course_id=None):
             form = CourseForm(data=request.POST)
         if form.is_valid():
             course = form.save()
-            return redirect()
+            return redirect(reverse('course_overview'))
     else:
         if edit:
             form = CourseForm(instance=course)
@@ -262,3 +262,49 @@ def attendance(request, code, year, group):
     """The registers for the seminar groups or the whole module"""
     module = Module.objects.get(code=code, year=year)
     pass
+
+
+def assessment(request, code, year, slug=None):
+    """Enter and edit the assessments for each module"""
+    module = Module.objects.get(code=code, year=year)
+    assessments = list(module.assessments.all())
+    if slug:
+        assessment = Assessment.objects.get(module=module, slug=slug)
+        assessments.remove(assessment)
+        edit = assessment.title
+    else:
+        edit = False
+    if request.method == 'POST':
+        if edit:
+            form = AssessmentForm(instance=module, data=request.POST)
+        else:
+            form = AssessmentForm(data=request.POST)
+        if form.is_valid():
+            assessment = form.save()
+            assessment.module = module
+            assessment.save()
+            return redirect(module.get_assessment_url())
+        else:
+            print(form.errors)
+    else:
+        if edit:
+            form = AssessmentForm(instance=assessment)
+        else:
+            form = AssessmentForm()
+    value_so_far = 0
+    for assessment in assessments:
+        value_so_far += assessment.value
+    value_left = 100 - value_so_far
+
+    return render(
+        request,
+        'assessment.html',
+        {
+            'form': form,
+            'edit': edit,
+            'module': module,
+            'assessments': assessments,
+            'value_left': value_left
+        }
+    )
+

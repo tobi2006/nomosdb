@@ -1,6 +1,7 @@
-import datetime
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.utils.text import slugify
+import datetime
 
 ACADEMIC_YEARS = (
     [(i, str(i) + "/" + str(i+1)[-2:]) for i in range(2010, 2025)]
@@ -58,45 +59,6 @@ class Course(models.Model):
         return reverse('edit_course', args=[self.id])
 
 
-class Assessment(models.Model):
-    """The basic information about an assessment"""
-    title = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        unique=True
-    )
-    value = models.IntegerField(
-        verbose_name="Value",
-        blank=True,
-        null=True,
-    )
-    submission_date = models.DateField(
-        verbose_name="Submission Date",
-        blank=True,
-        null=True
-    )
-    max_word_count = models.IntegerField(
-        verbose_name="Word Count",
-        blank=True,
-        null=True
-    )
-    #    marksheet_type = models.CharField(
-    #        max_length=50,
-    #        verbose_name="Marksheet Type",
-    #        blank=True,
-    #        null=True,
-    #        choices=AVAILABLE_MARKSHEETS
-    #        )
-    available = models.BooleanField(
-        verbose_name="Students can see the mark/feedback",
-        default=False
-    )
-
-    class Meta:
-        ordering = ['title']
-        
-
 class Module(models.Model):
     """Modules are the subjects - eg "Law of Contracts".
 
@@ -132,7 +94,10 @@ class Module(models.Model):
         choices=ACADEMIC_YEARS,
         default=this_year()
     )
-    subject_areas = models.ManyToManyField(SubjectArea, blank=True)
+    subject_areas = models.ManyToManyField(
+        SubjectArea,
+        verbose_name='Open for'
+    )
     # successor_of = models.ForeignKey('self', blank=True, null=True)
     foundational = models.BooleanField(
         verbose_name="Foundational Module",
@@ -147,25 +112,31 @@ class Module(models.Model):
         max_length=3,
         choices=ELIGIBLE,
         default='1',
-        verbose_name="Which students can (or have to) take this module?"
+        verbose_name="Which students can (or have to) take this module?",
+        blank=True,
+        null=True
         )
     first_session = models.IntegerField(
         default=5,
         verbose_name="Week of first seminar",
-        choices=TEACHING_WEEKS
+        choices=TEACHING_WEEKS,
+        blank=True,
+        null=True
         )
     no_teaching_in = models.CharField(
         max_length=100,
         blank=True,
-        verbose_name=(NO_TEACHING_STR)
+        verbose_name=(NO_TEACHING_STR),
+        null=True
     )
     last_session = models.IntegerField(
         default=15,
         verbose_name="Week of last seminar",
-        choices=TEACHING_WEEKS
+        choices=TEACHING_WEEKS,
+        blank=True,
+        null=True
     )
     sessions_recorded = models.IntegerField(blank=True, null=True, default=0)
-    assessments = models.ManyToManyField(Assessment, blank=True, null=True)
 
     class Meta:
         unique_together = ('code', 'year')
@@ -191,11 +162,14 @@ class Module(models.Model):
     def get_seminar_groups_url(self):
         return reverse('assign_seminar_groups', args=[self.code, self.year])
 
+    def get_assessment_url(self):
+        return reverse('assessment', args=[self.code, self.year])
+
     def all_assessment_titles(self):
         returnlist = []
         exam = False
         for assessment in self.assessments.all():
-            if assessment.title != 'Exam': # Make sure the exam comes last
+            if assessment.title != 'Exam':  # Make sure the exam comes last
                 returnlist.append((assessment.title, assessment.value))
             else:
                 exam = ('Exam', assessment.value)
@@ -203,6 +177,61 @@ class Module(models.Model):
             returnlist.append(exam)
         return returnlist
 
+
+class Assessment(models.Model):
+    """The basic information about an assessment"""
+    module = models.ForeignKey(
+        Module,
+        related_name='assessments',
+        blank=True,
+        null=True
+    )
+    title = models.CharField(max_length=100)
+    slug = models.CharField(max_length=100, blank=True, null=True)
+    value = models.IntegerField(
+        verbose_name="Value",
+        blank=True,
+        null=True,
+    )
+    submission_date = models.DateField(
+        verbose_name="Submission Date",
+        blank=True,
+        null=True
+    )
+    max_word_count = models.IntegerField(
+        verbose_name="Word Count",
+        blank=True,
+        null=True
+    )
+    #    marksheet_type = models.CharField(
+    #        max_length=50,
+    #        verbose_name="Marksheet Type",
+    #        blank=True,
+    #        null=True,
+    #        choices=AVAILABLE_MARKSHEETS
+    #        )
+    available = models.BooleanField(
+        verbose_name="Students can see the mark/feedback",
+        default=False
+    )
+
+    class Meta:
+        ordering = ['title']
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.title)
+        super(Assessment, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse(
+            'edit_assessment',
+            args=[self.module.code, self.module.year, self.slug]
+        )
+
+        return reverse('module_view', args=[self.code, self.year])
 
 class Student(models.Model):
     """The class representing a student"""
@@ -369,13 +398,12 @@ class AssessmentResult(models.Model):
                 returnstring += ")"
         return returnstring
 
-
     def module_needs_to_be_capped(self):
         if self.resit_mark:
             if self.concessions in [self.NO_CONCESSIONS, self.PENDING]:
                 return True
         return False
-    
+
 
 class Performance(models.Model):
     """The Performance class connects a student with a module"""
@@ -398,19 +426,17 @@ class Performance(models.Model):
         unique_together = ('student', 'module')
         ordering = ['module', 'student']
 
-    
     def all_assessment_results_as_strings(self):
         return_list = []
         exam = False
         for result in self.assessment_results.all():
-            if result.assessment.title != 'Exam': # Make sure exam comes last
+            if result.assessment.title != 'Exam':  # Make sure exam comes last
                 return_list.append(result.result_as_string())
             else:
                 exam = result.result_as_string()
         if exam:
             return_list.append(exam)
         return return_list
-            
 
     # def safe(self, *args, **kwargs):
     #    marks = 0
