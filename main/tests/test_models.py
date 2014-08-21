@@ -1,4 +1,4 @@
-from main.models import Student, Module, SubjectArea, Course, Performance
+from main.models import Student, Module, SubjectArea, Course, Performance, Assessment, AssessmentResult
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
@@ -185,22 +185,37 @@ class ModuleTest(TestCase):
         )
 
     def test_module_returns_all_assessment_titles_in_list(self):
-        module1 = create_module(save=False)
-        module1.assessment_1_title = "Practical Exercise"
-        module1.assessment_1_value = 40
-        module1.exam_value = 60
-        module2 = Module(
-            title="A different title",
-            code="MT23",
-            year="2013",
-            assessment_1_title="Assessment 1",
-            assessment_1_value=20,
-            assessment_2_title="Assessment 2",
-            assessment_2_value=20,
-            assessment_3_title="Assessment 3",
-            assessment_3_value=60,
-            exam_value=0
+        module1 = create_module()
+        m_1_assessment_1 = Assessment.objects.create(
+            title = 'Practical Exercise',
+            value = 40
         )
+        module1.assessments.add(m_1_assessment_1)
+        m_1_assessment_2 = Assessment.objects.create(
+            title = 'Exam',
+            value = 60
+        )
+        module1.assessments.add(m_1_assessment_2)
+        module2 = Module.objects.create(
+            title="A different title",
+            code="DT42",
+            year="2013",
+        )
+        m_2_assessment_1 = Assessment.objects.create(
+            title="Assessment 1",
+            value=20
+        )
+        module2.assessments.add(m_2_assessment_1)
+        m_2_assessment_2 = Assessment.objects.create(
+            title="Assessment 2",
+            value=20,
+        )
+        module2.assessments.add(m_2_assessment_2)
+        m_2_assessment_3 = Assessment.objects.create(
+            title="Assessment 3",
+            value=60,
+        )
+        module2.assessments.add(m_2_assessment_3)
         list_of_assessments_1 = [
             ("Practical Exercise", 40),
             ("Exam", 60)
@@ -230,105 +245,85 @@ class PerformanceTest(TestCase):
         self.assertEqual(performance.student, student)
 
     def test_performance_returns_all_assessment_results(self):
+        student = create_student()
+        # First module with all marks
         module = Module.objects.create(
             title="A module title",
             code="MT23",
             year=2013,
-            assessment_1_title="Assessment 1",
-            assessment_1_value=20,
-            assessment_2_title="Assessment 2",
-            assessment_2_value=20,
-            assessment_3_title="Assessment 3",
-            assessment_3_value=20,
-            exam_value=40
         )
-        module2 = Module.objects.create(
-            title="Another Module",
-            year=2013,
-            code="AM42",
-            assessment_1_title="Assessment 1",
-            assessment_1_value=30,
-            assessment_2_title="Assessment 2",
-            assessment_2_value=20,
-            assessment_3_title="Assessment 3",
-            assessment_3_value=50,
-            exam_value=0
-        )
-        module3 = Module.objects.create(
-            title="Yet Another Module",
-            year=2013,
-            code="YAM42",
-            assessment_1_title="Assessment 1",
-            assessment_1_value=20,
-            assessment_2_title="Assessment 2",
-            assessment_2_value=20,
-            assessment_3_title="Assessment 3",
-            assessment_3_value=10,
-            assessment_4_title="Assessment 4",
-            assessment_4_value=10,
-            assessment_5_title="Assessment 5",
-            assessment_5_value=10,
-            assessment_6_title="Assessment 6",
-            assessment_6_value=10,
-            exam_value=20
-        )
-        student = create_student()
-        performance1 = Performance(
+        performance1 = Performance.objects.create(
             module=module,
-            student=student,
-            assessment_1=20,
-            assessment_2=30,
-            assessment_3=40,
-            assessment_4=50,
-            exam=60
+            student=student
         )
-        expected_list_1 = ['20', '30', '40', '60']
-        performance2 = Performance(
+        assessment = Assessment.objects.create(
+            title="Assessment 1",
+            value=20
+        )
+        module.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=20
+        )
+        performance1.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="Assessment 2",
+            value=20
+        )
+        module.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=30
+        )
+        performance1.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="Assessment 3",
+            value=20,
+        )
+        module.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=40
+        )
+        performance1.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="Exam",
+            value=40
+        )
+        module.assessments.add(assessment)
+        expected_list_1 = ['20', '30', '40']
+        module2 = Module.objects.create(
+            title="And another one",
+            code="AAO4223"
+        )
+        performance2 = Performance.objects.create(
             module=module2,
-            student=student,
-            assessment_1=0,
-            r_assessment_1=50,
-            assessment_1_concessions='G',
-            assessment_2=40,
-            assessment_3=20,
-            assessment_3_concessions='N',
-            r_assessment_3=30,
-            s_assessment_3=40
+            student=student
         )
-        expected_list_2 = [
-            '0 (Submission: 50)',
-            '40',
-            '20 (Resubmission: 30, Second resubmission: 40)'
-        ]
-        performance3 = Performance(
-            module=module3,
-            student=student,
-            assessment_1=40,
-            assessment_2=40,
-            assessment_3=40,
-            assessment_4=40,
-            assessment_5=30,
-            assessment_5_concessions='G',
-            r_assessment_5=40,
-            assessment_6=35,
-            assessment_6_concessions='N',
-            r_assessment_6=37,
-            s_assessment_6=40,
-            exam=35,
-            exam_concessions='G',
-            r_exam=37,
-            s_exam=40
+        assessment = Assessment.objects.create(
+            title="Zo far back in the alphabet",
+            value=30
         )
-        expected_list_3 = [
-            '40',
-            '40',
-            '40',
-            '40',
-            '30 (Submission: 40)',
-            '35 (Resubmission: 37, Second resubmission: 40)',
-            '35 (Sit: 37, Second resit: 40)'
-        ]
-        self.assertEqual(performance1.assessment_result_as_string(1), '20')
+        module2.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=50
+        )
+        performance2.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="And another assessment",
+            value=20
+        )
+        module2.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=35,
+            resit_mark=38,
+            concessions='G',
+            second_resit_mark=40
+        )
+        performance2.assessment_results.add(result)
+        expected_list_2 = ['35 (Submission: 38, Second resubmission: 40)', '50']
         self.assertEqual(
             performance1.all_assessment_results_as_strings(),
             expected_list_1
@@ -336,8 +331,4 @@ class PerformanceTest(TestCase):
         self.assertEqual(
             performance2.all_assessment_results_as_strings(),
             expected_list_2
-        )
-        self.assertEqual(
-            performance3.all_assessment_results_as_strings(),
-            expected_list_3
         )

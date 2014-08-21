@@ -167,7 +167,7 @@ def assign_seminar_groups(request, code, year):
         randomize = False
         randomize_all = False
         if 'action' in request.POST:
-            if request.POST['action'] == 'Randomly assign':
+            if request.POST['action'] == 'Go':
                 randomize = True
                 if 'ignore' in request.POST:
                     save_these = False

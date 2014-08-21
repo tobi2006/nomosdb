@@ -58,6 +58,45 @@ class Course(models.Model):
         return reverse('edit_course', args=[self.id])
 
 
+class Assessment(models.Model):
+    """The basic information about an assessment"""
+    title = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        unique=True
+    )
+    value = models.IntegerField(
+        verbose_name="Value",
+        blank=True,
+        null=True,
+    )
+    submission_date = models.DateField(
+        verbose_name="Submission Date",
+        blank=True,
+        null=True
+    )
+    max_word_count = models.IntegerField(
+        verbose_name="Word Count",
+        blank=True,
+        null=True
+    )
+    #    marksheet_type = models.CharField(
+    #        max_length=50,
+    #        verbose_name="Marksheet Type",
+    #        blank=True,
+    #        null=True,
+    #        choices=AVAILABLE_MARKSHEETS
+    #        )
+    available = models.BooleanField(
+        verbose_name="Students can see the mark/feedback",
+        default=False
+    )
+
+    class Meta:
+        ordering = ['title']
+        
+
 class Module(models.Model):
     """Modules are the subjects - eg "Law of Contracts".
 
@@ -126,216 +165,7 @@ class Module(models.Model):
         choices=TEACHING_WEEKS
     )
     sessions_recorded = models.IntegerField(blank=True, null=True, default=0)
-    # Assessment 1
-    assessment_1_title = models.CharField(
-        max_length=100,
-        verbose_name="Title",
-        blank=True,
-        null=True
-    )
-    assessment_1_value = models.IntegerField(
-        verbose_name="Value",
-        blank=True,
-        null=True,
-    )
-    assessment_1_submission_date = models.DateField(
-        verbose_name="Submission Date",
-        blank=True,
-        null=True
-    )
-    assessment_1_max_word_count = models.IntegerField(
-        verbose_name="Word Count",
-        blank=True,
-        null=True
-    )
-    #    assessment_1_marksheet_type = models.CharField(
-    #        max_length=50,
-    #        verbose_name="Marksheet Type",
-    #        blank=True,
-    #        null=True,
-    #        choices=AVAILABLE_MARKSHEETS
-    #        )
-    assessment_1_available = models.BooleanField(
-        verbose_name="Students can see the mark/feedback",
-        default=False
-    )
-    # Assessment 2
-    assessment_2_title = models.CharField(
-        max_length=100,
-        verbose_name="Title",
-        blank=True,
-        null=True
-    )
-    assessment_2_value = models.IntegerField(
-        verbose_name="Value",
-        blank=True,
-        null=True,
-    )
-    assessment_2_submission_date = models.DateField(
-        verbose_name="Submission Date",
-        blank=True,
-        null=True
-    )
-    assessment_2_max_word_count = models.IntegerField(
-        verbose_name="Word Count",
-        blank=True,
-        null=True
-    )
-    #    assessment_2_marksheet_type = models.CharField(
-    #        max_length=50,
-    #        verbose_name="Marksheet Type",
-    #        blank=True,
-    #        null=True,
-    #        choices=AVAILABLE_MARKSHEETS
-    #        )
-    assessment_2_available = models.BooleanField(
-        verbose_name="Students can see the mark/feedback",
-        default=False
-    )
-    # Assessment 3
-    assessment_3_title = models.CharField(
-        max_length=100,
-        verbose_name="Title",
-        blank=True,
-        null=True
-    )
-    assessment_3_value = models.IntegerField(
-        verbose_name="Value",
-        blank=True,
-        null=True,
-    )
-    assessment_3_submission_date = models.DateField(
-        verbose_name="Submission Date",
-        blank=True,
-        null=True
-    )
-    assessment_3_max_word_count = models.IntegerField(
-        verbose_name="Word Count",
-        blank=True,
-        null=True
-    )
-    #    assessment_3_marksheet_type = models.CharField(
-    #        max_length=50,
-    #        verbose_name="Marksheet Type",
-    #        blank=True,
-    #        null=True,
-    #        choices=AVAILABLE_MARKSHEETS
-    #        )
-    assessment_3_available = models.BooleanField(
-        verbose_name="Students can see the mark/feedback",
-        default=False
-    )
-    # Assessment 4
-    assessment_4_title = models.CharField(
-        max_length=100,
-        verbose_name="Title",
-        blank=True,
-        null=True
-    )
-    assessment_4_value = models.IntegerField(
-        verbose_name="Value",
-        blank=True,
-        null=True,
-    )
-    assessment_4_submission_date = models.DateField(
-        verbose_name="Submission Date",
-        blank=True,
-        null=True
-    )
-    assessment_4_max_word_count = models.IntegerField(
-        verbose_name="Word Count",
-        blank=True,
-        null=True
-    )
-    #    assessment_4_marksheet_type = models.CharField(
-    #        max_length=50,
-    #        verbose_name="Marksheet Type",
-    #        blank=True,
-    #        null=True,
-    #        choices=AVAILABLE_MARKSHEETS
-    #        )
-    assessment_4_available = models.BooleanField(
-        verbose_name="Students can see the mark/feedback",
-        default=False
-    )
-    # Assessment 5
-    assessment_5_title = models.CharField(
-        max_length=100,
-        verbose_name="Title",
-        blank=True,
-        null=True
-    )
-    assessment_5_value = models.IntegerField(
-        verbose_name="Value",
-        blank=True,
-        null=True,
-    )
-    assessment_5_submission_date = models.DateField(
-        verbose_name="Submission Date",
-        blank=True,
-        null=True
-    )
-    assessment_5_max_word_count = models.IntegerField(
-        verbose_name="Word Count",
-        blank=True,
-        null=True
-    )
-    #    assessment_5_marksheet_type = models.CharField(
-    #        max_length=50,
-    #        verbose_name="Marksheet Type",
-    #        blank=True,
-    #        null=True,
-    #        choices=AVAILABLE_MARKSHEETS
-    #        )
-    assessment_5_available = models.BooleanField(
-        verbose_name="Students can see the mark/feedback",
-        default=False
-    )
-    # Assessment 6
-    assessment_6_title = models.CharField(
-        max_length=100,
-        verbose_name="Title",
-        blank=True,
-        null=True
-    )
-    assessment_6_value = models.IntegerField(
-        verbose_name="Value",
-        blank=True,
-        null=True,
-    )
-    assessment_6_submission_date = models.DateField(
-        verbose_name="Submission Date",
-        blank=True,
-        null=True
-    )
-    assessment_6_max_word_count = models.IntegerField(
-        verbose_name="Word Count",
-        blank=True,
-        null=True
-    )
-    #    assessment_6_marksheet_type = models.CharField(
-    #        max_length=50,
-    #        verbose_name="Marksheet Type",
-    #        blank=True,
-    #        null=True,
-    #        choices=AVAILABLE_MARKSHEETS
-    #        )
-    assessment_6_available = models.BooleanField(
-        verbose_name="Students can see the mark/feedback",
-        default=False
-    )
-    # Exam
-    exam_value = models.IntegerField(
-        verbose_name="Percentage value for the exam",
-        default=60,
-        blank=True,
-        null=True
-        )
-    exam_available = models.BooleanField(
-        verbose_name="Students can see the exam mark",
-        blank=True,
-        default=False
-        )
+    assessments = models.ManyToManyField(Assessment, blank=True, null=True)
 
     class Meta:
         unique_together = ('code', 'year')
@@ -363,51 +193,14 @@ class Module(models.Model):
 
     def all_assessment_titles(self):
         returnlist = []
-        if self.assessment_1_title:
-            if self.assessment_1_value:
-                returnlist.append(
-                    (self.assessment_1_title, self.assessment_1_value))
+        exam = False
+        for assessment in self.assessments.all():
+            if assessment.title != 'Exam': # Make sure the exam comes last
+                returnlist.append((assessment.title, assessment.value))
             else:
-                returnlist.append(
-                    (self.assessment_1_title, None))
-        if self.assessment_2_title:
-            if self.assessment_2_value:
-                returnlist.append(
-                    (self.assessment_2_title, self.assessment_2_value))
-            else:
-                returnlist.append(
-                    (self.assessment_1_title, None))
-        if self.assessment_3_title:
-            if self.assessment_3_value:
-                returnlist.append(
-                    (self.assessment_3_title, self.assessment_3_value))
-            else:
-                returnlist.append(
-                    (self.assessment_1_title, None))
-        if self.assessment_4_title:
-            if self.assessment_4_value:
-                returnlist.append(
-                    (self.assessment_4_title, self.assessment_4_value))
-            else:
-                returnlist.append(
-                    (self.assessment_1_title, None))
-        if self.assessment_5_title:
-            if self.assessment_5_value:
-                returnlist.append(
-                    (self.assessment_5_title, self.assessment_5_value))
-            else:
-                returnlist.append(
-                    (self.assessment_1_title, None))
-        if self.assessment_6_title:
-            if self.assessment_6_value:
-                returnlist.append(
-                    (self.assessment_6_title, self.assessment_6_value))
-            else:
-                returnlist.append(
-                    (self.assessment_1_title, None))
-        if self.exam_value:
-            returnlist.append(
-                ('Exam', self.exam_value))
+                exam = ('Exam', assessment.value)
+        if exam:
+            returnlist.append(exam)
         return returnlist
 
 
@@ -518,8 +311,8 @@ class Student(models.Model):
         return reverse('edit_student', args=[self.student_id])
 
 
-class Performance(models.Model):
-    """The Performance class connects a student with a module"""
+class AssessmentResult(models.Model):
+    """How a particular student does in an assessment"""
     NO_CONCESSIONS = 'N'
     PENDING = 'P'
     GRANTED = 'G'
@@ -527,87 +320,76 @@ class Performance(models.Model):
         (NO_CONCESSIONS, 'No concession'),
         (PENDING, 'Concession pending'),
         (GRANTED, 'Concession granted')
-        )
-
-    student = models.ForeignKey(Student)
-    module = models.ForeignKey(Module)
-    seminar_group = models.IntegerField(blank=True, null=True)
-    group_assessment_group = models.IntegerField(blank=True, null=True)
-    student_year = models.IntegerField(blank=True, null=True)
-    notes = models.TextField(blank=True)
-    # Marks
-    assessment_1 = models.IntegerField(blank=True, null=True)
-    assessment_2 = models.IntegerField(blank=True, null=True)
-    assessment_3 = models.IntegerField(blank=True, null=True)
-    assessment_4 = models.IntegerField(blank=True, null=True)
-    assessment_5 = models.IntegerField(blank=True, null=True)
-    assessment_6 = models.IntegerField(blank=True, null=True)
-    exam = models.IntegerField(blank=True, null=True)
-    # Resit Marks
-    r_assessment_1 = models.IntegerField(blank=True, null=True)
-    r_assessment_2 = models.IntegerField(blank=True, null=True)
-    r_assessment_3 = models.IntegerField(blank=True, null=True)
-    r_assessment_4 = models.IntegerField(blank=True, null=True)
-    r_assessment_5 = models.IntegerField(blank=True, null=True)
-    r_assessment_6 = models.IntegerField(blank=True, null=True)
-    r_exam = models.IntegerField(blank=True, null=True)
-    assessment_1_concessions = models.CharField(
+    )
+    assessment = models.ForeignKey(Assessment)
+    mark = models.IntegerField(blank=True, null=True)
+    resit_mark = models.IntegerField(blank=True, null=True)
+    concessions = models.CharField(
         choices=CONCESSIONS,
         max_length=1,
         blank=True,
         null=True,
         default=NO_CONCESSIONS
-        )
-    assessment_2_concessions = models.CharField(
+    )
+    second_resit_mark = models.IntegerField(blank=True, null=True)
+    second_concessions = models.CharField(
         choices=CONCESSIONS,
-        max_length=2,
+        max_length=1,
         blank=True,
         null=True,
         default=NO_CONCESSIONS
-        )
-    assessment_3_concessions = models.CharField(
-        choices=CONCESSIONS,
-        max_length=2,
+    )
+    assessment_group = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['assessment']
+
+    def result_as_string(self):
+        if self.mark is None:
+            returnstring = ''
+        else:
+            returnstring = str(self.mark)
+            if self.resit_mark:
+                if self.concessions == self.GRANTED:
+                    if self.assessment.title == 'Exam':
+                        resit_type = 'Sit'
+                    else:
+                        resit_type = 'Submission'
+                else:
+                    if self.assessment.title == 'Exam':
+                        resit_type = 'Resit'
+                    else:
+                        resit_type = 'Resubmission'
+                returnstring += " (%s: %s" % (resit_type, self.resit_mark)
+                # The following needs to be changed to allow second resits
+                if self.second_resit_mark:
+                    returnstring += (
+                        ", Second resubmission: %s" % (self.second_resit_mark)
+                    )
+                returnstring += ")"
+        return returnstring
+
+
+    def module_needs_to_be_capped(self):
+        if self.resit_mark:
+            if self.concessions in [self.NO_CONCESSIONS, self.PENDING]:
+                return True
+        return False
+    
+
+class Performance(models.Model):
+    """The Performance class connects a student with a module"""
+
+    student = models.ForeignKey(Student)
+    module = models.ForeignKey(Module)
+    seminar_group = models.IntegerField(blank=True, null=True)
+    student_year = models.IntegerField(blank=True, null=True)
+    assessment_results = models.ManyToManyField(
+        AssessmentResult,
         blank=True,
         null=True,
-        default=NO_CONCESSIONS
-        )
-    assessment_4_concessions = models.CharField(
-        choices=CONCESSIONS,
-        max_length=2,
-        blank=True,
-        null=True,
-        default=NO_CONCESSIONS
-        )
-    assessment_5_concessions = models.CharField(
-        choices=CONCESSIONS,
-        max_length=2,
-        blank=True,
-        null=True,
-        default=NO_CONCESSIONS
-        )
-    assessment_6_concessions = models.CharField(
-        choices=CONCESSIONS,
-        max_length=2,
-        blank=True,
-        null=True,
-        default=NO_CONCESSIONS
-        )
-    exam_concessions = models.CharField(
-        choices=CONCESSIONS,
-        max_length=2,
-        blank=True,
-        null=True,
-        default=NO_CONCESSIONS
-        )
-    # Second Resit Marks
-    s_assessment_1 = models.IntegerField(blank=True, null=True)
-    s_assessment_2 = models.IntegerField(blank=True, null=True)
-    s_assessment_3 = models.IntegerField(blank=True, null=True)
-    s_assessment_4 = models.IntegerField(blank=True, null=True)
-    s_assessment_5 = models.IntegerField(blank=True, null=True)
-    s_assessment_6 = models.IntegerField(blank=True, null=True)
-    s_exam = models.IntegerField(blank=True, null=True)
+        related_name="part_of"
+    )
     # Average
     average = models.IntegerField(blank=True, null=True)  # For display
     real_average = models.FloatField(blank=True, null=True)  # For calculation
@@ -616,146 +398,19 @@ class Performance(models.Model):
         unique_together = ('student', 'module')
         ordering = ['module', 'student']
 
-    def assessment_result_as_string(self, assessment):
-        assessment = str(assessment)
-        if assessment == '1':
-            if self.assessment_1 is not None:
-                returnstring = str(self.assessment_1)
-                if self.r_assessment_1:
-                    if self.assessment_1_concessions == self.GRANTED:
-                        resit_type = 'Submission'
-                    else:
-                        resit_type = 'Resubmission'
-                    returnstring += " (%s: %s" % (
-                        resit_type, self.r_assessment_1)
-                    if self.s_assessment_1:
-                        returnstring += (
-                            ", Second resubmission: %s" % (
-                                self.s_assessment_1))
-                    returnstring += ")"
-            else:
-                returnstring = ''
-        elif assessment == '2':
-            if self.assessment_2 is not None:
-                returnstring = str(self.assessment_2)
-                if self.r_assessment_2:
-                    if self.assessment_2_concessions == self.GRANTED:
-                        resit_type = 'Submission'
-                    else:
-                        resit_type = 'Resubmission'
-                    returnstring += " (%s: %s" % (
-                        resit_type, self.r_assessment_2)
-                    if self.s_assessment_2:
-                        returnstring += (
-                            ", Second resubmission: %s" % (
-                                self.s_assessment_2))
-                    returnstring += ")"
-            else:
-                returnstring = ''
-        elif assessment == '3':
-            if self.assessment_3 is not None:
-                returnstring = str(self.assessment_3)
-                if self.r_assessment_3:
-                    if self.assessment_3_concessions == self.GRANTED:
-                        resit_type = 'Submission'
-                    else:
-                        resit_type = 'Resubmission'
-                    returnstring += " (%s: %s" % (
-                        resit_type, self.r_assessment_3)
-                    if self.s_assessment_3:
-                        returnstring += (
-                            ", Second resubmission: %s" % (
-                                self.s_assessment_3))
-                    returnstring += ")"
-            else:
-                returnstring = ''
-        elif assessment == '4':
-            if self.assessment_4 is not None:
-                returnstring = str(self.assessment_4)
-                if self.r_assessment_4:
-                    if self.assessment_4_concessions == self.GRANTED:
-                        resit_type = 'Submission'
-                    else:
-                        resit_type = 'Resubmission'
-                    returnstring += " (%s: %s" % (
-                        resit_type, self.r_assessment_4)
-                    if self.s_assessment_4:
-                        returnstring += (
-                            ", Second resubmission: %s" % (
-                                self.s_assessment_4))
-                    returnstring += ")"
-            else:
-                returnstring = ''
-        elif assessment == '5':
-            if self.assessment_5 is not None:
-                returnstring = str(self.assessment_5)
-                if self.r_assessment_5:
-                    if self.assessment_5_concessions == self.GRANTED:
-                        resit_type = 'Submission'
-                    else:
-                        resit_type = 'Resubmission'
-                    returnstring += " (%s: %s" % (
-                        resit_type, self.r_assessment_5)
-                    if self.s_assessment_5:
-                        returnstring += (
-                            ", Second resubmission: %s" % (
-                                self.s_assessment_5))
-                    returnstring += ")"
-            else:
-                returnstring = ''
-        elif assessment == '6':
-            if self.assessment_6 is not None:
-                returnstring = str(self.assessment_6)
-                if self.r_assessment_6:
-                    if self.assessment_6_concessions == self.GRANTED:
-                        resit_type = 'Submission'
-                    else:
-                        resit_type = 'Resubmission'
-                    returnstring += " (%s: %s" % (
-                        resit_type, self.r_assessment_6)
-                    if self.s_assessment_6:
-                        returnstring += (
-                            ", Second resubmission: %s" % (
-                                self.s_assessment_6))
-                    returnstring += ")"
-            else:
-                returnstring = ''
-        elif assessment == 'exam':
-            if self.exam is not None:
-                returnstring = str(self.exam)
-                if self.r_exam:
-                    if self.exam_concessions == self.GRANTED:
-                        resit_type = 'Sit'
-                    else:
-                        resit_type = 'Resit'
-                    returnstring += " (%s: %s" % (
-                        resit_type, self.r_exam)
-                    if self.s_exam:
-                        returnstring += (
-                            ", Second resit: %s" % (
-                                self.s_exam))
-                    returnstring += ")"
-            else:
-                returnstring = ''
-        return returnstring
-
+    
     def all_assessment_results_as_strings(self):
         return_list = []
-        if self.module.assessment_1_title:
-            return_list.append(self.assessment_result_as_string(1))
-        if self.module.assessment_2_title:
-            return_list.append(self.assessment_result_as_string(2))
-        if self.module.assessment_3_title:
-            return_list.append(self.assessment_result_as_string(3))
-        if self.module.assessment_4_title:
-            return_list.append(self.assessment_result_as_string(4))
-        if self.module.assessment_5_title:
-            return_list.append(self.assessment_result_as_string(5))
-        if self.module.assessment_6_title:
-            return_list.append(self.assessment_result_as_string(6))
-        if self.module.exam_value:
-            return_list.append(self.assessment_result_as_string('exam'))
+        exam = False
+        for result in self.assessment_results.all():
+            if result.assessment.title != 'Exam': # Make sure exam comes last
+                return_list.append(result.result_as_string())
+            else:
+                exam = result.result_as_string()
+        if exam:
+            return_list.append(exam)
         return return_list
+            
 
     # def safe(self, *args, **kwargs):
     #    marks = 0

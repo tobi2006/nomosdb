@@ -45,6 +45,7 @@
 
 <br><br>
 
+{% comment %}
 {% if performances %}
 
 <table id ="sortable_table" class="table table-striped table-sortable">
@@ -85,10 +86,8 @@
                     {% if performance.student.lsp %}<span class="glyphicon glyphicon-warning-sign"></span>{% endif %}
                 </td>
                 <td>
-                    {% comment %}
-                    {{ performance.student.get_attendance }}
-                    {% endcomment %}
                 </td>
+                
                 <td>
                     {% for assessment_result in performance.all_assessment_results_as_strings %}
                         <td>
@@ -111,5 +110,6 @@
 </p>
 
 {% endif %}
+{% endcomment%}
 
 {% endblock %}
