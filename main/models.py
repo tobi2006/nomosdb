@@ -2,13 +2,10 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.text import slugify
 import datetime
+from nomosdb.unisettings import TEACHING_WEEKS
 
 ACADEMIC_YEARS = (
     [(i, str(i) + "/" + str(i+1)[-2:]) for i in range(2010, 2025)]
-)
-
-TEACHING_WEEKS = (
-    [(i, 'Week ' + str(i)) for i in range(1, 53)]
 )
 
 
@@ -345,10 +342,13 @@ class Student(models.Model):
         return reverse('edit_student', args=[self.student_id])
 
 
-
-
 class Performance(models.Model):
     """The Performance class connects a student with a module"""
+    ATTENDANCE_ENTRIES = (
+        ('p', 'Present'),
+        ('a', 'Absent'),
+        ('e', 'Excused Absence')
+    )
 
     student = models.ForeignKey(Student)
     module = models.ForeignKey(Module)
@@ -357,6 +357,8 @@ class Performance(models.Model):
     # Average
     average = models.IntegerField(blank=True, null=True)  # For display
     real_average = models.FloatField(blank=True, null=True)  # For calculation
+    # Attendance: week:string/week/string...
+    attendance = models.CharField(max_length=250, blank=True, null=True)
 
     class Meta:
         unique_together = ('student', 'module')
@@ -373,6 +375,57 @@ class Performance(models.Model):
         if exam:
             return_list.append(exam)
         return return_list
+
+    def attendance_as_dict(self):
+        return_dict = {}
+        if self.attendance:
+            if '/' in self.attendance:
+                p_list = self.attendance.split('/')
+                for entry in p_list:
+                    entry_list = entry.split(':')
+                    return_dict[entry_list[0]] = entry_list[1]
+            else:
+                if ':' in self.attendance:
+                    entry = self.attendance.split(':')
+                    return_dict[entry[0]] = entry[1]
+        return return_dict
+
+    def attendance_for(self, week):
+        week = str(week)
+        attendance = self.attendance_as_dict()
+        if week in attendance:
+            return attendance[week]
+        else:
+            return None
+
+    def save_attendance(self, week, presence):
+        week = str(week)
+        attendance = self.attendance_as_dict()
+        attendance[week] = presence
+        attendance_string = ''
+        first_run = True
+        for week_no in attendance:
+            if not first_run:
+                attendance_string += '/'
+            else:
+                first_run = False
+            attendance_string += week_no
+            attendance_string += ':'
+            attendance_string += attendance[week_no]
+        self.attendance = attendance_string
+        self.save()
+
+#   Probably not needed:
+#    def attendance_as_list(self):
+#        attendance = self.attendance_as_dict()
+#        returnlist = []
+#        weeklist = []
+#        for week in attendance:
+#            weeklist.append(int(week))  # Otherwise 10 will be before 2!
+#        weeklist.sort()
+#        for week in weeklist:
+#            returnlist.append(attendance[str(week)])
+#        return returnlist
 
     # def safe(self, *args, **kwargs):
     #    marks = 0
@@ -450,21 +503,3 @@ class AssessmentResult(models.Model):
             if self.concessions in [self.NO_CONCESSIONS, self.PENDING]:
                 return True
         return False
-
-
-class Session(models.Model):
-    """Simply a recorded session for attendance purposes"""
-    module = models.ForeignKey(Module)
-    group = models.IntegerField(blank=True, null=True)
-    date = models.DateField()
-
-
-class Attendance(models.Model):
-    """The attendance for one student at one session"""
-    ENTRIES = (
-        ('p', 'Present'),
-        ('a', 'Absent'),
-        ('e', 'Excused Absence')
-    )
-    performance = models.ForeignKey(Performance)
-    session = models.ForeignKey(Session)

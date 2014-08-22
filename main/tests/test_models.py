@@ -1,4 +1,4 @@
-from main.models import Student, Module, SubjectArea, Course, Performance, Assessment, AssessmentResult
+from main.models import *
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
@@ -179,7 +179,6 @@ class AssessmentTest(TestCase):
         )
 
 
-
 class ModuleTest(TestCase):
     """Tests for the Module class"""
 
@@ -238,17 +237,16 @@ class ModuleTest(TestCase):
             '/assessment/hl23/2013/'
         )
 
-
     def test_module_returns_all_assessment_titles_in_list(self):
         module1 = create_module()
         m_1_assessment_1 = Assessment.objects.create(
-            title = 'Practical Exercise',
-            value = 40
+            title='Practical Exercise',
+            value=40
         )
         module1.assessments.add(m_1_assessment_1)
         m_1_assessment_2 = Assessment.objects.create(
-            title = 'Exam',
-            value = 60
+            title='Exam',
+            value=60
         )
         module1.assessments.add(m_1_assessment_2)
         module2 = Module.objects.create(
@@ -375,7 +373,10 @@ class PerformanceTest(TestCase):
             concessions='G',
             second_resit_mark=40
         )
-        expected_list_2 = ['35 (Submission: 38, Second resubmission: 40)', '50']
+        expected_list_2 = [
+            '35 (Submission: 38, Second resubmission: 40)',
+            '50'
+        ]
         self.assertEqual(
             performance1.all_assessment_results_as_strings(),
             expected_list_1
@@ -384,3 +385,25 @@ class PerformanceTest(TestCase):
             performance2.all_assessment_results_as_strings(),
             expected_list_2
         )
+
+    def test_attendance_can_be_saved_and_checked(self):
+        module = create_module()
+        student = create_student()
+        performance = Performance.objects.create(module=module, student=student)
+        performance.save_attendance(1, 'p')
+        performance.save_attendance('2', 'a')
+        performance.save_attendance('3', 'e')
+        performance.save_attendance(5, 'p')
+        performance.save_attendance(6, 'p')
+        performance.save_attendance(7, 'p')
+        performance.save_attendance(8, 'p')
+        performance.save_attendance(9, 'a')
+        performance.save_attendance('10', 'p')
+        self.assertEqual(performance.attendance_for('6'), 'p')
+        self.assertEqual(performance.attendance_for('4'), None)
+        self.assertEqual(performance.attendance_for(9), 'a')
+        self.assertEqual(performance.attendance_for(10), 'p')
+        # self.assertEqual(
+        #   performance.attendance_as_list(),
+        #   ['p', 'a', 'e', 'p', 'p', 'p', 'p', 'a', 'p']
+        # )
