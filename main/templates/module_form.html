@@ -30,9 +30,9 @@ src="{{ STATIC_URL }}js/chosen/chosen.jquery.min.js">
 <link rel="stylesheet" href="{{ STATIC_URL }}js/chosen/chosen.css" type="text/css" media="screen" />
 
 <script type="text/javascript">
-
-$(".chosen-select").chosen()
-
+    $(".chosen-select").chosen()
 </script>
+
+{{ javascript|safe }}
 
 {% endblock %}

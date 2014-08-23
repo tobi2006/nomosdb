@@ -3,6 +3,7 @@ from main.models import *
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Field, Fieldset, HTML, Div
 from crispy_forms.bootstrap import TabHolder, Tab, FormActions
+from nomosdb.unisettings import TEACHING_WEEK_HELPTEXT, TEACHING_WEEK_OPTIONS
 
 NO_STUDENT_ID_ERROR = "You need to specify a unique student ID number"
 
@@ -108,19 +109,51 @@ class StudentForm(forms.ModelForm):
 
 class ModuleForm(forms.ModelForm):
     """The modelform for the Module model, using crispy forms"""
+
+    # Prepare stuff for second tab (containing the helptext and options)
+    if TEACHING_WEEK_HELPTEXT:
+        helptext = ('<p>' + TEACHING_WEEK_HELPTEXT + '</p><br>')
+    else:
+        helptext = ''
+    if TEACHING_WEEK_OPTIONS:
+        buttons = '<label>Default options: </label><div class="btn-group">'
+        numberlist = []
+        for number in TEACHING_WEEK_OPTIONS:
+            numberlist.append(number)
+        numberlist.sort()
+        for number in numberlist:
+            buttons += '<button type="button" id="option_'
+            buttons += str(number)
+            buttons += '" class="btn btn-default">'
+            buttons += TEACHING_WEEK_OPTIONS[number][0]
+            buttons += '</button>'
+        buttons += '</div><br><br>'
+    else:
+        buttons = ''
+
     helper = FormHelper()
     helper.layout = Layout(
-        Fieldset(
-            '',
-            'title',
-            'code',
-            'year',
-            Field('subject_areas', css_class='chosen-select'),
-            'credits',
-            # 'sucessor_of',
-            'eligible',
-            'foundational',
-            'nalp',
+        TabHolder(
+            Tab(
+                'Module Information',
+                'title',
+                'code',
+                'year',
+                Field('subject_areas', css_class='chosen-select'),
+                'credits',
+                # 'sucessor_of',
+                'eligible',
+                'foundational',
+                'nalp',
+            ),
+            Tab(
+                'Sessions',
+                HTML(helptext),
+                HTML(buttons),
+                'first_session',
+                'no_teaching_in',
+                'last_session'
+            )
         ),
         FormActions(
             Submit('save', 'Save Module', css_class="btn btn-primary")

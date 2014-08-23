@@ -112,7 +112,30 @@ def add_or_edit_module(request, code=None, year=None):
             form = ModuleForm(instance=module)
         else:
             form = ModuleForm()
-    return render(request, 'module_form.html', {'form': form, 'edit': edit})
+    if TEACHING_WEEK_OPTIONS:  # Ugly, but it works fine...
+        javascript = '<script type="text/javascript">'
+        javascript += '$(document).ready(function(){'
+        for number in TEACHING_WEEK_OPTIONS:
+            javascript += '$("#option_' + str(number) + '").click(function(){'
+            javascript += '$("#id_first_session").val("'
+            javascript += TEACHING_WEEK_OPTIONS[number][1]
+            javascript += '");'
+            javascript += '$("#id_last_session").val("'
+            javascript += TEACHING_WEEK_OPTIONS[number][2]
+            javascript += '");'
+            javascript += '$("#id_no_teaching_in").val("'
+            javascript += TEACHING_WEEK_OPTIONS[number][3]
+            javascript += '");'
+            javascript += '});'
+        javascript += '});'
+        javascript += '</script>'
+    else:
+        javascript = ''
+    return render(
+        request,
+        'module_form.html',
+        {'form': form, 'edit': edit, 'javascript': javascript}
+    )
 
 
 def module_view(request, code, year):
@@ -294,7 +317,12 @@ def attendance(request, code, year, group):
     return render(
         request,
         'attendance.html',
-        {'seminar_group': seminar_group, 'performances': performances})
+        {
+            'seminar_group': seminar_group,
+            'performances': performances,
+            'module': module
+        }
+    )
 
 
 def assessment(request, code, year, slug=None):

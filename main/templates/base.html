@@ -9,6 +9,7 @@
     <meta name="author" content="{{ UNI_NAME }}">
     <link rel="shortcut icon" href="{{ STATIC_URL }}img/favicon.ico" />
     <link href="{{ STATIC_URL }}css/bootstrap.css" rel="stylesheet" media="screen">
+    {% block stylesheets %}{% endblock %}
 
     <style type="text/css">
         body {
@@ -90,6 +91,7 @@
 
 <script src="{{ STATIC_URL }}js/jquery-2.1.1.min.js"></script>
 <script src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
+{% block loadscripts %}{% endblock %}
 
 {% block scripts %}{% endblock %}
 
