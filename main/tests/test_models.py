@@ -283,6 +283,14 @@ class ModuleTest(TestCase):
         self.assertEqual(
             module2.all_assessment_titles(), list_of_assessments_2)
 
+    def test_module_returns_all_week_numbers_correctly(self):
+        module = create_module(save=False)
+        module.first_session = 5
+        module.last_session = 17
+        module.no_teaching_in = '6,12'
+        sessions = [5, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17]
+        self.assertEqual(module.all_teaching_weeks(), sessions)
+
 
 class PerformanceTest(TestCase):
     """Tests for the Performance class"""

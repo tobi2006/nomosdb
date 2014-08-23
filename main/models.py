@@ -174,6 +174,27 @@ class Module(models.Model):
             returnlist.append(exam)
         return returnlist
 
+    def all_teaching_weeks(self):
+        no_teaching = []
+        if self.no_teaching_in:
+            if ',' in self.no_teaching_in:
+                no_teaching_strings = self.no_teaching_in.split(',')
+            else:
+                no_teaching_strings = [self.no_teaching_in]
+            for entry in no_teaching_strings:
+                try:
+                    no_teaching.append(int(entry))
+                except ValueError:
+                    pass
+        returnlist = []
+        last = self.last_session + 1
+        for week in range(self.first_session, last):
+            if week not in no_teaching:
+                returnlist.append(week)
+        returnlist.sort()
+        return returnlist
+
+
 
 class Assessment(models.Model):
     """The basic information about an assessment"""
