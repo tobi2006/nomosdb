@@ -30,6 +30,7 @@ def subject_areas(request):
         {'subject_areas': subject_areas, 'form': form}
     )
 
+
 def course_overview(request):
     """Page that shows all courses"""
     courses = Course.objects.all()
@@ -73,7 +74,7 @@ def add_or_edit_student(request, student_id=None):
             form = StudentForm(data=request.POST)
         if form.is_valid():
             student = form.save()
-            if student.exam_id == '': # Fixes problem with unique constraint
+            if student.exam_id == '':  # Fixes problem with unique constraint
                 student.exam_id = None
                 student.save()
             return redirect(student.get_absolute_url())
@@ -118,10 +119,28 @@ def module_view(request, code, year):
     """Shows all information about a module"""
     module = Module.objects.get(code=code, year=year)
     performances = Performance.objects.filter(module=module)
+    seminar_groups = []
+    for performance in performances:
+        if performance.seminar_group:
+            if performance.seminar_group not in seminar_groups:
+                seminar_groups.append(performance.seminar_group)
+    seminar_groups.sort()
+    seminar_group_links = []
+    for seminar_group in seminar_groups:
+        seminar_group_links.append(
+            (seminar_group, module.get_attendance_url(seminar_group))
+        )
+    seminar_group_links.append(
+        ('all', module.get_attendance_url('all'))
+    )
     return render(
         request,
         'module_view.html',
-        {'module': module, 'performances': performances}
+        {
+            'module': module,
+            'performances': performances,
+            'seminar_group_links': seminar_group_links
+        }
     )
 
 
@@ -262,7 +281,20 @@ def assign_seminar_groups(request, code, year):
 def attendance(request, code, year, group):
     """The registers for the seminar groups or the whole module"""
     module = Module.objects.get(code=code, year=year)
-    pass
+    group = str(group)
+    if group == 'all':
+        performances = Performance.objects.filter(module=module)
+        seminar_group = False
+    else:
+        performances = Performance.objects.filter(
+            module=module,
+            seminar_group=group
+        )
+        seminar_group = group
+    return render(
+        request,
+        'attendance.html',
+        {'seminar_group': seminar_group, 'performances': performances})
 
 
 def assessment(request, code, year, slug=None):

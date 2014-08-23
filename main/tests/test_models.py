@@ -389,7 +389,10 @@ class PerformanceTest(TestCase):
     def test_attendance_can_be_saved_and_checked(self):
         module = create_module()
         student = create_student()
-        performance = Performance.objects.create(module=module, student=student)
+        performance = Performance.objects.create(
+            module=module,
+            student=student
+        )
         performance.save_attendance(1, 'p')
         performance.save_attendance('2', 'a')
         performance.save_attendance('3', 'e')
@@ -398,12 +401,16 @@ class PerformanceTest(TestCase):
         performance.save_attendance(7, 'p')
         performance.save_attendance(8, 'p')
         performance.save_attendance(9, 'a')
-        performance.save_attendance('10', 'p')
+        performance.save_attendance('10', 'a')
         self.assertEqual(performance.attendance_for('6'), 'p')
         self.assertEqual(performance.attendance_for('4'), None)
         self.assertEqual(performance.attendance_for(9), 'a')
-        self.assertEqual(performance.attendance_for(10), 'p')
-        # self.assertEqual(
-        #   performance.attendance_as_list(),
-        #   ['p', 'a', 'e', 'p', 'p', 'p', 'p', 'a', 'p']
-        # )
+        self.assertEqual(performance.attendance_for(10), 'a')
+        self.assertEqual(performance.count_attendance(), '6/9')
+        performance.save_attendance(11, 'a')
+        self.assertEqual(performance.count_attendance(), '6/10')
+        self.assertEqual(
+            performance.attendance_as_list(),
+            ['p', 'a', 'e', 'p', 'p', 'p', 'p', 'a', 'a', 'a']
+        )
+        self.assertTrue(performance.missed_the_last_two_sessions())

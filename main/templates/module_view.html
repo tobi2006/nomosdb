@@ -36,6 +36,13 @@
         <a class = "btn btn-default dropdown-toggle" data-toggle="dropdown">Seminar Groups / Attendance <span class="caret"></span></a>
         <ul class="dropdown-menu" role="menu">
             <li><a href="{{ module.get_seminar_groups_url }}">Assign Seminar Groups</a></li>
+            {% for item in seminar_group_links %}
+                {% if item.0 == 'all' %}
+                    <li><a href="{{ item.1 }}">Attendance for all groups</a></li>
+                {% else %}
+                    <li><a href="{{ item.1 }}">Attendance for Seminar Group {{ item.0 }}</a></li>
+                {% endif %}
+            {% endfor %}
         </ul>
     </div>
     <div class="btn-group dropdown">

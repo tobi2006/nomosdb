@@ -415,17 +415,35 @@ class Performance(models.Model):
         self.attendance = attendance_string
         self.save()
 
-#   Probably not needed:
-#    def attendance_as_list(self):
-#        attendance = self.attendance_as_dict()
-#        returnlist = []
-#        weeklist = []
-#        for week in attendance:
-#            weeklist.append(int(week))  # Otherwise 10 will be before 2!
-#        weeklist.sort()
-#        for week in weeklist:
-#            returnlist.append(attendance[str(week)])
-#        return returnlist
+    def count_attendance(self):
+        attendance = self.attendance_as_dict()
+        present = 0
+        absent = 0
+        for week, presence in attendance.items():
+            if presence in ['p', 'e']:
+                present += 1
+            elif presence == 'a':
+                absent += 1
+        returnstring = str(present) + "/" + str(present + absent)
+        return returnstring
+
+    def attendance_as_list(self):
+        attendance = self.attendance_as_dict()
+        returnlist = []
+        weeklist = []
+        for week in attendance:
+            weeklist.append(int(week))  # Otherwise 10 will be before 2!
+        weeklist.sort()
+        for week in weeklist:
+            returnlist.append(attendance[str(week)])
+        return returnlist
+
+    def missed_the_last_two_sessions(self):
+        attendancelist = self.attendance_as_list()
+        if attendancelist[-1] == 'a':
+            if attendancelist[-2] == 'a':
+                return True
+        return False
 
     # def safe(self, *args, **kwargs):
     #    marks = 0

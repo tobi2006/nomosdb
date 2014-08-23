@@ -367,10 +367,58 @@ class AssessmentTest(TestCase):
         self.assertEqual(AssessmentResult.objects.count(), 0)
 
 
-# class AttendanceTest(TestCase):
-#    """Tests around the attendance function"""
-#
-#    def test_students_are_shown_according_to_parameter(self):
+class AttendanceTest(TestCase):
+    """Tests around the attendance function"""
+
+    def test_attendance_uses_correct_template(self):
+        module = set_up_stuff()[0]
+        response = self.client.get(module.get_attendance_url())
+        self.assertTemplateUsed(response, 'attendance.html')
+
+
+    def test_attendance_form_shows_seminar_group(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        student5 = stuff[5]
+        performance1 = Performance.objects.get(student=student1, module=module)
+        performance2 = Performance.objects.get(student=student2, module=module)
+        performance3 = Performance.objects.get(student=student3, module=module)
+        performance4 = Performance.objects.get(student=student4, module=module)
+        performance5 = Performance.objects.get(student=student5, module=module)
+        performance1.seminar_group = 1
+        performance1.save()
+        performance2.seminar_group = 1
+        performance2.save()
+        performance3.seminar_group = 1
+        performance3.save()
+        performance4.seminar_group = 2
+        performance4.save()
+        performance5.seminar_group = 2
+        performance5.save()
+        response = self.client.get(module.get_attendance_url(1))
+        self.assertContains(response, student1.last_name)
+        self.assertContains(response, student2.last_name)
+        self.assertContains(response, student3.last_name)
+        self.assertNotContains(response, student4.last_name)
+        self.assertNotContains(response, student5.last_name)
+        response = self.client.get(module.get_attendance_url(2))
+        self.assertNotContains(response, student1.last_name)
+        self.assertNotContains(response, student2.last_name)
+        self.assertNotContains(response, student3.last_name)
+        self.assertContains(response, student4.last_name)
+        self.assertContains(response, student5.last_name)
+        response = self.client.get(module.get_attendance_url(all))
+        self.assertContains(response, student1.last_name)
+        self.assertContains(response, student2.last_name)
+        self.assertContains(response, student3.last_name)
+        self.assertContains(response, student4.last_name)
+        self.assertContains(response, student5.last_name)
+
+#    def test_attendance_can_be_added_through_form(self):
 #        stuff = set_up_stuff()
 #        module = stuff[0]
 #        student1 = stuff[1]
@@ -378,36 +426,8 @@ class AssessmentTest(TestCase):
 #        student3 = stuff[3]
 #        student4 = stuff[4]
 #        student5 = stuff[5]
-#       performance1 = Performance.objects.get(student=student1, module=module)
-#       performance2 = Performance.objects.get(student=student2, module=module)
-#       performance3 = Performance.objects.get(student=student3, module=module)
-#       performance4 = Performance.objects.get(student=student4, module=module)
-#       performance5 = Performance.objects.get(student=student5, module=module)
-#        performance1.seminar_group = 1
-#        performance1.save()
-#        performance2.seminar_group = 1
-#        performance2.save()
-#        performance3.seminar_group = 1
-#        performance3.save()
-#        performance4.seminar_group = 2
-#        performance4.save()
-#        performance5.seminar_group = 2
-#        performance5.save()
-#        response = self.client.get(module.get_attendance_url(1))
-#        self.assertContains(response, student1.last_name)
-#        self.assertContains(response, student2.last_name)
-#        self.assertContains(response, student3.last_name)
-#        self.assertNotContains(response, student4.last_name)
-#        self.assertNotContains(response, student5.last_name)
-#        response = self.client.get(module.get_attendance_url(2))
-#        self.assertNotContains(response, student1.last_name)
-#        self.assertNotContains(response, student2.last_name)
-#        self.assertNotContains(response, student3.last_name)
-#        self.assertContains(response, student4.last_name)
-#        self.assertContains(response, student5.last_name)
-#        response = self.client.get(module.get_attendance_url(all))
-#        self.assertContains(response, student1.last_name)
-#        self.assertContains(response, student2.last_name)
-#        self.assertContains(response, student3.last_name)
-#        self.assertContains(response, student4.last_name)
-#        self.assertContains(response, student5.last_name)
+#        performance1 = Performance.objects.get(student=student1, module=module)
+#        performance2 = Performance.objects.get(student=student2, module=module)
+#        performance3 = Performance.objects.get(student=student3, module=module)
+#        performance4 = Performance.objects.get(student=student4, module=module)
+#        performance5 = Performance.objects.get(student=student5, module=module)
