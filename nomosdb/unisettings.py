@@ -1,3 +1,5 @@
+import datetime
+
 UNI_NAME = 'Acme University'
 UNI_SHORT_NAME = 'ACM'
 
@@ -42,4 +44,10 @@ TEACHING_WEEK_OPTIONS = {
         '29',
         '6,8,10,12,14,16,17,18,19,20,22,24,26,28'
     )
+}
+
+FIRST_WEEK_STARTS = {
+    1900: datetime.date(1900, 9, 3), # Leave this in for the tests to work
+    2013: datetime.date(2014, 9, 2),
+    2014: datetime.date(2014, 9, 1)
 }

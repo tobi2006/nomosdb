@@ -1,8 +1,5 @@
 {% extends "base.html" %}
-
-{% block stylesheets %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/table-fixed-header.css">
-{% endblock %}
+{% load custom_filters %}
 
 {% block formstart %}
     <form id="absenceForm" method="post"> 
@@ -15,30 +12,109 @@
     Attendance for {{ module }}{% if seminar_group %} - Seminar Group {{ seminar_group }}{% endif %}
 </h1>
 
-<p>
-    A = Absent / E = Excused absent / P = Present
-</p>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-md-4">
+            <label>Show</label>
+            <select class="form-control" id="show">
+                <option value="all">All Weeks</option>
+                {% for week in module.all_teaching_weeks %}
+                    <option value="{{ week }}">Only Week {{ week }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            A = Absent / E = Excused absent / P = Present
+        </div>
+    </div>
+</div>
 
-<table id="attendance_table" class="table table-fixed-header">
+<table id="attendance_table" class="table table-hover">
     <thead class="header">
         <tr>
+            <th>Student</th>
+            {% for week in module.all_teaching_weeks %}
+                <th class="column column_{{ week }}">{{ week }}</th>
+            {% endfor %}
         </tr>
     </thead>
     <tbody>
-        <tr>
-        </tr>
+        {% for performance in performances %}
+            <tr>
+                <td>
+                    {{ performance.student.short_name }}
+                </td>
+                {% for week in module.all_teaching_weeks %}
+                    <td class="column column_{{ week }}">
+                        <div class="btn-group" data-toggle="buttons">
+                            {% if performance|get_attendance:week == 'a' %}
+                                <label class="btn btn-default btn-xs active">
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="a" class="{{ week }}_a" checked>A
+                                </label>
+                            {% else %}
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="a" class="{{ week }}_a">A
+                                </label>
+                            {% endif %}
+                            {% if performance|get_attendance:week == 'e' %}
+                                <label class="btn btn-default btn-xs active">
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="e" class="{{ week }}_e" checked>E
+                                </label>
+                            {% else %}
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="e" class="{{ week }}_e">E
+                                </label>
+                            {% endif %}
+                            {% if performance|get_attendance:week == 'p' %}
+                                <label class="btn btn-default btn-xs active">
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="p" class="{{ week }}_p" checked>P
+                                </label>
+                            {% else %}
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="p" class="{{ week }}_p">P
+                                </label>
+                            {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
     </tbody>
-    
+</table>
+
+<div class="btn-group" align="right">
+    <a href="{{ module.get_absolute_url }}" class="btn btn-primary">Cancel</a>
+    <input type="submit" name="save" value="Save Changes for All Groups" id="save" class="btn btn-primary" data-loading-text="Please wait">
+</div>
+
 {% endblock %}
 
-{% block loadscripts %}
-<script src="{{ STATIC_URL }}js/table-fixed-header.js"></script>
+{% block formend %}
+</form>
 {% endblock %}
 
 {% block scripts %}
 
 <script type="text/javascript">
-    $('.table-fixed-header').prepFixedHeader().fixedHeader();
+
+$(document).ready(function() {
+    $('#show').change(function() {
+        switch($(this).val()) {
+            case 'all':
+                $('.column').show();
+                $('#save').val('Save Changes for All Weeks');
+                break;
+            {% for week in module.all_teaching_weeks %}
+            case '{{ week }}':
+                $('.column').hide();
+                $('.column_{{ week }}').show();
+                $('#save').val('Save Changes for Week {{ week }}');
+                break;
+            {% endfor %}
+        }
+    })
+});
+
 </script>
 
 {% endblock %}

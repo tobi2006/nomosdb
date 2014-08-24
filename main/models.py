@@ -20,6 +20,12 @@ def this_year():
     return current_year
 
 
+class Settings(models.Model):
+    """Allows to save some general settings in the database"""
+    name = models.CharField(max_length=100, unique=True)
+    value = models.CharField(max_length=200)
+
+
 class SubjectArea(models.Model):
     """Subject areas are the broader categories - eg "Law" or "Economics".
 
@@ -193,7 +199,6 @@ class Module(models.Model):
                 returnlist.append(week)
         returnlist.sort()
         return returnlist
-
 
 
 class Assessment(models.Model):

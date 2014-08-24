@@ -3,7 +3,7 @@ from django import template
 register = template.Library()
 
 @register.filter
-def get_directory_item(dictionary, key):
+def get_item(dictionary, key):
     return dictionary.get(key)
 
 @register.filter
@@ -33,3 +33,20 @@ def get_item_plus_1(dictionary, key):
     number += 1
     key = str(number)
     return dictionary.get(key)
+
+@register.filter
+def remove_spacebars(words):
+    """Simply removes blank spaces from a word"""
+    if words is not None:
+        result = words.strip()
+        result = result.replace('/', '')
+        result = result.replace(' ', '_')
+        result = result.replace('__', '_')
+    else:
+        result = ''
+    return result
+
+@register.filter
+def get_attendance(performance, week):
+    result = performance.attendance_for(week)
+    return result

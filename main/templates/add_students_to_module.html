@@ -1,10 +1,24 @@
 {% extends "base.html" %}
+{% load custom_filters %}
 
 {% block formstart %}
 <form method="post">
 {% endblock %}
 
 {% block content %}
+
+<h1>Add Students to {{ module }}</h1>
+
+<div class="panel">
+    <div class="panel-body">
+        <label>Add / remove all from...</label>
+        <div class="btn-group" id="add_on_bulk_buttons">
+            {% for course, students in courses.items %}
+                <button type="button" class="btn btn-default btn-sm" id="{{ course|remove_spacebars }}">{{ course }}</button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 
 <table id="sortable_table" class="table table-hover table-sortable">
     <thead>
@@ -58,4 +72,31 @@
 {% block formend %}
 {% csrf_token %}
 </form>
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+    {% for course, students in courses.items %}
+        $('#{{ course|remove_spacebars }}').click(function() {
+            if ($(this).hasClass('active')){
+                $(this).removeClass('active');
+                {% for student_id in students %}
+                    $('#cb_{{ student_id }}').prop('checked', false);
+                {% endfor %}
+            }
+            else {
+                $(this).addClass('active');
+                {% for student_id in students %}
+                    $('#cb_{{ student_id }}').prop('checked', true);
+                {% endfor %}
+            };
+        });
+    {% endfor %}
+});
+
+</script>
+
 {% endblock %}

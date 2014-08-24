@@ -194,10 +194,16 @@ def add_students_to_module(request, code, year):
                     if subject_area in student.course.subject_areas.all():
                         if student not in students:
                             students.append(student)
+    courses = {}
+    for student in students:
+        if student.course.short_title in courses:
+            courses[student.course.short_title].append(student.student_id)
+        else:
+            courses[student.course.short_title] = [student.student_id]
     return render(
         request,
         'add_students_to_module.html',
-        {'students': students}
+        {'module': module, 'students': students, 'courses': courses}
     )
 
 
