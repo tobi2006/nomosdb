@@ -32,6 +32,9 @@ def set_up_stuff():
         title="Hunting Practice",
         code="hp23",
         year=2014,
+        first_session=1,
+        last_session=12,
+        no_teaching_in=7
     )
     student1 = Student.objects.create(
         last_name="Bunny",
@@ -99,11 +102,14 @@ class AddEditStudentTest(TestCase):
     """Tests for the student form function"""
 
     def send_form(self):
-        response = self.client.post('/add_student/', data={
-            'student_id': 'bb23',
-            'last_name': 'Bünny',
-            'first_name': 'Bugs Middle Names'
-        })
+        response = self.client.post(
+            '/add_student/',
+            data={
+                'student_id': 'bb23',
+                'last_name': 'Bünny',
+                'first_name': 'Bugs Middle Names'
+            }
+        )
         return response
 
     def test_add_edit_student_renders_right_template(self):
@@ -418,16 +424,53 @@ class AttendanceTest(TestCase):
         self.assertContains(response, student4.last_name)
         self.assertContains(response, student5.last_name)
 
-#    def test_attendance_can_be_added_through_form(self):
-#        stuff = set_up_stuff()
-#        module = stuff[0]
-#        student1 = stuff[1]
-#        student2 = stuff[2]
-#        student3 = stuff[3]
-#        student4 = stuff[4]
-#        student5 = stuff[5]
-#        performance1 = Performance.objects.get(student=student1, module=module)
-#        performance2 = Performance.objects.get(student=student2, module=module)
-#        performance3 = Performance.objects.get(student=student3, module=module)
-#        performance4 = Performance.objects.get(student=student4, module=module)
-#        performance5 = Performance.objects.get(student=student5, module=module)
+    def test_attendance_can_be_added_through_form(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        response = self.client.post(
+            module.get_attendance_url('all'),
+            data={
+                'bb23': ['1_p', '2_a', '3_e'],
+                'dd42': ['1_p', '3_a'],
+                'save': 'Save Changes for all weeks'
+            }
+        )
+        student1_out = Student.objects.get(student_id='bb23')
+        performance1_out = Performance.objects.get(
+            student=student1_out, module=module)
+        student2_out = Student.objects.get(student_id='dd42')
+        performance2_out = Performance.objects.get(
+            student=student2_out, module=module)
+        self.assertEqual(performance1_out.attendance_for(1), 'p')
+        self.assertEqual(performance1_out.attendance_for(2), 'a')
+        self.assertEqual(performance1_out.attendance_for(3), 'e')
+        self.assertEqual(performance2_out.attendance_for(1), 'p')
+        self.assertEqual(performance2_out.attendance_for(2), None)
+        self.assertEqual(performance2_out.attendance_for(3), 'a')
+
+    def test_attendance_changes_are_ignored_for_hidden_weeks(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        performance1 = Performance.objects.get(student=student1, module=module)
+        performance1.save_attendance('1', 'e')
+        response = self.client.post(
+            module.get_attendance_url('all'),
+            data={
+                'bb23': ['1_p', '2_a', '3_e'],
+                'dd42': ['1_p', '3_a'],
+                'save': 'Save Changes for Week 2'
+            }
+        )
+        student1_out = Student.objects.get(student_id='bb23')
+        performance1_out = Performance.objects.get(
+            student=student1_out, module=module)
+        student2_out = Student.objects.get(student_id='dd42')
+        performance2_out = Performance.objects.get(
+            student=student2_out, module=module)
+        self.assertEqual(performance1_out.attendance_for(1), 'e')
+        self.assertEqual(performance1_out.attendance_for(2), 'a')
+        self.assertEqual(performance1_out.attendance_for(3), None)
+        self.assertEqual(performance2_out.attendance_for(1), None)
+        self.assertEqual(performance2_out.attendance_for(2), None)
+        self.assertEqual(performance2_out.attendance_for(3), None)

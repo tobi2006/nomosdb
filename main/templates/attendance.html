@@ -23,9 +23,11 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-4"></div>
-        <div class="col-md-4">
-            A = Absent / E = Excused absent / P = Present
+        <div class="col-md-1">
+        <div class="col-md-7">
+            <p>{% if this_week %}We are currently in week {{ this_week }}.{% else %}We are either not in a teaching week or your administrator forgot to enter them...{% endif %}</p>
+            <p>Make sure you enter all attendances for this session. Blank entries will not be counted.</p>
+            <p>A = Absent / E = Excused absent / P = Present</p>
         </div>
     </div>
 </div>
@@ -50,29 +52,29 @@
                         <div class="btn-group" data-toggle="buttons">
                             {% if performance|get_attendance:week == 'a' %}
                                 <label class="btn btn-default btn-xs active">
-                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="a" class="{{ week }}_a" checked>A
+                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_a" class="{{ week }}_a" checked>A
                                 </label>
                             {% else %}
                                 <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="a" class="{{ week }}_a">A
+                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_a" class="{{ week }}_a">A
                                 </label>
                             {% endif %}
                             {% if performance|get_attendance:week == 'e' %}
                                 <label class="btn btn-default btn-xs active">
-                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="e" class="{{ week }}_e" checked>E
+                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_e" class="{{ week }}_e" checked>E
                                 </label>
                             {% else %}
                                 <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="e" class="{{ week }}_e">E
+                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_e" class="{{ week }}_e">E
                                 </label>
                             {% endif %}
                             {% if performance|get_attendance:week == 'p' %}
                                 <label class="btn btn-default btn-xs active">
-                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="p" class="{{ week }}_p" checked>P
+                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_p" class="{{ week }}_p" checked>P
                                 </label>
                             {% else %}
                                 <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="p" class="{{ week }}_p">P
+                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_p" class="{{ week }}_p">P
                                 </label>
                             {% endif %}
                     </td>
@@ -81,6 +83,11 @@
         {% endfor %}
     </tbody>
 </table>
+
+{% comment %}
+The Value of the Save button can be changed, as long as the week specific one contains the week number
+as its only number and as long as the "Save all" one does not contain a number
+{% endcomment %}
 
 <div class="btn-group" align="right">
     <a href="{{ module.get_absolute_url }}" class="btn btn-primary">Cancel</a>

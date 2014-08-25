@@ -2,6 +2,7 @@ from django.shortcuts import redirect, render
 from nomosdb.unisettings import *
 from main.forms import *
 from main.models import *
+from main.functions import week_number
 from random import shuffle
 
 
@@ -320,13 +321,37 @@ def attendance(request, code, year, group):
             seminar_group=group
         )
         seminar_group = group
+    if request.method == 'POST':
+        save = request.POST['save']
+        save_li = save.split()
+        check = 'all'
+        for word in save_li:
+            if word.isdigit():
+                check = word
+        for performance in performances:
+            student_id = performance.student.student_id
+            if student_id in request.POST:
+                entries = request.POST.getlist(student_id)
+                for entry in entries:
+                    result = entry.split('_')
+                    week = result[0]
+                    presence = result[1]
+                    if check == 'all':
+                        performance.save_attendance(week, presence)
+                    else:
+                        if week == check:
+                            performance.save_attendance(week, presence)
+        return redirect(module.get_absolute_url())
+    this_week = week_number()
+    print(this_week)
     return render(
         request,
         'attendance.html',
         {
             'seminar_group': seminar_group,
             'performances': performances,
-            'module': module
+            'module': module,
+            'this_week': this_week
         }
     )
 
