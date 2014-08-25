@@ -349,7 +349,9 @@ class PerformanceTest(TestCase):
             value=40
         )
         module.assessments.add(assessment)
-        expected_list_1 = ['20', '30', '40']
+        # No result for the exam - should return "None"
+        expected_list_1 = ['20', '30', '40', None]
+
         module2 = Module.objects.create(
             title="And another one",
             code="AAO4223"
@@ -370,7 +372,7 @@ class PerformanceTest(TestCase):
         )
         assessment = Assessment.objects.create(
             title="And another assessment",
-            value=20
+            value=10
         )
         module2.assessments.add(assessment)
         result = AssessmentResult.objects.create(
@@ -381,8 +383,14 @@ class PerformanceTest(TestCase):
             concessions='G',
             second_resit_mark=40
         )
+        assessment = Assessment.objects.create(
+            title="Middle Assessment",
+            value=10
+        )
+        module2.assessments.add(assessment)
         expected_list_2 = [
             '35 (Submission: 38, Second resubmission: 40)',
+            None,
             '50'
         ]
         self.assertEqual(

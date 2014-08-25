@@ -58,8 +58,8 @@
 
 <br><br>
 
-{% if no_assessments %}
-    <p>You need to <a href="{{ module.get_assessment_url }}"set some assessments for this module</p>
+{% if module.all_assessment_titles|length == 0 %}
+<p class="bg-warning">You need to <a href="{{ module.get_assessment_url }}">set some assessments for this module</a></p>
 {% endif %}
 
 
@@ -103,12 +103,13 @@
                     {% if performance.student.lsp %}<span class="glyphicon glyphicon-warning-sign"></span>{% endif %}
                 </td>
                 <td>
+                    {{ performance.count_attendance }}
                 </td>
                 
                 <td>
                     {% for assessment_result in performance.all_assessment_results_as_strings %}
                         <td>
-                            {{ assessment_result }}
+                            {{ assessment_result|default_if_none:"" }}
                         </td>
                     {% endfor %}
                 </td>
@@ -122,9 +123,7 @@
 
 {% else %}
 
-<p>
-    You need to <a href="{{ module.get_add_students_url }}">add students</a> to this module.
-</p>
+<p class="bg-warning">You need to <a href="{{ module.get_add_students_url }}">add students</a> to this module.</p>
 
 {% endif %}
 

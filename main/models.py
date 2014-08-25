@@ -180,6 +180,18 @@ class Module(models.Model):
             returnlist.append(exam)
         return returnlist
 
+    def all_assessments(self):
+        returnlist = []
+        exam = False
+        for assessment in self.assessments.all():
+            if assessment.title != 'Exam':  # Make sure the exam comes last
+                returnlist.append(assessment)
+            else:
+                exam = assessment
+        if exam:
+            returnlist.append(exam)
+        return returnlist
+
     def all_teaching_weeks(self):
         no_teaching = []
         if self.no_teaching_in:
@@ -392,13 +404,25 @@ class Performance(models.Model):
 
     def all_assessment_results_as_strings(self):
         return_list = []
-        exam = False
+        there_is_an_exam = False
+        all_results = {}
         for result in self.assessment_results.all():
-            if result.assessment.title != 'Exam':  # Make sure exam comes last
-                return_list.append(result.result_as_string())
+            all_results[result.assessment] = result
+        for assessment in self.module.all_assessments():
+            if assessment.title != 'Exam':
+                if assessment in all_results:
+                    result = all_results[assessment]
+                    return_list.append(result.result_as_string())
+                else:
+                    return_list.append(None)
             else:
-                exam = result.result_as_string()
-        if exam:
+                there_is_an_exam = True
+                if assessment in all_results:
+                    result = all_results[assessment]
+                    exam = result.result_as_string()
+                else:
+                    exam = None
+        if there_is_an_exam:
             return_list.append(exam)
         return return_list
 
@@ -519,7 +543,7 @@ class AssessmentResult(models.Model):
 
     def result_as_string(self):
         if self.mark is None:
-            returnstring = ''
+            returnstring = None
         else:
             returnstring = str(self.mark)
             if self.resit_mark:
