@@ -23,7 +23,7 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-1">
+        <div class="col-md-1"></div>
         <div class="col-md-7">
             <p>{% if this_week %}We are currently in week {{ this_week }}.{% else %}We are either not in a teaching week or your administrator forgot to enter them...{% endif %}</p>
             <p>Make sure you enter all attendances for this session. Blank entries will not be counted.</p>
@@ -89,10 +89,8 @@ The Value of the Save button can be changed, as long as the week specific one co
 as its only number and as long as the "Save all" one does not contain a number
 {% endcomment %}
 
-<div class="btn-group" align="right">
-    <a href="{{ module.get_absolute_url }}" class="btn btn-primary">Cancel</a>
-    <input type="submit" name="save" value="Save Changes for All Groups" id="save" class="btn btn-primary" data-loading-text="Please wait">
-</div>
+<a href="{{ module.get_absolute_url }}" class="btn btn-primary">Cancel</a>
+<input type="submit" name="save" value="Save Changes for All Groups" id="save" class="btn btn-primary" data-loading-text="Please wait">
 
 {% endblock %}
 
