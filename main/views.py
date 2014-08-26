@@ -330,12 +330,11 @@ def attendance(request, code, year, group):
                 check = word
         for performance in performances:
             student_id = performance.student.student_id
-            if student_id in request.POST:
-                entries = request.POST.getlist(student_id)
-                for entry in entries:
-                    result = entry.split('_')
-                    week = result[0]
-                    presence = result[1]
+            for week in module.all_teaching_weeks():
+                week = str(week)
+                key = student_id + '_' + week
+                if key in request.POST:
+                    presence = request.POST[key]
                     if check == 'all':
                         performance.save_attendance(week, presence)
                     else:
@@ -343,7 +342,6 @@ def attendance(request, code, year, group):
                             performance.save_attendance(week, presence)
         return redirect(module.get_absolute_url())
     this_week = week_number()
-    print(this_week)
     return render(
         request,
         'attendance.html',
@@ -376,8 +374,6 @@ def assessment(request, code, year, slug=None):
             assessment.module = module
             assessment.save()
             return redirect(module.get_assessment_url())
-        else:
-            print(form.errors)
     else:
         if edit:
             form = AssessmentForm(instance=assessment)

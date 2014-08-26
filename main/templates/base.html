@@ -79,9 +79,10 @@
 </nav>
 {% endblock %}
 
-{% block formstart %}{% endblock %} <!-- necessary for forms that include sortable tables -->
-
-{% block structure %} <!-- to be adaptable for different basic layouts -->
+{% block formstart %}
+<!-- necessary for forms that include sortable tables -->
+{% endblock %} 
+{% block structure %} <!-- adaptable for different basic layouts -->
 <div class="container">
     {% block content %}{% endblock %}
 </div>

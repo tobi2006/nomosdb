@@ -6,6 +6,12 @@
     {% csrf_token %}
 {% endblock %}
 
+{% block style %}
+.small-table{
+    padding:5px;
+}
+{% endblock %}
+
 {% block content %}
 
 <h1>
@@ -49,34 +55,62 @@
                 </td>
                 {% for week in module.all_teaching_weeks %}
                     <td class="column column_{{ week }}">
-                        <div class="btn-group" data-toggle="buttons">
-                            {% if performance|get_attendance:week == 'a' %}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="small-table">A</th>
+                                    <th class="small-table">E</th>
+                                    <th class="small-table">P</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>
+                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="a"{% if performance|get_attendance:week == 'a' %} checked{% endif %}>
+                                    </th>
+                                    <th>
+                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="e"{% if performance|get_attendance:week == 'e' %} checked{% endif %}>
+                                    </th>
+                                    <th>
+                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="p"{% if performance|get_attendance:week == 'p' %} checked{% endif %}>
+                                    </th>
+                                </tr>
+                            </tbody>
+                        </table>
+                        {% comment %}
+                        
+                        This solution looks much nicer. Unfortunately, it causes problems: when saving a big range of values,
+                        some of them can be left out at random. I could not find a solution. The Stack Overflow thread is:
+                        http://stackoverflow.com/questions/25490595/result-from-radio-style-buttons-in-bootstrap-3-not-always-in-post-data
+
                                 <label class="btn btn-default btn-xs active">
-                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_a" class="{{ week }}_a" checked>A
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="a" checked>A
                                 </label>
                             {% else %}
                                 <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_a" class="{{ week }}_a">A
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="a">A
                                 </label>
                             {% endif %}
                             {% if performance|get_attendance:week == 'e' %}
                                 <label class="btn btn-default btn-xs active">
-                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_e" class="{{ week }}_e" checked>E
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="e" checked>E
                                 </label>
                             {% else %}
                                 <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_e" class="{{ week }}_e">E
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="e">E
                                 </label>
                             {% endif %}
                             {% if performance|get_attendance:week == 'p' %}
                                 <label class="btn btn-default btn-xs active">
-                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_p" class="{{ week }}_p" checked>P
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="p" checked>P
                                 </label>
                             {% else %}
                                 <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="{{ performance.student.student_id }}" value="{{ week }}_p" class="{{ week }}_p">P
+                                    <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="p">P
                                 </label>
                             {% endif %}
+                        </div>
+                        {% endcomment %}
                     </td>
                 {% endfor %}
             </tr>
@@ -90,7 +124,7 @@ as its only number and as long as the "Save all" one does not contain a number
 {% endcomment %}
 
 <a href="{{ module.get_absolute_url }}" class="btn btn-primary">Cancel</a>
-<input type="submit" name="save" value="Save Changes for All Groups" id="save" class="btn btn-primary" data-loading-text="Please wait">
+<input type="submit" name="save" value="Save Changes for All Weeks" id="save" class="btn btn-primary" data-loading-text="Please wait">
 
 {% endblock %}
 
@@ -118,6 +152,26 @@ $(document).ready(function() {
             {% endfor %}
         }
     })
+
+    // The following allows to deselect the radio buttons
+    $(':radio').mousedown(function(e){
+        var $self = $(this);
+        if( $self.is(':checked') ){
+            var uncheck = function(){
+                setTimeout(function(){$self.removeAttr('checked');},0);
+            };
+            var unbind = function(){
+                $self.unbind('mouseup',up);
+            };
+            var up = function(){
+                uncheck();
+                unbind();
+            };
+            $self.bind('mouseup',up);
+            $self.one('mouseout', unbind);
+        }
+    });
+
 });
 
 </script>

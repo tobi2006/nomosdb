@@ -430,8 +430,11 @@ class AttendanceTest(TestCase):
         response = self.client.post(
             module.get_attendance_url('all'),
             data={
-                'bb23': ['1_p', '2_a', '3_e'],
-                'dd42': ['1_p', '3_a'],
+                'bb23_1': 'p',
+                'bb23_2': 'a',
+                'bb23_3': 'e',
+                'dd42_1': 'p',
+                'dd42_3': 'a',
                 'save': 'Save Changes for all weeks'
             }
         )
@@ -457,8 +460,11 @@ class AttendanceTest(TestCase):
         response = self.client.post(
             module.get_attendance_url('all'),
             data={
-                'bb23': ['1_p', '2_a', '3_e'],
-                'dd42': ['1_p', '3_a'],
+                'bb23_1': 'p',
+                'bb23_2': 'a',
+                'bb23_3': 'e',
+                'dd42_1': 'p',
+                'dd42_3': 'a',
                 'save': 'Save Changes for Week 2'
             }
         )
