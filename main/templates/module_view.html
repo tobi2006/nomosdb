@@ -88,6 +88,9 @@
             <th>
                 Module Mark
             </th>
+            <th>
+                &nbsp;
+            </th>
         </tr>
     </thead>
     <tbody>
@@ -105,16 +108,16 @@
                 <td>
                     {{ performance.count_attendance }}
                 </td>
-                
-                <td>
-                    {% for assessment_result in performance.all_assessment_results_as_strings %}
-                        <td>
-                            {{ assessment_result|default_if_none:"" }}
-                        </td>
-                    {% endfor %}
-                </td>
+                {% for assessment_result in performance.all_assessment_results_as_strings %}
+                    <td>
+                        {{ assessment_result|default_if_none:"" }}
+                    </td>
+                {% endfor %}
                 <td>
                     {{ performance.average|default_if_none:"" }}
+                </td>
+                <td>
+                    <a href="#" class="remove"><span class="glyphicon glyphicon-remove" id="{{ performance.student.student_id }}"></span></a>
                 </td>
             </tr>
         {% endfor %}
@@ -126,5 +129,32 @@
 <p class="bg-warning">You need to <a href="{{ module.get_add_students_url }}">add students</a> to this module.</p>
 
 {% endif %}
+
+{% endblock %}
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+
+    $(document).ready(function(){
+
+        $(document).on("click", ".remove", function(e) {
+            bootbox.confirm("Are you sure you want to remove this student from the module and delete all marks the students might have in this module? If the student is just temporary absent, it is better to mark them inactive.", function(confirm) {
+                if (confirm)
+                {
+                var student_id = e.target.id;
+                var remove = "{{ module.get_blank_remove_student_url }}" + student_id;
+                window.location.replace(remove);
+                }
+            });
+        });
+
+    });
+
+</script>
 
 {% endblock %}
