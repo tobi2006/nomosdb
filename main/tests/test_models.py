@@ -57,7 +57,7 @@ class SubjectAreaTest(TestCase):
     def test_subject_area_returns_name(self):
         subject = create_subject_area(save=False)
         self.assertEqual(
-            subject.__unicode__(),
+            subject.__str__(),
             "Law"
         )
 
@@ -80,7 +80,7 @@ class CourseTest(TestCase):
     def test_course_returns_name(self):
         course = create_course(save=False)
         self.assertEqual(
-            course.__unicode__(),
+            course.__str__(),
             "BA in Cartoon Studies"
         )
 
@@ -116,7 +116,7 @@ class StudentTest(TestCase):
     def test_student_name_returns_correctly(self):
         student = create_student(save=False)
         self.assertEqual(
-            student.__unicode__(),
+            student.__str__(),
             'Bunny, Bugs Middle Names'
         )
 
@@ -192,7 +192,7 @@ class ModuleTest(TestCase):
     def test_module_name_returns_correctly(self):
         module = create_module(save=False)
         self.assertEqual(
-            module.__unicode__(),
+            module.__str__(),
             'Hunting Laws (2013/14)'
         )
 
@@ -228,6 +228,13 @@ class ModuleTest(TestCase):
         self.assertEqual(
             module.get_attendance_url(1),
             '/attendance/hl23/2013/1/'
+        )
+
+    def test_module_returns_blank_remove_students_url(self):
+        module = create_module(save=False)
+        self.assertEqual(
+            module.get_blank_remove_student_url(),
+            '/remove_student_from_module/hl23/2013/'
         )
 
     def test_module_returns_correct_assessment_url(self):

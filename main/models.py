@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.text import slugify
@@ -10,7 +11,7 @@ ACADEMIC_YEARS = (
 
 
 def this_year():
-    """Check which academic year we are in"""
+    """Checks which academic year we are in"""
     year = datetime.datetime.now().year
     month = datetime.datetime.now().month
     if month < 9:
@@ -37,7 +38,7 @@ class SubjectArea(models.Model):
 
     name = models.CharField(max_length=100, unique=True, verbose_name="Add...")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -52,7 +53,7 @@ class Course(models.Model):
     )
     subject_areas = models.ManyToManyField(SubjectArea, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_absolute_url(self):
@@ -144,7 +145,7 @@ class Module(models.Model):
     class Meta:
         unique_together = ('code', 'year')
 
-    def __unicode__(self):
+    def __str__(self):
         next_year = str(int(self.year) + 1)
         nxt = next_year[-2:]
         return u'%s (%s/%s)' % (self.title, self.year, nxt)
@@ -165,8 +166,25 @@ class Module(models.Model):
     def get_seminar_groups_url(self):
         return reverse('assign_seminar_groups', args=[self.code, self.year])
 
+    def get_seminar_group_overview_url(self):
+        return reverse('seminar_group_overview', args=[self.code, self.year])
+
     def get_assessment_url(self):
         return reverse('assessment', args=[self.code, self.year])
+
+    def get_remove_student_url(self, student_id):
+        return reverse(
+            'remove_student_from_module',
+            args=[self.code, self.year, student_id]
+        )
+
+    def get_blank_remove_student_url(self):
+        url = reverse(
+            'remove_student_from_module',
+            args=[self.code, self.year, 'xxxxxxxxxxxxxxxxxxxx']
+        )
+        blank_url = url.replace('xxxxxxxxxxxxxxxxxxxx/', '')
+        return blank_url
 
     def all_assessment_titles(self):
         returnlist = []
@@ -257,7 +275,7 @@ class Assessment(models.Model):
         self.slug = slugify(self.title)
         super(Assessment, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_absolute_url(self):
@@ -363,7 +381,7 @@ class Student(models.Model):
     achieved_degree = models.IntegerField(
         choices=DEGREES, blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s, %s" % (self.last_name, self.first_name)
 
     def short_first_name(self):
@@ -373,11 +391,41 @@ class Student(models.Model):
     def short_name(self):
         return "%s, %s" % (self.last_name, self.short_first_name())
 
+    def name(self):
+        return "%s %s" % (self.short_first_name(), self.last_name)
+
     def get_absolute_url(self):
         return reverse('student_view', args=[self.student_id])
 
     def get_edit_url(self):
         return reverse('edit_student', args=[self.student_id])
+
+
+class Staff(models.Model):
+    """The class representing a teacher with additional information"""
+    user = models.OneToOneField(User)
+    subject_areas = models.ManyToManyField(SubjectArea, blank=True, null=True)
+    modules = models.ManyToManyField(
+        Module,
+        blank=True,
+        null=True,
+        related_name="teacher"
+    )
+    tutees = models.ManyToManyField(
+        Student,
+        blank=True,
+        null=True,
+        related_name="tutor"
+    )
+    is_admin = models.BooleanField(default=False)
+    is_teacher = models.BooleanField(default=True)
+    pastoral_care = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "%s, %s" % (self.user.last_name, self.user.first_name)
+
+    def name(self):
+        return "%s %s" % (self.user.first_name, self.user.last_name)
 
 
 class Performance(models.Model):

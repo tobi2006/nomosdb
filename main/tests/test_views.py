@@ -1,6 +1,7 @@
 from django.test import TestCase
 from nomosdb.unisettings import UNI_NAME
 from main.models import *
+from bs4 import BeautifulSoup
 
 
 def create_student():
@@ -239,6 +240,28 @@ class AddStudentsToModuleTest(TestCase):
         self.assertEqual(response.status_code, 301)
 
 
+class RemoveStudentFromModuleTest(TestCase):
+    """Tests for the function to remove a student from a module"""
+
+    def test_student_removed_from_module_is_not_in_module_anymore(self):
+        module = create_module()
+        student = create_student()
+        student.modules.add(module)
+        Performance.objects.create(module=module, student=student)
+        url = (
+            '/remove_student_from_module/' +
+            module.code +
+            '/' +
+            str(module.year) +
+            '/' +
+            student.student_id +
+            '/'
+        )
+        response = self.client.get(url)
+        self.assertEqual(Performance.objects.count(), 0)
+        self.assertEqual(student.modules.count(), 0)
+
+
 class SeminarGroupTest(TestCase):
     """Tests involving the seminar group setup"""
 
@@ -330,6 +353,44 @@ class SeminarGroupTest(TestCase):
         self.assertNotEqual(performance4.seminar_group, None)
         self.assertNotEqual(performance5.seminar_group, None)
 
+    def test_seminar_group_overview_uses_correct_template(self):
+        module = create_module()
+        response = self.client.get(module.get_seminar_group_overview_url())
+        self.assertTemplateUsed(response, 'seminar_group_overview.html')
+
+    def test_seminar_group_overview_is_correct(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        student5 = stuff[5]
+        performance1 = Performance.objects.get(student=student1, module=module)
+        performance1.seminar_group = 1
+        performance1.save()
+        performance2 = Performance.objects.get(student=student2, module=module)
+        performance2.seminar_group = 2
+        performance2.save()
+        performance3 = Performance.objects.get(student=student3, module=module)
+        performance3.seminar_group = 1
+        performance3.save()
+        performance4 = Performance.objects.get(student=student4, module=module)
+        performance4.seminar_group = 2
+        performance4.save()
+        performance5 = Performance.objects.get(student=student5, module=module)
+        performance5.seminar_group = 1
+        performance5.save()
+        response = self.client.get(module.get_seminar_group_overview_url())
+        soup = BeautifulSoup(response.content)
+        group_1 = str(soup.select('#group_1')[0])
+        group_2 = str(soup.select('#group_2')[0])
+        self.assertIn(student1.short_name(), group_1)
+        self.assertIn(student2.short_name(), group_2)
+        self.assertIn(student3.short_name(), group_1)
+        self.assertIn(student4.short_name(), group_2)
+        self.assertIn(student5.short_name(), group_1)
+
 
 class AssessmentTest(TestCase):
     """Tests involving setting and deleting of assessments"""
@@ -343,7 +404,7 @@ class AssessmentTest(TestCase):
         module = set_up_stuff()[0]
         self.client.post(
             module.get_assessment_url(),
-            data = {
+            data={
                 'title': 'Hunting Exercise',
                 'value': 40,
             }
@@ -380,7 +441,6 @@ class AttendanceTest(TestCase):
         module = set_up_stuff()[0]
         response = self.client.get(module.get_attendance_url('all'))
         self.assertTemplateUsed(response, 'attendance.html')
-
 
     def test_attendance_form_shows_seminar_group(self):
         stuff = set_up_stuff()

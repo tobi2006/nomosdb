@@ -46,6 +46,16 @@ urlpatterns += patterns(
     ),
     url(r'^edit_student/(\w+)/$', 'add_or_edit_student', name='edit_student'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),
+    url(
+        r'^remove_student_from_module/(\w+)/(\d{4})/(\w+)/$',
+        'remove_student_from_module',
+        name='remove_student_from_module'
+    ),
+    url(
+        r'^seminar_group_overview/(\w+)/(\d{4})/$',
+        'seminar_group_overview',
+        name='seminar_group_overview'
+    ),
     url(r'^student/(\w+)/$', 'student_view', name='student_view'),
     url(r'^subject_areas/$', 'subject_areas', name='subject_areas'),
 )

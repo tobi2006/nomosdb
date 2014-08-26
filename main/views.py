@@ -6,6 +6,13 @@ from main.functions import week_number
 from random import shuffle
 
 
+def is_teacher(user):
+    if hasattr(user, 'staff'):
+        if user.staff.is_teacher:
+            return True
+    return False
+
+
 def home(request):
     """Simply the home page, nothing there yet"""
     # use if to show different pages for students and teachers!
@@ -208,6 +215,16 @@ def add_students_to_module(request, code, year):
     )
 
 
+def remove_student_from_module(request, code, year, student_id):
+    """Removes student from module, deletes performance object"""
+    module = Module.objects.get(code=code, year=year)
+    student = Student.objects.get(student_id=student_id)
+    performance = Performance.objects.get(module=module, student=student)
+    performance.delete()
+    student.modules.remove(module)
+    return redirect(module.get_absolute_url())
+
+
 def assign_seminar_groups(request, code, year):
     """Allows to assign the students to seminar groups graphically"""
     module = Module.objects.get(code=code, year=year)
@@ -408,3 +425,26 @@ def delete_assessment(request, code, year, slug):
         result.delete()
     assessment.delete()
     return redirect(module.get_absolute_url())
+
+
+def seminar_group_overview(request, code, year):
+    """Gives a nice overview of seminar groups"""
+    module = Module.objects.get(code=code, year=year)
+    performances = Performance.objects.filter(module=module)
+    seminar_groups = {}
+    for performance in performances:
+        if performance.seminar_group in seminar_groups:
+            seminar_groups[performance.seminar_group].append(
+                performance.student.short_name()
+            )
+        else:
+            seminar_groups[performance.seminar_group] = [
+                performance.student.short_name()
+            ]
+    for group in seminar_groups:
+        seminar_groups[group].sort()
+    return render(
+        request,
+        'seminar_group_overview.html',
+        {'seminar_groups': seminar_groups, 'module': module}
+    )

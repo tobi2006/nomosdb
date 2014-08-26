@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block style %}
+
+.sl{
+    list-style-type: none;
+}
+
+{% endblock %}
+
+{% block content %}
+<h1>{{ module }} - Seminar Groups</h1>
+
+{% if seminar_groups %}
+    {% for seminar_group, students in seminar_groups.items %}
+
+    <h2>Group {{ seminar_group }}</h2>
+
+    <ul id="group_{{ seminar_group }}">
+        {% for student in students %}
+        <li class="sl">{{ student }}</li>
+        {% endfor %}
+    </ul>
+
+    {% endfor %}
+{% else %}
+<p>You did not assign any seminar groups yet. You can do that on <a href="{{ module.get_seminar_groups_url }}">this page.</a>
+{% endif %}
+
+{% endblock %}
