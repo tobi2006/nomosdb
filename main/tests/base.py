@@ -1,0 +1,111 @@
+from main.models import *
+
+
+def create_subject_area(save=True):
+    """Creates one subject area"""
+    subject = SubjectArea(name="Law")
+    if save:
+        subject.save()
+    return subject
+
+
+def create_course(save=True):
+    """Creates a course"""
+    course = Course(
+        title="BA in Cartoon Studies",
+        short_title="CS"
+    )
+    if save:
+        course.save()
+    return course
+
+
+def create_student(save=True):
+    """Creates a student"""
+    student = Student(
+        student_id='bb23',
+        last_name='Bunny',
+        first_name='Bugs Middle Names'
+    )
+    if save:
+        student.save()
+    return student
+
+
+def create_module(save=True):
+    """Creates a module"""
+    module = Module(
+        title='Hunting Laws',
+        code="hl23",
+        year="2013",
+    )
+    if save:
+        module.save()
+    return module
+
+
+def create_user():
+    user = User.objects.create_user(
+        first_name='Elmar',
+        last_name='Fudd',
+        username='ef123',
+        email='e.fudd@acme.edu',
+        password='password'
+    )
+    return user
+
+
+def create_staff(save=True):
+    user = create_user()
+    staff = Staff(user=user, role='teacher')
+    if save:
+        staff.save()
+    return staff
+
+
+def set_up_stuff():
+    """Sets up a module with five students, enrolls them"""
+    module = Module.objects.create(
+        title="Hunting Practice",
+        code="hp23",
+        year=2014,
+        first_session=1,
+        last_session=12,
+        no_teaching_in=7
+    )
+    student1 = Student.objects.create(
+        last_name="Bunny",
+        first_name="Bugs",
+        student_id="bb23",
+    )
+    student1.modules.add(module)
+    student2 = Student.objects.create(
+        last_name="Duck",
+        first_name="Daffy",
+        student_id="dd42",
+    )
+    student2.modules.add(module)
+    student3 = Student.objects.create(
+        last_name="Pig",
+        first_name="Porky",
+        student_id="pp2323",
+    )
+    student3.modules.add(module)
+    student4 = Student.objects.create(
+        last_name="Le Pew",
+        first_name="Pepe",
+        student_id="plp42"
+    )
+    student4.modules.add(module)
+    student5 = Student.objects.create(
+        last_name="Devil",
+        first_name="Tasmanian",
+        student_id="td2323"
+    )
+    student5.modules.add(module)
+    Performance.objects.create(student=student1, module=module)
+    Performance.objects.create(student=student2, module=module)
+    Performance.objects.create(student=student3, module=module)
+    Performance.objects.create(student=student4, module=module)
+    Performance.objects.create(student=student5, module=module)
+    return((module, student1, student2, student3, student4, student5))

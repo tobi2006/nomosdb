@@ -2,77 +2,7 @@ from django.test import TestCase
 from nomosdb.unisettings import UNI_NAME
 from main.models import *
 from bs4 import BeautifulSoup
-
-
-def create_student():
-    """Creates a student to be used by other tests"""
-    student = Student.objects.create(
-        student_id="bb23",
-        last_name="Bunny",
-        first_name="Bugs",
-        year="1",
-        qld=True
-    )
-    return student
-
-
-def create_module(save=True):
-    module = Module(
-        title='Hunting Laws',
-        code="hl23",
-        year="2013",
-    )
-    if save:
-        module.save()
-    return module
-
-
-def set_up_stuff():
-    """Sets up a module with five students, enrolls them"""
-    module = Module.objects.create(
-        title="Hunting Practice",
-        code="hp23",
-        year=2014,
-        first_session=1,
-        last_session=12,
-        no_teaching_in=7
-    )
-    student1 = Student.objects.create(
-        last_name="Bunny",
-        first_name="Bugs",
-        student_id="bb23",
-    )
-    student1.modules.add(module)
-    student2 = Student.objects.create(
-        last_name="Duck",
-        first_name="Daffy",
-        student_id="dd42",
-    )
-    student2.modules.add(module)
-    student3 = Student.objects.create(
-        last_name="Pig",
-        first_name="Porky",
-        student_id="pp2323",
-    )
-    student3.modules.add(module)
-    student4 = Student.objects.create(
-        last_name="Le Pew",
-        first_name="Pepe",
-        student_id="plp42"
-    )
-    student4.modules.add(module)
-    student5 = Student.objects.create(
-        last_name="Devil",
-        first_name="Tasmanian",
-        student_id="td2323"
-    )
-    student5.modules.add(module)
-    Performance.objects.create(student=student1, module=module)
-    Performance.objects.create(student=student2, module=module)
-    Performance.objects.create(student=student3, module=module)
-    Performance.objects.create(student=student4, module=module)
-    Performance.objects.create(student=student5, module=module)
-    return((module, student1, student2, student3, student4, student5))
+from .base import *
 
 
 class HomePageTest(TestCase):
@@ -605,3 +535,6 @@ class AddEditStaffTest(TestCase):
         self.assertEqual(staff_out.role, 'admin')
 
 
+class ViewStaffTest(TestCase):
+    """Tests for Viewing Staff Members"""
+    

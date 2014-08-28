@@ -1,60 +1,7 @@
 from main.models import *
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-
-
-def create_subject_area(save=True):
-    """Creates one subject area"""
-    subject = SubjectArea(name="Law")
-    if save:
-        subject.save()
-    return subject
-
-
-def create_course(save=True):
-    """Creates a course"""
-    course = Course(
-        title="BA in Cartoon Studies",
-        short_title="CS"
-    )
-    if save:
-        course.save()
-    return course
-
-
-def create_student(save=True):
-    """Creates a student"""
-    student = Student(
-        student_id='bb23',
-        last_name='Bunny',
-        first_name='Bugs Middle Names'
-    )
-    if save:
-        student.save()
-    return student
-
-
-def create_module(save=True):
-    """Creates a module"""
-    module = Module(
-        title='Hunting Laws',
-        code="hl23",
-        year="2013",
-    )
-    if save:
-        module.save()
-    return module
-
-
-def create_user():
-    user = User.objects.create_user(
-        first_name='Elmar',
-        last_name='Fudd',
-        username='ef123',
-        email='e.fudd@acme.edu',
-        password='password'
-    )
-    return user
+from .base import *
 
 
 class SubjectAreaTest(TestCase):
@@ -151,6 +98,7 @@ class StudentTest(TestCase):
         self.assertEqual(student.short_name(), 'Bunny, Bugs')
         self.assertEqual(student.short_first_name(), 'Bugs')
 
+
 class StaffTest(TestCase):
     """Tests for the Staff class"""
 
@@ -166,6 +114,9 @@ class StaffTest(TestCase):
         self.assertEqual(staff_out.user.last_name, 'Fudd')
         self.assertEqual(staff_out.role, 'teacher')
 
+    def test_staff_member_returns_correct_edit_url(self):
+        staff = create_staff(save=False)
+        self.assertEqual(staff.get_edit_url(), '/edit_staff/ef123/')
 
 
 class AssessmentTest(TestCase):

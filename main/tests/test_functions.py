@@ -2,9 +2,10 @@ from django.test import TestCase
 from main.functions import *
 import datetime
 
+
 class WeekFunctionsTest(TestCase):
     """Testing the functions around the numbers of academic weeks"""
-    
+
     def set_up_year(self):
         year = Settings.objects.create(name='current_year', value='1900')
         return year
