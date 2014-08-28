@@ -13,6 +13,7 @@ urlpatterns += patterns(
     url(r'^$', 'home', name='home'),
     url(r'^add_course/$', 'add_or_edit_course', name='add_course'),
     url(r'^add_module/$', 'add_or_edit_module', name='add_module'),
+    url(r'^add_staff/$', 'add_or_edit_staff', name='add_staff'),
     url(r'^add_student/$', 'add_or_edit_student', name='add_student'),
     url(
         r'^add_students_to_module/(\w+)/(\d{4})/$', 
@@ -44,6 +45,7 @@ urlpatterns += patterns(
         'add_or_edit_module',
         name='edit_module'
     ),
+    url(r'^edit_staff/(\w+)/$', 'add_or_edit_staff', name='edit_staff'),
     url(r'^edit_student/(\w+)/$', 'add_or_edit_student', name='edit_student'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),
     url(

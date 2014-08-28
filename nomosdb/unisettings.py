@@ -3,6 +3,13 @@ import datetime
 UNI_NAME = 'Acme University'
 UNI_SHORT_NAME = 'ACM'
 
+NOMOSDB_URL = 'http://nomosdb.acme.edu'
+NOMOSDB_NAME = 'NomosDB'
+
+# The following is used to sign mails, could also be "The DB Admin Team"
+ADMIN_EMAIL = 'chuck.jones@acme.edu'
+ADMIN_NAME = 'Chuck Jones'
+
 TEACHING_WEEKS = (
     [(i, 'Week ' + str(i)) for i in range(1, 53)]
 )

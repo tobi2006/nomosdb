@@ -34,10 +34,20 @@ class StudentFormTest(TestCase):
         self.assertTrue(form2.is_valid())
 
 
-class ModelForm(TestCase):
+class ModuleFormTest(TestCase):
 
     def test_module_form_contains_right_form_elements(self):
         form = ModuleForm()
         self.assertIn('id="id_title"', form.as_p())
         self.assertIn('id="id_code"', form.as_p())
         self.assertIn('id="id_year"', form.as_p())
+
+
+class StaffFormTest(TestCase):
+
+    def test_staff_form_contains_right_elements(self):
+        form = StaffForm()
+        self.assertIn('id="id_first_name"', form.as_p())
+        self.assertIn('id="id_last_name"', form.as_p())
+        self.assertIn('id="id_email"', form.as_p())
+        self.assertIn('id="id_subject_areas"', form.as_p())

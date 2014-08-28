@@ -80,6 +80,7 @@ class Module(models.Model):
         ('23', 'Years 2 and 3')
         )  # With these kinds of strings, we can check "if '1' in eligible:"
     CREDITS = (
+        (10, '10'),
         (20, '20'),
         (40, '40')
         )
@@ -403,6 +404,11 @@ class Student(models.Model):
 
 class Staff(models.Model):
     """The class representing a teacher with additional information"""
+    ROLES = (
+        ('admin', 'Admin'),
+        ('teacher', 'Teacher'),
+    )
+
     user = models.OneToOneField(User)
     subject_areas = models.ManyToManyField(SubjectArea, blank=True, null=True)
     modules = models.ManyToManyField(
@@ -417,15 +423,20 @@ class Staff(models.Model):
         null=True,
         related_name="tutor"
     )
-    is_admin = models.BooleanField(default=False)
-    is_teacher = models.BooleanField(default=True)
+    role = models.CharField(
+        choices=ROLES, max_length=6, default='teacher')
     pastoral_care = models.BooleanField(default=False)
+    programme_director = models.BooleanField(default=False)
+    main_admin = models.BooleanField(default=False)  # Sees all subjects
 
     def __str__(self):
         return "%s, %s" % (self.user.last_name, self.user.first_name)
 
     def name(self):
         return "%s %s" % (self.user.first_name, self.user.last_name)
+
+    def get_edit_url(self):
+        return reverse('edit_staff', args=[self.user.username])
 
 
 class Performance(models.Model):

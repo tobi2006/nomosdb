@@ -46,6 +46,17 @@ def create_module(save=True):
     return module
 
 
+def create_user():
+    user = User.objects.create_user(
+        first_name='Elmar',
+        last_name='Fudd',
+        username='ef123',
+        email='e.fudd@acme.edu',
+        password='password'
+    )
+    return user
+
+
 class SubjectAreaTest(TestCase):
     """Tests for the Subject Area class"""
 
@@ -139,6 +150,22 @@ class StudentTest(TestCase):
         student = create_student(save=False)
         self.assertEqual(student.short_name(), 'Bunny, Bugs')
         self.assertEqual(student.short_first_name(), 'Bugs')
+
+class StaffTest(TestCase):
+    """Tests for the Staff class"""
+
+    def test_staff_member_can_be_created(self):
+        user = create_user()
+        teacher = Staff.objects.create(
+            user=user,
+            role='teacher'
+        )
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(Staff.objects.count(), 1)
+        staff_out = Staff.objects.first()
+        self.assertEqual(staff_out.user.last_name, 'Fudd')
+        self.assertEqual(staff_out.role, 'teacher')
+
 
 
 class AssessmentTest(TestCase):

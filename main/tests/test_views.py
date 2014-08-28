@@ -540,3 +540,68 @@ class AttendanceTest(TestCase):
         self.assertEqual(performance2_out.attendance_for(1), None)
         self.assertEqual(performance2_out.attendance_for(2), None)
         self.assertEqual(performance2_out.attendance_for(3), None)
+
+class AddEditStaffTest(TestCase):
+    """Tests for adding and adding a new staff member"""
+
+    def test_staff_can_be_added_new_user_gets_created(self):
+        subject_area = SubjectArea.objects.create(name='Cartoon Studies')
+        self.client.post('/add_staff/', data={
+            'first_name': 'Elmar',
+            'last_name': 'Fudd',
+            'email': 'elmar.fudd@acme.edu',
+            'subject_areas': ['Cartoon Studies'],
+            'role': 'teacher'
+        })
+        user = User.objects.first()
+        staff = Staff.objects.first()
+        self.assertEqual(user.staff, staff)
+        self.assertEqual(user.last_name, 'Fudd')
+        self.assertEqual(user.first_name, 'Elmar')
+        self.assertEqual(user.email, 'elmar.fudd@acme.edu')
+        self.assertIn(subject_area, staff.subject_areas.all())
+        self.assertEqual(staff.role, 'teacher')
+
+    def test_form_for_existing_staff_shows_right_details(self):
+        user_in = User.objects.create_user(
+            'ef10', 'e.fudd@acme.edu', 'rabbitseason')
+        user_in.last_name = 'Fudd'
+        user_in.first_name = 'Elmar'
+        user_in.save()
+        subject_area = SubjectArea.objects.create(name='Cartoon Studies')
+        staff_in = Staff.objects.create(user=user_in, role='teacher')
+        staff_in.subject_areas.add(subject_area)
+        staff_in.save()
+        response = self.client.get(staff_in.get_edit_url())
+        soup = BeautifulSoup(response.content)
+        first_name = str(soup.select('#id_first_name')[0]['value'])
+        self.assertEqual(first_name, 'Elmar')
+        last_name = str(soup.select('#id_last_name')[0]['value'])
+        self.assertEqual(last_name, 'Fudd')
+        last_name = str(soup.select('#id_email')[0]['value'])
+        self.assertEqual(last_name, 'e.fudd@acme.edu')
+        teacher_option = str(soup.find(value='teacher'))
+        self.assertTrue('selected="selected"' in teacher_option)
+
+    def test_staff_member_can_be_edited(self):
+        user_in = User.objects.create_user(
+            'ef10', 'e.fudd@acme.edu', 'rabbitseason')
+        user_in.last_name = 'Fadd'
+        user_in.first_name = 'Elmar'
+        user_in.save()
+        subject_area = SubjectArea.objects.create(name='Cartoon Studies')
+        staff_in = Staff.objects.create(user=user_in, role='teacher')
+        staff_in.subject_areas.add(subject_area)
+        staff_in.save()
+        self.client.post(staff_in.get_edit_url(), data={
+            'first_name': 'Elmar',
+            'last_name': 'Fudd',
+            'email': 'elmar.fudd@acme.edu',
+            'subject_areas': ['Cartoon Studies'],
+            'role': 'admin'
+        })
+        staff_out = Staff.objects.first()
+        self.assertEqual(staff_out.user.last_name, 'Fudd')
+        self.assertEqual(staff_out.role, 'admin')
+
+

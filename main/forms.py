@@ -165,3 +165,37 @@ class ModuleForm(forms.ModelForm):
 
     class Meta:
         model = Module
+
+
+class StaffForm(forms.Form):
+    """A form for staff members, to be used by admins"""
+    choices = []
+    queryset = SubjectArea.objects.all()
+    for area in queryset:
+        tpl = (area.name, area.name)
+        choices.append(tpl)
+    choices = tuple(choices)
+    ROLES = (
+        ('admin', 'Admin'),
+        ('teacher', 'Teacher'),
+    )
+    first_name = forms.CharField(label="First Name", required=True)
+    last_name = forms.CharField(label="Last Name", required=True)
+    email = forms.EmailField(label="Email Address", required=True)
+    subject_areas = forms.MultipleChoiceField(required=True, choices=choices)
+    role = forms.ChoiceField(choices=ROLES)
+    
+    helper = FormHelper()
+    helper.form_method = "POST"
+    helper.layout = Layout(
+        'first_name',
+        'last_name',
+        'email',
+        Field('subject_areas', css_class='chosen-select'),
+        'role',
+        FormActions(
+            Submit('save', 'Save Staff Member', css_class='btn btn-primary'))
+    )
+    helper.form_class = "form-horizontal"
+    helper.label_class = "col-lg-2"
+    helper.field_class="col-lg-6 col-md-8 col-sm-10"

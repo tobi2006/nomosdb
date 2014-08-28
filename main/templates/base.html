@@ -60,7 +60,7 @@
             <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
         </form>
         <ul class="nav navbar-nav navbar-right">
-            <li><a href="{% url "admin" %}" id="menu-admin">Admin</a></li>
+            <li><a href="{% url "admin" %}" id="menu-admin">Admin  </a></li>
         <!--
             <li><a href="#">Link</a></li>
             <li class="dropdown">
@@ -80,9 +80,9 @@
 {% endblock %}
 
 {% block formstart %}
-<!-- necessary for forms that include sortable tables -->
+{% comment %} necessary for forms that include sortable tables {% endcomment %}
 {% endblock %} 
-{% block structure %} <!-- adaptable for different basic layouts -->
+{% block structure %} {% comment %} adaptable for different basic layouts {% endcomment %}
 <div class="container">
     {% block content %}{% endblock %}
 </div>

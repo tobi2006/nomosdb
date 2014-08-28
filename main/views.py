@@ -4,6 +4,7 @@ from main.forms import *
 from main.models import *
 from main.functions import week_number
 from random import shuffle
+from main.messages import new_staff_email
 
 
 def is_teacher(user):
@@ -448,3 +449,74 @@ def seminar_group_overview(request, code, year):
         'seminar_group_overview.html',
         {'seminar_groups': seminar_groups, 'module': module}
     )
+
+
+def add_or_edit_staff(request, username=None):
+    """Allows to edit or add a staff member.
+
+    The classes concerned are the User class and the Staff class
+    for additional details
+    """
+    if username:
+        edit = True
+        user = User.objects.get(username=username)
+        staff = user.staff
+    else:
+        edit = False
+    if request.method == 'POST':
+        form = StaffForm(data=request.POST)
+        if form.is_valid():
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            email = form.cleaned_data['email']
+            if not edit:
+                initials = ''
+                for word in first_name.split():
+                    initials += word[0]
+                initials = initials[:3]
+                initials += last_name[0]
+                initials = initials.lower()
+                number = 1
+                still_searching = True
+                while still_searching:
+                    username = initials + str(number)
+                    if User.objects.filter(username=username).exists():
+                        number += 1
+                    else:
+                        still_searching = False
+                password = User.objects.make_random_password()
+                user = User.objects.create_user(username, email, password)
+                message = new_staff_email(first_name, username, password)
+                #send_mail(
+                #   '%s Login Data' % (NOMOSDB_NAME),
+                #   message,
+                #   ADMIN_EMAIL,
+                #   [email, ]
+                #)
+                print(message)
+                staff = Staff.objects.create(user=user)
+            for subject_area in staff.subject_areas.all():
+                if subject_area.name not in form.cleaned_data['subject_areas']:
+                    staff.subject_areas.remove(subject_area)
+            for name in form.cleaned_data['subject_areas']:
+                subject_area = SubjectArea.objects.get(name=name)
+                if subject_area not in staff.subject_areas.all():
+                    staff.subject_areas.add(subject_area)
+            staff.role = form.cleaned_data['role']
+            staff.save()
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save()
+    else:
+        if edit:
+            form = StaffForm(initial={
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'subject_areas': staff.subject_areas.all(),
+                'role': staff.role
+            })
+        else:
+            form = StaffForm(initial={'role': 'teacher'})
+    return render(request, 'staff_form.html', {'form': form, 'edit': edit})
