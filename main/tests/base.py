@@ -3,7 +3,7 @@ from main.models import *
 
 def create_subject_area(save=True):
     """Creates one subject area"""
-    subject = SubjectArea(name="Law")
+    subject = SubjectArea(name="Cartoon Studies")
     if save:
         subject.save()
     return subject

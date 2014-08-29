@@ -10,13 +10,13 @@ class SubjectAreaTest(TestCase):
     def test_subject_area_can_be_saved(self):
         subject_in = create_subject_area()
         subject_out = SubjectArea.objects.first()
-        self.assertEqual(subject_out.name, 'Law')
+        self.assertEqual(subject_out.name, 'Cartoon Studies')
 
     def test_subject_area_returns_name(self):
         subject = create_subject_area(save=False)
         self.assertEqual(
             subject.__str__(),
-            "Law"
+            "Cartoon Studies"
         )
 
     def test_subject_area_name_cannot_be_created_twice(self):

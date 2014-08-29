@@ -60,4 +60,14 @@ urlpatterns += patterns(
     ),
     url(r'^student/(\w+)/$', 'student_view', name='student_view'),
     url(r'^subject_areas/$', 'subject_areas', name='subject_areas'),
+    url(
+        r'^view_staff_by_name/$',
+        'view_staff_by_name',
+        name='view_staff_by_name'
+    ),
+    url(
+        r'^view_staff_by_subject/$',
+        'view_staff_by_subject',
+        name='view_staff_by_subject'
+    ),
 )

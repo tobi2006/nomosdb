@@ -488,7 +488,7 @@ def add_or_edit_staff(request, username=None):
                 user = User.objects.create_user(username, email, password)
                 message = new_staff_email(first_name, username, password)
                 #send_mail(
-                #   '%s Login Data' % (NOMOSDB_NAME),
+                #   '%s Login Data' % (NOMOSDB_NAME)
                 #   message,
                 #   ADMIN_EMAIL,
                 #   [email, ]
@@ -520,3 +520,24 @@ def add_or_edit_staff(request, username=None):
         else:
             form = StaffForm(initial={'role': 'teacher'})
     return render(request, 'staff_form.html', {'form': form, 'edit': edit})
+
+def view_staff_by_subject(request):
+    """Shows all staff members, sorted by subject"""
+    subject_dict = {}
+    for staff in Staff.objects.all():
+        for subject_area in staff.subject_areas.all():
+            if subject_area in subject_dict:
+                subject_dict[subject_area].append(staff)
+            else:
+                subject_dict[subject_area] = [staff]
+    return render(
+        request, 'all_staff_by_subject.html', {'subject_dict': subject_dict})
+
+
+def view_staff_by_name(request):
+    """Shows all staff members, sorted by name"""
+    staff_members = Staff.objects.all()
+    return render(
+        request, 'all_staff_by_name.html', {'staff_members': staff_members})
+
+

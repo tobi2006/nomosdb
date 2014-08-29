@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load custom_filters %}
+{% block content %}
+<h1>Staff Members (by Name)</h1>
+
+{% for staff_member in staff_members %}
+
+    <table id="all_staff" class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Subjects</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ staff_member.name }}</td>
+                <td>{{ staff_member.role }}</td>
+                <td>{{ staff_member.subject_areas.all|joinby:", " }}</td>
+                <th><a href="{{ staff_member.get_edit_url }}">Edit</a></th>
+            </tr>
+        </tbody>
+    </table>
+{% endfor %}
+
+
+{% endblock %}

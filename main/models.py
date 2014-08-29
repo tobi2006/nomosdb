@@ -41,6 +41,9 @@ class SubjectArea(models.Model):
     def __str__(self):
         return self.name
 
+    def slug(self):
+        return slugify(self.name)
+
 
 class Course(models.Model):
     """Courses are the programmes of students - eg "Law with Economics" """
@@ -382,6 +385,9 @@ class Student(models.Model):
     achieved_degree = models.IntegerField(
         choices=DEGREES, blank=True, null=True)
 
+    class Meta:
+        ordering = ['last_name', 'first_name']
+
     def __str__(self):
         return "%s, %s" % (self.last_name, self.first_name)
 
@@ -428,6 +434,9 @@ class Staff(models.Model):
     pastoral_care = models.BooleanField(default=False)
     programme_director = models.BooleanField(default=False)
     main_admin = models.BooleanField(default=False)  # Sees all subjects
+
+    class Meta:
+        ordering = ['user']
 
     def __str__(self):
         return "%s, %s" % (self.user.last_name, self.user.first_name)

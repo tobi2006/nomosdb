@@ -471,6 +471,7 @@ class AttendanceTest(TestCase):
         self.assertEqual(performance2_out.attendance_for(2), None)
         self.assertEqual(performance2_out.attendance_for(3), None)
 
+
 class AddEditStaffTest(TestCase):
     """Tests for adding and adding a new staff member"""
 
@@ -538,3 +539,68 @@ class AddEditStaffTest(TestCase):
 class ViewStaffTest(TestCase):
     """Tests for Viewing Staff Members"""
     
+    def test_staff_view_by_subject_uses_correct_template(self):
+        response = self.client.get('/view_staff_by_subject/')
+        self.assertTemplateUsed(response, 'all_staff_by_subject.html')
+
+    def test_staff_view_by_subject_contains_staff(self):
+        subject_area_1 = create_subject_area()
+        subject_area_2 = SubjectArea.objects.create(name='Evil Plotting')
+        staff1 = create_staff()
+        staff1.subject_areas.add(subject_area_1)
+        staff1.save()
+        user2 = User.objects.create_user(
+            'ys142', 'y.sam@acme.edu', 'squaredance')
+        user2.last_name = 'Sam'
+        user2.first_name = 'Yosemite'
+        user2.save()
+        staff2 = Staff.objects.create(user=user2, role='Teacher')
+        staff2.subject_areas.add(subject_area_1)
+        staff2.subject_areas.add(subject_area_2)
+        staff2.save()
+        user3 = User.objects.create_user(
+            'cj123', 'c.jones@acme.edu', 'password')
+        user3.first_name = 'Charles M'
+        user3.last_name = 'Jones'
+        user3.save()
+        staff3 = Staff.objects.create(user=user3, role='Admin')
+        staff3.subject_areas.add(subject_area_1)
+        staff3.save()
+        response = self.client.get('/view_staff_by_subject/')
+        soup = BeautifulSoup(response.content)
+        table1 = str(soup.find(id=subject_area_1.slug()))
+        self.assertTrue(staff1.name() in table1)
+        self.assertTrue(staff2.name() in table1)
+        self.assertTrue(staff3.name() in table1)
+        table2 = str(soup.find(id=subject_area_2.slug()))
+        self.assertFalse(staff1.name() in table2)
+        self.assertTrue(staff2.name() in table2)
+        self.assertFalse(staff3.name() in table2)
+
+    def test_staff_view_by_name_contains_staff(self):
+        subject_area_1 = create_subject_area()
+        subject_area_2 = SubjectArea.objects.create(name='Evil Plotting')
+        staff1 = create_staff()
+        staff1.subject_areas.add(subject_area_1)
+        staff1.save()
+        user2 = User.objects.create_user(
+            'ys142', 'y.sam@acme.edu', 'squaredance')
+        user2.last_name = 'Sam'
+        user2.first_name = 'Yosemite'
+        user2.save()
+        staff2 = Staff.objects.create(user=user2, role='Teacher')
+        staff2.subject_areas.add(subject_area_1)
+        staff2.subject_areas.add(subject_area_2)
+        staff2.save()
+        user3 = User.objects.create_user(
+            'cj123', 'c.jones@acme.edu', 'password')
+        user3.first_name = 'Charles M'
+        user3.last_name = 'Jones'
+        user3.save()
+        staff3 = Staff.objects.create(user=user3, role='Admin')
+        staff3.subject_areas.add(subject_area_1)
+        staff3.save()
+        response = self.client.get('/view_staff_by_name/')
+        self.assertContains(response, staff1.name())
+        self.assertContains(response, staff2.name())
+        self.assertContains(response, staff3.name())

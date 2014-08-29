@@ -50,3 +50,8 @@ def remove_spacebars(words):
 def get_attendance(performance, week):
     result = performance.attendance_for(week)
     return result
+
+@register.filter
+def joinby(value, arg):
+    value_string = value.__str__()
+    return arg.join(value_string)

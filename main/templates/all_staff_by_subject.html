@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1>Staff Members (by Subject Areas)</h1>
+
+{% for subject_area, staff_members in subject_dict.items %}
+    <h2>{{ subject_area.name }}</h2>
+
+    <table id="{{ subject_area.slug }}" class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for staff_member in staff_members %}
+                <tr>
+
+                    <td>{{ staff_member.name }}</td>
+                    <td>{{ staff_member.role }}</td>
+                    <th><a href="{{ staff_member.get_edit_url }}">Edit</a></th>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endfor %}
+
+
+{% endblock %}
