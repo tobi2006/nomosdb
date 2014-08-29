@@ -5,6 +5,7 @@ from main.models import *
 from main.functions import week_number
 from random import shuffle
 from main.messages import new_staff_email
+from django.core.urlresolvers import reverse
 
 
 def is_teacher(user):
@@ -31,7 +32,7 @@ def subject_areas(request):
         form = SubjectAreaForm(data=request.POST)
         if form.is_valid():
             form.save()
-            return redirect('/subject_areas/')
+            return redirect(reverse('subject_areas'))
     form = SubjectAreaForm()
     return render(
         request,
@@ -508,6 +509,7 @@ def add_or_edit_staff(request, username=None):
             user.last_name = last_name
             user.email = email
             user.save()
+            return redirect(reverse('view_staff_by_name'))
     else:
         if edit:
             form = StaffForm(initial={
@@ -520,6 +522,7 @@ def add_or_edit_staff(request, username=None):
         else:
             form = StaffForm(initial={'role': 'teacher'})
     return render(request, 'staff_form.html', {'form': form, 'edit': edit})
+
 
 def view_staff_by_subject(request):
     """Shows all staff members, sorted by subject"""

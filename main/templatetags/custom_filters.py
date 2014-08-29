@@ -53,5 +53,11 @@ def get_attendance(performance, week):
 
 @register.filter
 def joinby(value, arg):
-    value_string = value.__str__()
-    return arg.join(value_string)
+    value_list = []
+    for entry in value:
+        value_list.append(entry.__str__())
+    return arg.join(value_list)
+
+@register.filter
+def upper_case_first_letter(inputstring):
+    return inputstring.title()

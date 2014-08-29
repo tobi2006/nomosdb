@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+{% load custom_filters %}
 {% block content %}
 <h1>Staff Members (by Subject Areas)</h1>
 
@@ -19,7 +20,7 @@
                 <tr>
 
                     <td>{{ staff_member.name }}</td>
-                    <td>{{ staff_member.role }}</td>
+                    <td>{{ staff_member.role|upper_case_first_letter }}</td>
                     <th><a href="{{ staff_member.get_edit_url }}">Edit</a></th>
                 </tr>
             {% endfor %}
