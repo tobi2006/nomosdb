@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import redirect, render
 from nomosdb.unisettings import *
 from main.forms import *
@@ -10,22 +11,41 @@ from django.core.urlresolvers import reverse
 
 def is_teacher(user):
     if hasattr(user, 'staff'):
-        if user.staff.is_teacher:
+        if user.staff.role == 'teacher':
             return True
     return False
 
 
+def is_admin(user):
+    if hasattr(user, 'staff'):
+        if user.staff.role == 'admin':
+            return True
+    return False
+
+
+def is_staff(user):
+    if hasattr(user, 'staff'):
+        return True
+    else:
+        return False
+
+
+@login_required
 def home(request):
     """Simply the home page, nothing there yet"""
     # use if to show different pages for students and teachers!
     return render(request, 'home.html', {})
 
 
+@login_required
+@user_passes_test(is_admin)
 def admin(request):
     """Opens the admin dashboard"""
     return render(request, 'admin.html', {})
 
 
+@login_required
+@user_passes_test(is_admin)
 def subject_areas(request):
     subject_areas = SubjectArea.objects.all()
     if request.method == 'POST':
@@ -41,12 +61,16 @@ def subject_areas(request):
     )
 
 
+@login_required
+@user_passes_test(is_admin)
 def course_overview(request):
     """Page that shows all courses"""
     courses = Course.objects.all()
     return render(request, 'course_overview.html', {'courses': courses})
 
 
+@login_required
+@user_passes_test(is_admin)
 def add_or_edit_course(request, course_id=None):
     """The form to manually add or edit a course"""
     if course_id:
@@ -70,6 +94,8 @@ def add_or_edit_course(request, course_id=None):
     return render(request, 'course_form.html', {'form': form, 'edit': edit})
 
 
+@login_required
+@user_passes_test(is_staff)
 def add_or_edit_student(request, student_id=None):
     """The form to manually add or edit a student"""
     if student_id:
@@ -96,12 +122,16 @@ def add_or_edit_student(request, student_id=None):
     return render(request, 'student_form.html', {'form': form, 'edit': edit})
 
 
+@login_required
+@user_passes_test(is_staff)
 def student_view(request, student_id):
     """Shows all information about a student"""
     student = Student.objects.get(student_id=student_id)
     return render(request, 'student_view.html', {'student': student})
 
 
+@login_required
+@user_passes_test(is_staff)
 def add_or_edit_module(request, code=None, year=None):
     """The form to add or edit a module"""
     if code and year:
@@ -148,6 +178,8 @@ def add_or_edit_module(request, code=None, year=None):
     )
 
 
+@login_required
+@user_passes_test(is_staff)
 def module_view(request, code, year):
     """Shows all information about a module"""
     module = Module.objects.get(code=code, year=year)
@@ -177,6 +209,8 @@ def module_view(request, code, year):
     )
 
 
+@login_required
+@user_passes_test(is_staff)
 def add_students_to_module(request, code, year):
     """Simple form to add students to a module and create Performance items"""
     module = Module.objects.get(code=code, year=year)
@@ -217,6 +251,8 @@ def add_students_to_module(request, code, year):
     )
 
 
+@login_required
+@user_passes_test(is_staff)
 def remove_student_from_module(request, code, year, student_id):
     """Removes student from module, deletes performance object"""
     module = Module.objects.get(code=code, year=year)
@@ -227,6 +263,8 @@ def remove_student_from_module(request, code, year, student_id):
     return redirect(module.get_absolute_url())
 
 
+@login_required
+@user_passes_test(is_staff)
 def assign_seminar_groups(request, code, year):
     """Allows to assign the students to seminar groups graphically"""
     module = Module.objects.get(code=code, year=year)
@@ -327,6 +365,8 @@ def assign_seminar_groups(request, code, year):
     )
 
 
+@login_required
+@user_passes_test(is_staff)
 def attendance(request, code, year, group):
     """The registers for the seminar groups or the whole module"""
     module = Module.objects.get(code=code, year=year)
@@ -373,6 +413,8 @@ def attendance(request, code, year, group):
     )
 
 
+@login_required
+@user_passes_test(is_staff)
 def assessment(request, code, year, slug=None):
     """Enter and edit the assessments for each module"""
     module = Module.objects.get(code=code, year=year)
@@ -416,6 +458,8 @@ def assessment(request, code, year, slug=None):
     )
 
 
+@login_required
+@user_passes_test(is_staff)
 def delete_assessment(request, code, year, slug):
     """Deletes an assessment and all connected results.
 
@@ -429,6 +473,8 @@ def delete_assessment(request, code, year, slug):
     return redirect(module.get_absolute_url())
 
 
+@login_required
+@user_passes_test(is_staff)
 def seminar_group_overview(request, code, year):
     """Gives a nice overview of seminar groups"""
     module = Module.objects.get(code=code, year=year)
@@ -452,6 +498,8 @@ def seminar_group_overview(request, code, year):
     )
 
 
+@login_required
+@user_passes_test(is_admin)
 def add_or_edit_staff(request, username=None):
     """Allows to edit or add a staff member.
 
@@ -524,6 +572,8 @@ def add_or_edit_staff(request, username=None):
     return render(request, 'staff_form.html', {'form': form, 'edit': edit})
 
 
+@login_required
+@user_passes_test(is_admin)
 def view_staff_by_subject(request):
     """Shows all staff members, sorted by subject"""
     subject_dict = {}
@@ -537,6 +587,8 @@ def view_staff_by_subject(request):
         request, 'all_staff_by_subject.html', {'subject_dict': subject_dict})
 
 
+@login_required
+@user_passes_test(is_admin)
 def view_staff_by_name(request):
     """Shows all staff members, sorted by name"""
     staff_members = Staff.objects.all()

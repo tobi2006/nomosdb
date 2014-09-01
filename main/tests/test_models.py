@@ -1,10 +1,11 @@
 from main.models import *
+from main.views import *
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from .base import *
 
 
-class SubjectAreaTest(TestCase):
+class SubjectAreaTest(AdminUnitTest):
     """Tests for the Subject Area class"""
 
     def test_subject_area_can_be_saved(self):
@@ -26,7 +27,7 @@ class SubjectAreaTest(TestCase):
             subject2.full_clean()
 
 
-class CourseTest(TestCase):
+class CourseTest(AdminUnitTest):
     """Tests for the Course class"""
 
     def test_course_can_be_saved(self):
@@ -43,7 +44,7 @@ class CourseTest(TestCase):
         )
 
 
-class StudentTest(TestCase):
+class StudentTest(TeacherUnitTest):
     """Tests for the Student class"""
 
     def test_student_can_be_saved_to_database_with_basic_attributes(self):
@@ -99,7 +100,7 @@ class StudentTest(TestCase):
         self.assertEqual(student.short_first_name(), 'Bugs')
 
 
-class StaffTest(TestCase):
+class StaffTest(AdminUnitTest):
     """Tests for the Staff class"""
 
     def test_staff_member_can_be_created(self):
@@ -108,18 +109,17 @@ class StaffTest(TestCase):
             user=user,
             role='teacher'
         )
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(Staff.objects.count(), 1)
-        staff_out = Staff.objects.first()
+        self.assertEqual(User.objects.count(), 2)
+        self.assertEqual(Staff.objects.count(), 2)
+        staff_out = Staff.objects.get(role="teacher")
         self.assertEqual(staff_out.user.last_name, 'Fudd')
-        self.assertEqual(staff_out.role, 'teacher')
 
     def test_staff_member_returns_correct_edit_url(self):
-        staff = create_staff(save=False)
+        staff = create_teacher(save=False)
         self.assertEqual(staff.get_edit_url(), '/edit_staff/ef123/')
 
 
-class AssessmentTest(TestCase):
+class AssessmentTest(TeacherUnitTest):
     """Tests for the Assessment class"""
 
     def test_assessment_can_be_saved_and_slug_gets_created(self):
@@ -157,7 +157,7 @@ class AssessmentTest(TestCase):
         )
 
 
-class ModuleTest(TestCase):
+class ModuleTest(TeacherUnitTest):
     """Tests for the Module class"""
 
     def test_module_can_be_saved_to_database_with_basic_attributes(self):
@@ -277,16 +277,18 @@ class ModuleTest(TestCase):
         self.assertEqual(module.all_teaching_weeks(), sessions)
 
 
-class PerformanceTest(TestCase):
+class PerformanceTest(TeacherUnitTest):
     """Tests for the Performance class"""
 
     def test_enlisting_a_student_in_a_module_creates_performance_item(self):
         student = create_student()
         module = create_module()
-        response = self.client.post(
+        request = self.factory.post(
             '/add_students_to_module/%s/%s/' % (module.code, module.year),
             data={'student_ids': [student.student_id, ]}
         )
+        request.user = self.user
+        add_students_to_module(request, module.code, module.year)
         performance = Performance.objects.first()
         self.assertEqual(performance.module, module)
         self.assertEqual(performance.student, student)

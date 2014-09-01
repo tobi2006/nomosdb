@@ -1,4 +1,6 @@
 from main.models import *
+from django.contrib.auth.models import User
+from django.test import TestCase, RequestFactory
 
 
 def create_subject_area(save=True):
@@ -50,14 +52,28 @@ def create_user():
         last_name='Fudd',
         username='ef123',
         email='e.fudd@acme.edu',
-        password='password'
+        password='rabbitseason'
     )
     return user
 
 
-def create_staff(save=True):
+def create_teacher(save=True):
     user = create_user()
     staff = Staff(user=user, role='teacher')
+    if save:
+        staff.save()
+    return staff
+
+
+def create_admin(save=True):
+    user = User.objects.create_user(
+        first_name="Mel",
+        last_name="Blank",
+        username="mb1000",
+        email="mel.blank@acme.edu",
+        password="manof1000voices"
+    )
+    staff = Staff(user=user, role='admin')
     if save:
         staff.save()
     return staff
@@ -109,3 +125,35 @@ def set_up_stuff():
     Performance.objects.create(student=student4, module=module)
     Performance.objects.create(student=student5, module=module)
     return((module, student1, student2, student3, student4, student5))
+
+
+class TeacherUnitTest(TestCase):
+    """Sets up the testing environment for a teacher"""
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        user = User.objects.create_user(
+            username="mtm23",
+            email="marvin.the.martian@acme.edu",
+            password="zapp",
+            first_name="Marvin",
+            last_name="The Martian"
+        )
+        teacher = Staff.objects.create(user=user, role='teacher')
+        self.user = user
+
+
+class AdminUnitTest(TestCase):
+    """Sets up the testing environment for an admin"""
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        user = User.objects.create_user(
+            username="cj123",
+            email="chuck.jones@acme.edu",
+            password="cartoongod",
+            first_name="Chuck",
+            last_name="Jones"
+        )
+        admin = Staff.objects.create(user=user, role='admin')
+        self.user = user

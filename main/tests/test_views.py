@@ -1,39 +1,62 @@
 from django.test import TestCase
 from nomosdb.unisettings import UNI_NAME
 from main.models import *
+from main.views import *
 from bs4 import BeautifulSoup
 from .base import *
 
 
-class HomePageTest(TestCase):
+class StatusCheckTest(TestCase):
+    """Testing the decorator test functions"""
+
+    def test_user_teacher_test_works(self):
+        elmar = create_teacher()
+        self.assertTrue(is_staff(elmar.user))
+        self.assertTrue(is_teacher(elmar.user))
+        self.assertFalse(is_admin(elmar.user))
+
+    def test_staff_admin_status_is_properly_undertood_at_login(self):
+        admin = create_admin()
+        self.assertTrue(is_staff(admin.user))
+        self.assertFalse(is_teacher(admin.user))
+        self.assertTrue(is_admin(admin.user))
+
+
+class HomePageTest(TeacherUnitTest):
     """Simple tests for the home page"""
 
     def test_home_page_renders_home_template(self):
-        response = self.client.get('/')
+        request = self.factory.get('/')
+        request.user = self.user
+        response = home(request)
         self.assertTemplateUsed(response, 'home.html')
 
     def test_home_page_title_contains_uni_name(self):
-        response = self.client.get('/')
+        request = self.factory.get('/')
+        request.user = self.user
+        response = home(request)
         self.assertContains(response, UNI_NAME)
 
 
-class StudentViewTest(TestCase):
+class StudentViewTest(TeacherUnitTest):
     """Tests for the student view function"""
 
     def test_student_view_renders_student_view_template(self):
         student = create_student()
-        response = self.client.get(student.get_absolute_url())
+        request = self.factory.get(student.get_absolute_url())
+        request.user = self.user
+        response = student_view(request, student.student_id)
         self.assertTemplateUsed(response, 'student_view.html')
         self.assertContains(response, "bb23")
         self.assertContains(response, "Bunny")
         self.assertContains(response, "Bugs")
 
 
-class AddEditStudentTest(TestCase):
+class AddEditStudentTest(TeacherUnitTest):
     """Tests for the student form function"""
 
     def send_form(self):
-        response = self.client.post(
+        request = self.factory.post(
             '/add_student/',
             data={
                 'student_id': 'bb23',
@@ -41,15 +64,15 @@ class AddEditStudentTest(TestCase):
                 'first_name': 'Bugs Middle Names'
             }
         )
+        request.user = self.user
+        response = add_or_edit_student(request)
         return response
 
     def test_add_edit_student_renders_right_template(self):
-        response = self.client.get('/add_student/')
+        request = self.factory.get('/add_student/')
+        request.user = self.user
+        response = add_or_edit_student(request)
         self.assertTemplateUsed(response, 'student_form.html')
-
-    def test_add_student_redirects_to_student_view(self):
-        response = self.send_form()
-        self.assertRedirects(response, '/student/bb23/')
 
     def test_add_student_adds_student_to_database(self):
         self.send_form()
@@ -60,14 +83,16 @@ class AddEditStudentTest(TestCase):
 
     def test_edit_student_shows_correct_data(self):
         student = create_student()
-        response = self.client.get(student.get_edit_url())
+        request = self.factory.get(student.get_edit_url())
+        request.user = self.user
+        response = add_or_edit_student(request, student.student_id)
         self.assertTemplateUsed(response, 'student_form.html')
         self.assertContains(response, 'Bunny')
         self.assertContains(response, 'Bugs')
         self.assertContains(response, 'bb23')
 
 
-class ModuleViewTest(TestCase):
+class ModuleViewTest(TeacherUnitTest):
     """Tests for the module view"""
 
     def test_module_view_renders_module_view_template(self):
@@ -76,7 +101,9 @@ class ModuleViewTest(TestCase):
             code="hp23",
             year=2014
         )
-        response = self.client.get(module.get_absolute_url())
+        request = self.factory.get(module.get_absolute_url())
+        request.user = self.user
+        response = module_view(request, module.code, module.year)
         self.assertTemplateUsed(response, 'module_view.html')
 
     def test_performances_in_a_module_are_shown(self):
@@ -92,51 +119,45 @@ class ModuleViewTest(TestCase):
             student_id="pp2323",
             year=2
         )
-        self.client.post(
+        request = self.factory.post(
             module.get_add_students_url(),
             data={'student_ids': [student.student_id]}
         )
-        response = self.client.get(module.get_absolute_url())
-        self.assertContains(response, "Pig, Porky")
+        request.user = self.user
+        response = add_students_to_module(request, module.code, module.year)
+        out_request = self.factory.get(module.get_absolute_url())
+        out_request.user = self.user
+        out_response = module_view(out_request, module.code, module.year)
+        self.assertContains(out_response, "Pig, Porky")
 
 
-class AddStudentsToModuleTest(TestCase):
+class AddStudentsToModuleTest(TeacherUnitTest):
     """Tests for the function to add students to a module"""
 
     def test_add_students_to_module_uses_right_template(self):
-        module = Module.objects.create(
-            title="Hunting Practice",
-            code="hp23",
-            year=2014,
-            eligible="1"
-        )
-        response = self.client.get(module.get_add_students_url())
+        module = create_module()
+        request = self.factory.get(module.get_add_students_url())
+        request.user = self.user
+        response = add_students_to_module(request, module.code, module.year)
         self.assertTemplateUsed(response, 'add_students_to_module.html')
 
     def test_only_students_from_same_subject_areas_and_year_are_shown(self):
-        subject_area1 = SubjectArea.objects.create(name="Warrior Studies")
-        subject_area2 = SubjectArea.objects.create(name="Alchemy")
-        course = Course.objects.create(title="BA in Warrior Studies")
+        subject_area1 = create_subject_area()
+        subject_area2 = SubjectArea.objects.create(name="Evil Plotting")
+        course = Course.objects.create(title="BA in Cartoon Studies")
         course.subject_areas.add(subject_area1)
         course.save()
-        course2 = Course.objects.create(title="BA in Wizard Stuff")
+        course2 = Course.objects.create(
+            title="BA in Evil Plotting")
         course2.subject_areas.add(subject_area2)
         course2.save()
-        module = Module.objects.create(
-            title="Hunting Practice",
-            code="hp23",
-            year=2014,
-            eligible="1"
-        )
+        module = create_module()
         module.subject_areas.add(subject_area1)
         module.save()
-        student1 = Student.objects.create(
-            last_name="Bunny",
-            first_name="Bugs",
-            student_id="bb23",
-            course=course,
-            year=1
-        )
+        student1 = create_student()
+        student1.course = course
+        student1.year = 1
+        student1.save()
         student2 = Student.objects.create(
             last_name="Duck",
             first_name="Daffy",
@@ -151,26 +172,25 @@ class AddStudentsToModuleTest(TestCase):
             course=course,
             year=2
         )
-        response = self.client.get(module.get_add_students_url())
+        request = self.factory.get(module.get_add_students_url())
+        request.user = self.user
+        response = add_students_to_module(request, module.code, module.year)
         self.assertContains(response, 'Bunny')
         self.assertNotContains(response, 'Duck')
         self.assertNotContains(response, 'Pig')
 
     def test_submitting_an_empty_form_does_not_break_it(self):
-        module = Module.objects.create(
-            title="Hunting Practice",
-            code="hp23",
-            year=2014,
-            eligible="1"
-        )
-        response = self.client.post(
+        module = create_module()
+        request = self.factory.post(
             '/add_students_to_module/%s/%s' % (module.code, module.year),
             data={}
         )
-        self.assertEqual(response.status_code, 301)
+        request.user = self.user
+        response = add_students_to_module(request, module.code, module.year)
+        self.assertTrue(response.status_code in [301, 302])
 
 
-class RemoveStudentFromModuleTest(TestCase):
+class RemoveStudentFromModuleTest(TeacherUnitTest):
     """Tests for the function to remove a student from a module"""
 
     def test_student_removed_from_module_is_not_in_module_anymore(self):
@@ -187,12 +207,15 @@ class RemoveStudentFromModuleTest(TestCase):
             student.student_id +
             '/'
         )
-        response = self.client.get(url)
+        request = self.factory.get(url)
+        request.user = self.user
+        response = remove_student_from_module(
+            request, module.code, module.year, student.student_id)
         self.assertEqual(Performance.objects.count(), 0)
         self.assertEqual(student.modules.count(), 0)
 
 
-class SeminarGroupTest(TestCase):
+class SeminarGroupTest(TeacherUnitTest):
     """Tests involving the seminar group setup"""
 
     def test_seminar_groups_can_be_saved(self):
@@ -201,7 +224,7 @@ class SeminarGroupTest(TestCase):
         student1 = stuff[1]
         student2 = stuff[2]
         student3 = stuff[3]
-        response = self.client.post(
+        request = self.factory.post(
             module.get_seminar_groups_url(),
             data={
                 'action': 'Save students',
@@ -210,6 +233,8 @@ class SeminarGroupTest(TestCase):
                 student3.student_id: '1'
             }
         )
+        request.user = self.user
+        response = assign_seminar_groups(request, module.code, module.year)
         performance1 = Performance.objects.get(student=student1, module=module)
         performance2 = Performance.objects.get(student=student2, module=module)
         performance3 = Performance.objects.get(student=student3, module=module)
@@ -225,7 +250,7 @@ class SeminarGroupTest(TestCase):
         student3 = stuff[3]
         student4 = stuff[4]
         student5 = stuff[5]
-        response = self.client.post(
+        request = self.factory.post(
             module.get_seminar_groups_url(),
             data={
                 'action': 'Go',
@@ -233,6 +258,8 @@ class SeminarGroupTest(TestCase):
                 'number_of_groups': '3'
             }
         )
+        request.user = self.user
+        response = assign_seminar_groups(request, module.code, module.year)
         performance1 = Performance.objects.get(student=student1, module=module)
         performance2 = Performance.objects.get(student=student2, module=module)
         performance3 = Performance.objects.get(student=student3, module=module)
@@ -264,7 +291,7 @@ class SeminarGroupTest(TestCase):
         student3 = stuff[3]
         student4 = stuff[4]
         student5 = stuff[5]
-        response = self.client.post(
+        request = self.factory.post(
             module.get_seminar_groups_url(),
             data={
                 student2.student_id: '2',
@@ -272,6 +299,8 @@ class SeminarGroupTest(TestCase):
                 'number_of_groups': '3'
             }
         )
+        request.user = self.user
+        response = assign_seminar_groups(request, module.code, module.year)
         performance1 = Performance.objects.get(student=student1, module=module)
         performance2 = Performance.objects.get(student=student2, module=module)
         performance3 = Performance.objects.get(student=student3, module=module)
@@ -285,7 +314,9 @@ class SeminarGroupTest(TestCase):
 
     def test_seminar_group_overview_uses_correct_template(self):
         module = create_module()
-        response = self.client.get(module.get_seminar_group_overview_url())
+        request = self.factory.get(module.get_seminar_group_overview_url())
+        request.user = self.user
+        response = seminar_group_overview(request, module.code, module.year)
         self.assertTemplateUsed(response, 'seminar_group_overview.html')
 
     def test_seminar_group_overview_is_correct(self):
@@ -311,7 +342,9 @@ class SeminarGroupTest(TestCase):
         performance5 = Performance.objects.get(student=student5, module=module)
         performance5.seminar_group = 1
         performance5.save()
-        response = self.client.get(module.get_seminar_group_overview_url())
+        request = self.factory.get(module.get_seminar_group_overview_url())
+        request.user = self.user
+        response = seminar_group_overview(request, module.code, module.year)
         soup = BeautifulSoup(response.content)
         group_1 = str(soup.select('#group_1')[0])
         group_2 = str(soup.select('#group_2')[0])
@@ -322,26 +355,30 @@ class SeminarGroupTest(TestCase):
         self.assertIn(student5.short_name(), group_1)
 
 
-class AssessmentTest(TestCase):
+class AssessmentTest(TeacherUnitTest):
     """Tests involving setting and deleting of assessments"""
 
     def test_assessments_page_uses_right_template(self):
         module = set_up_stuff()[0]
-        response = self.client.get(module.get_assessment_url())
+        request = self.factory.get(module.get_assessment_url())
+        request.user = self.user
+        response = assessment(request, module.code, module.year)
         self.assertTemplateUsed(response, 'assessment.html')
 
     def test_assessments_can_be_added_to_module(self):
         module = set_up_stuff()[0]
-        self.client.post(
+        request = self.factory.post(
             module.get_assessment_url(),
             data={
                 'title': 'Hunting Exercise',
                 'value': 40,
             }
         )
-        assessment = Assessment.objects.first()
-        self.assertEqual(assessment.title, 'Hunting Exercise')
-        self.assertEqual(assessment.value, 40)
+        request.user = self.user
+        assessment(request, module.code, module.year)
+        assessment_out = Assessment.objects.first()
+        self.assertEqual(assessment_out.title, 'Hunting Exercise')
+        self.assertEqual(assessment_out.value, 40)
 
     def test_assessment_can_be_deleted(self):
         stuff = set_up_stuff()
@@ -359,17 +396,21 @@ class AssessmentTest(TestCase):
         )
         self.assertEqual(Assessment.objects.count(), 1)
         self.assertEqual(AssessmentResult.objects.count(), 1)
-        self.client.get(assessment.get_delete_url())
+        request = self.factory.get(assessment.get_delete_url())
+        request.user = self.user
+        delete_assessment(request, module.code, module.year, assessment.slug)
         self.assertEqual(Assessment.objects.count(), 0)
         self.assertEqual(AssessmentResult.objects.count(), 0)
 
 
-class AttendanceTest(TestCase):
+class AttendanceTest(TeacherUnitTest):
     """Tests around the attendance function"""
 
     def test_attendance_uses_correct_template(self):
         module = set_up_stuff()[0]
-        response = self.client.get(module.get_attendance_url('all'))
+        request = self.factory.get(module.get_attendance_url('all'))
+        request.user = self.user
+        response = attendance(request, module.code, module.year, 'all')
         self.assertTemplateUsed(response, 'attendance.html')
 
     def test_attendance_form_shows_seminar_group(self):
@@ -395,19 +436,25 @@ class AttendanceTest(TestCase):
         performance4.save()
         performance5.seminar_group = 2
         performance5.save()
-        response = self.client.get(module.get_attendance_url(1))
+        request = self.factory.get(module.get_attendance_url(1))
+        request.user = self.user
+        response = attendance(request, module.code, module.year, '1')
         self.assertContains(response, student1.last_name)
         self.assertContains(response, student2.last_name)
         self.assertContains(response, student3.last_name)
         self.assertNotContains(response, student4.last_name)
         self.assertNotContains(response, student5.last_name)
-        response = self.client.get(module.get_attendance_url(2))
+        request = self.factory.get(module.get_attendance_url(2))
+        request.user = self.user
+        response = attendance(request, module.code, module.year, '2')
         self.assertNotContains(response, student1.last_name)
         self.assertNotContains(response, student2.last_name)
         self.assertNotContains(response, student3.last_name)
         self.assertContains(response, student4.last_name)
         self.assertContains(response, student5.last_name)
-        response = self.client.get(module.get_attendance_url('all'))
+        request = self.factory.get(module.get_attendance_url('all'))
+        request.user = self.user
+        response = attendance(request, module.code, module.year, 'all')
         self.assertContains(response, student1.last_name)
         self.assertContains(response, student2.last_name)
         self.assertContains(response, student3.last_name)
@@ -417,7 +464,7 @@ class AttendanceTest(TestCase):
     def test_attendance_can_be_added_through_form(self):
         stuff = set_up_stuff()
         module = stuff[0]
-        response = self.client.post(
+        request = self.factory.post(
             module.get_attendance_url('all'),
             data={
                 'bb23_1': 'p',
@@ -428,6 +475,8 @@ class AttendanceTest(TestCase):
                 'save': 'Save Changes for all weeks'
             }
         )
+        request.user = self.user
+        response = attendance(request, module.code, module.year, 'all')
         student1_out = Student.objects.get(student_id='bb23')
         performance1_out = Performance.objects.get(
             student=student1_out, module=module)
@@ -447,7 +496,7 @@ class AttendanceTest(TestCase):
         student1 = stuff[1]
         performance1 = Performance.objects.get(student=student1, module=module)
         performance1.save_attendance('1', 'e')
-        response = self.client.post(
+        request = self.factory.post(
             module.get_attendance_url('all'),
             data={
                 'bb23_1': 'p',
@@ -458,6 +507,8 @@ class AttendanceTest(TestCase):
                 'save': 'Save Changes for Week 2'
             }
         )
+        request.user = self.user
+        attendance(request, module.code, module.year, 'all')
         student1_out = Student.objects.get(student_id='bb23')
         performance1_out = Performance.objects.get(
             student=student1_out, module=module)
@@ -472,38 +523,37 @@ class AttendanceTest(TestCase):
         self.assertEqual(performance2_out.attendance_for(3), None)
 
 
-class AddEditStaffTest(TestCase):
+class AddEditStaffTest(AdminUnitTest):
     """Tests for adding and adding a new staff member"""
 
     def test_staff_can_be_added_new_user_gets_created(self):
         subject_area = SubjectArea.objects.create(name='Cartoon Studies')
-        self.client.post('/add_staff/', data={
+        request = self.factory.post('/add_staff/', data={
             'first_name': 'Elmar',
             'last_name': 'Fudd',
             'email': 'elmar.fudd@acme.edu',
             'subject_areas': ['Cartoon Studies'],
             'role': 'teacher'
         })
-        user = User.objects.first()
-        staff = Staff.objects.first()
+        request.user = self.user
+        add_or_edit_staff(request)
+        user = User.objects.get(last_name='Fudd')
+        staff = Staff.objects.get(user=user)
         self.assertEqual(user.staff, staff)
-        self.assertEqual(user.last_name, 'Fudd')
         self.assertEqual(user.first_name, 'Elmar')
         self.assertEqual(user.email, 'elmar.fudd@acme.edu')
         self.assertIn(subject_area, staff.subject_areas.all())
         self.assertEqual(staff.role, 'teacher')
 
     def test_form_for_existing_staff_shows_right_details(self):
-        user_in = User.objects.create_user(
-            'ef10', 'e.fudd@acme.edu', 'rabbitseason')
-        user_in.last_name = 'Fudd'
-        user_in.first_name = 'Elmar'
-        user_in.save()
+        user_in = create_user()
         subject_area = SubjectArea.objects.create(name='Cartoon Studies')
         staff_in = Staff.objects.create(user=user_in, role='teacher')
         staff_in.subject_areas.add(subject_area)
         staff_in.save()
-        response = self.client.get(staff_in.get_edit_url())
+        request = self.factory.get(staff_in.get_edit_url())
+        request.user = self.user
+        response = add_or_edit_staff(request, user_in.username)
         soup = BeautifulSoup(response.content)
         first_name = str(soup.select('#id_first_name')[0]['value'])
         self.assertEqual(first_name, 'Elmar')
@@ -524,29 +574,33 @@ class AddEditStaffTest(TestCase):
         staff_in = Staff.objects.create(user=user_in, role='teacher')
         staff_in.subject_areas.add(subject_area)
         staff_in.save()
-        self.client.post(staff_in.get_edit_url(), data={
+        request = self.factory.post(staff_in.get_edit_url(), data={
             'first_name': 'Elmar',
             'last_name': 'Fudd',
             'email': 'elmar.fudd@acme.edu',
             'subject_areas': ['Cartoon Studies'],
             'role': 'admin'
         })
-        staff_out = Staff.objects.first()
+        request.user = self.user
+        add_or_edit_staff(request, user_in.username)
+        staff_out = Staff.objects.get(user=user_in)
         self.assertEqual(staff_out.user.last_name, 'Fudd')
         self.assertEqual(staff_out.role, 'admin')
 
 
-class ViewStaffTest(TestCase):
+class ViewStaffTest(AdminUnitTest):
     """Tests for Viewing Staff Members"""
     
     def test_staff_view_by_subject_uses_correct_template(self):
-        response = self.client.get('/view_staff_by_subject/')
+        request = self.factory.get('/view_staff_by_subject/')
+        request.user = self.user
+        response = view_staff_by_subject(request)
         self.assertTemplateUsed(response, 'all_staff_by_subject.html')
 
     def test_staff_view_by_subject_contains_staff(self):
         subject_area_1 = create_subject_area()
         subject_area_2 = SubjectArea.objects.create(name='Evil Plotting')
-        staff1 = create_staff()
+        staff1 = create_teacher()
         staff1.subject_areas.add(subject_area_1)
         staff1.save()
         user2 = User.objects.create_user(
@@ -559,14 +613,16 @@ class ViewStaffTest(TestCase):
         staff2.subject_areas.add(subject_area_2)
         staff2.save()
         user3 = User.objects.create_user(
-            'cj123', 'c.jones@acme.edu', 'password')
-        user3.first_name = 'Charles M'
-        user3.last_name = 'Jones'
+            'ta123', 't.avery@acme.edu', 'othergod')
+        user3.first_name = 'Tex'
+        user3.last_name = 'Avery'
         user3.save()
         staff3 = Staff.objects.create(user=user3, role='Admin')
         staff3.subject_areas.add(subject_area_1)
         staff3.save()
-        response = self.client.get('/view_staff_by_subject/')
+        request = self.factory.get('/view_staff_by_subject/')
+        request.user = self.user
+        response = view_staff_by_subject(request)
         soup = BeautifulSoup(response.content)
         table1 = str(soup.find(id=subject_area_1.slug()))
         self.assertTrue(staff1.name() in table1)
@@ -580,7 +636,7 @@ class ViewStaffTest(TestCase):
     def test_staff_view_by_name_contains_staff(self):
         subject_area_1 = create_subject_area()
         subject_area_2 = SubjectArea.objects.create(name='Evil Plotting')
-        staff1 = create_staff()
+        staff1 = create_teacher()
         staff1.subject_areas.add(subject_area_1)
         staff1.save()
         user2 = User.objects.create_user(
@@ -593,14 +649,16 @@ class ViewStaffTest(TestCase):
         staff2.subject_areas.add(subject_area_2)
         staff2.save()
         user3 = User.objects.create_user(
-            'cj123', 'c.jones@acme.edu', 'password')
-        user3.first_name = 'Charles M'
-        user3.last_name = 'Jones'
+            'ta142', 't.avery@acme.edu', 'othergod')
+        user3.first_name = 'Tex'
+        user3.last_name = 'Avery'
         user3.save()
         staff3 = Staff.objects.create(user=user3, role='Admin')
         staff3.subject_areas.add(subject_area_1)
         staff3.save()
-        response = self.client.get('/view_staff_by_name/')
+        request = self.factory.get('/view_staff_by_name/')
+        request.user = self.user
+        response = view_staff_by_name(request)
         self.assertContains(response, staff1.name())
         self.assertContains(response, staff2.name())
         self.assertContains(response, staff3.name())
