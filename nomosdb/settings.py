@@ -88,6 +88,7 @@ STATIC_URL = '/static/'
 
 TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS + (
     'main.context_processors.constants',
+    'main.context_processors.menubar'
 )
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'

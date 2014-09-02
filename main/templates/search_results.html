@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p>You searched for: <strong>{{ query }}</strong></p>
+
+{% if students %}
+    <p>Found {{ students|length }}</p>
+    <ul>
+        {% for student in students %}
+        <li><a href="{{ student.get_absolute_url }}">{{student}} (Year {{student.year}})</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No students matched your search criteria.</p>
+{% endif %}
+{% endblock %}

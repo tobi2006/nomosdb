@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block menubar %}
+{% endblock %}
+
+{% block content %}
+
+<p>
+    Welcome to NomosDB. Please provide your login details to continue.
+</p>
+
+  {% if form.errors %}
+    <p class="error">Sorry, but this username or password is not valid</p>
+  {% endif %}
+
+<form method="post" role="form" class="form-horizontal">
+    <div class="form-group">
+        <label for="username" class="col-sm-2">Username:</label>
+        <div class="col-sm-6">
+            <input type="text" name="username" value="" id="username" class="form-control">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="password" class="col-sm-2">Password:</label>
+        <div class="col-sm-6">
+            <input type="password" name="password" value="" id="password" class="form-control">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-6">
+            <input type="submit" value="Login" class="btn btn-primary" />
+            <input type="hidden" name="next" value="{{ next|escape }}" />
+        </div>
+    </div>
+{% csrf_token %}
+</form>
+
+  <br><br>
+
+  <a href="#" id="forgot">Forgot your user details?</a>
+
+
+<div id="reset_password">
+  <hr>
+  <br><br>
+  <p>
+      Please enter your university email address (all in lower case) and click "Submit". 
+      Your username and a new password will be emailed to you.
+      It might take a minute before the email arrives, if it is not there then, please check your Junk email folder as well
+      and try it again, making sure that you definitely enter the correct email address.
+  </p>
+  <form action="/reset_password/" method="get" class="form-inline">
+      <div class="form-group">
+          <input type="email" name="email" class="form-control" />
+          <input type="submit" value="Submit" class="btn btn-default">
+        </div>
+    <form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        $("#reset_password").hide();
+        $("#forgot").click(function(){
+            $("#reset_password").toggle();
+        });
+    });
+
+</script>
+
+{% comment %}
+    $(document).ready(function(){
+        alert("Hallo");
+    });
+
+//        $("#forgot").click(function(){
+//            $("#reset_password").show();
+//        });
+//});
+{% endcomment %}
+{% endblock %}

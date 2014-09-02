@@ -1,12 +1,14 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import redirect, render
-from nomosdb.unisettings import *
-from main.forms import *
-from main.models import *
-from main.functions import week_number
-from random import shuffle
-from main.messages import new_staff_email
 from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from main.forms import *
+from main.functions import week_number
+from main.messages import new_staff_email
+from main.models import *
+from nomosdb.unisettings import *
+from random import shuffle
 
 
 def is_teacher(user):
@@ -570,6 +572,42 @@ def add_or_edit_staff(request, username=None):
         else:
             form = StaffForm(initial={'role': 'teacher'})
     return render(request, 'staff_form.html', {'form': form, 'edit': edit})
+
+
+@login_required
+@user_passes_test(is_staff)
+def search_student(request):
+    """Little search function. Can at some point be replaced with AJAX"""
+    if 'q' in request.GET and request.GET['q']:
+        q = request.GET['q']
+        students = []
+        if len(q) > 1:
+            if "," in q:
+                search = q.split(",")
+                first_name = search[-1].strip()
+                last_name = search[0].strip()
+            else:
+                search = q.split()
+                first_name = search[0]
+                last_name = search[-1]
+            students = Student.objects.filter(
+                last_name__icontains=last_name,
+                first_name__icontains=first_name
+                )
+        if len(students) == 0:
+            students = Student.objects.filter(
+                Q(last_name__istartswith=q) | Q(first_name__istartswith=q))
+        if len(students) == 1:
+            student = students[0]
+            return redirect(student.get_absolute_url())
+        else:
+            return render(
+                request,
+                'search_results.html',
+                {'students': students, 'query': q},
+            )
+    else:
+        return redirect(reverse('home'))
 
 
 @login_required

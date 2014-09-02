@@ -48,14 +48,38 @@
             </li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" id="menu-modules" data-toggle="dropdown">Modules <b class="caret"></b></a>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu" id="menu-module-list">
+                    {% for module in module_dict.current %}
+                        <li><a href="{{ module.get_absolute_url }}">{{ module.title }}</a></li>
+                    {% endfor %}
+                    <li class="divider"></li>
                     <li><a href="{% url "add_module" %}" id="menu-add-module">Add Module</a></li>
                 </ul>
             </li>
+            {% if module_dict.past %}
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Past Modules<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    {% for module in module_dict.past %}
+                        <li><a href="{{ module.get_absolute_url }}">{{ module }}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
+            {% if module_dict.future %}
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Future Modules<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    {% for module in module_dict.future %}
+                        <li><a href="{{ module.get_absolute_url }}">{{ module }}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endif %}
         </ul>
-        <form class="navbar-form navbar-left" role="search">
+        <form class="navbar-form navbar-left" role="search" action="{% url "search_student" %}" method="get">
             <div class="form-group">
-                <input type="text" class="form-control" placeholder="Search Student">
+                <input type="text" class="form-control" placeholder="Search Student" name="q">
             </div>
             <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search"></span></button>
         </form>

@@ -3,6 +3,8 @@ import datetime
 UNI_NAME = 'Acme University'
 UNI_SHORT_NAME = 'ACM'
 
+START_YEAR = 2013  # Only used for the very first run
+
 NOMOSDB_URL = 'http://nomosdb.acme.edu'
 NOMOSDB_NAME = 'NomosDB'
 
