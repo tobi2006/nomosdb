@@ -3,6 +3,10 @@ from django.contrib.auth.models import User
 from django.test import TestCase, RequestFactory
 
 
+def set_year():
+    """Sets the current year to 1900"""
+    Settings.objects.create(name="current_year", value="1900")
+
 def create_subject_area(save=True):
     """Creates one subject area"""
     subject = SubjectArea(name="Cartoon Studies")
@@ -39,7 +43,7 @@ def create_module(save=True):
     module = Module(
         title='Hunting Laws',
         code="hl23",
-        year="2013",
+        year="1900",
     )
     if save:
         module.save()
@@ -131,6 +135,7 @@ class TeacherUnitTest(TestCase):
     """Sets up the testing environment for a teacher"""
 
     def setUp(self):
+        set_year()
         self.factory = RequestFactory()
         user = User.objects.create_user(
             username="mtm23",
@@ -147,6 +152,7 @@ class AdminUnitTest(TestCase):
     """Sets up the testing environment for an admin"""
 
     def setUp(self):
+        set_year()
         self.factory = RequestFactory()
         user = User.objects.create_user(
             username="cj123",

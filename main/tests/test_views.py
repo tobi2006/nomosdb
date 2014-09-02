@@ -99,7 +99,7 @@ class ModuleViewTest(TeacherUnitTest):
         module = Module.objects.create(
             title="Hunting Practice",
             code="hp23",
-            year=2014
+            year=1900
         )
         request = self.factory.get(module.get_absolute_url())
         request.user = self.user
@@ -110,7 +110,7 @@ class ModuleViewTest(TeacherUnitTest):
         module = Module.objects.create(
             title="Hunting Practice",
             code="hp23",
-            year=2014,
+            year=1900,
             eligible="1"
         )
         student = Student.objects.create(

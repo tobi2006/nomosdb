@@ -89,7 +89,7 @@ class StudentTest(TeacherUnitTest):
 
     def test_student_can_be_enlisted_in_module(self):
         student = create_student()
-        module = Module.objects.create(code="hl23", year="2013")
+        module = Module.objects.create(code="hl23", year="1900")
         student.modules.add(module)
         student.save()
         self.assertEqual(student, module.student_set.first())
@@ -141,7 +141,7 @@ class AssessmentTest(TeacherUnitTest):
         module.assessments.add(assessment)
         self.assertEqual(
             assessment.get_absolute_url(),
-            '/edit_assessment/hl23/2013/practical-hunting-exercise/'
+            '/edit_assessment/hl23/1900/practical-hunting-exercise/'
         )
 
     def test_assessment_returns_correct_delete_url(self):
@@ -153,7 +153,7 @@ class AssessmentTest(TeacherUnitTest):
         )
         self.assertEqual(
             assessment.get_delete_url(),
-            '/delete_assessment/hl23/2013/practical-hunting-exercise/'
+            '/delete_assessment/hl23/1900/practical-hunting-exercise/'
         )
 
 
@@ -165,20 +165,20 @@ class ModuleTest(TeacherUnitTest):
         module_out = Module.objects.first()
         self.assertEqual(module_out.title, "Hunting Laws")
         self.assertEqual(module_out.code, "hl23")
-        self.assertEqual(module_out.year, 2013)
+        self.assertEqual(module_out.year, 1900)
 
     def test_module_name_returns_correctly(self):
         module = create_module(save=False)
         self.assertEqual(
             module.__str__(),
-            'Hunting Laws (2013/14)'
+            'Hunting Laws (1900/01)'
         )
 
     def test_module_returns_correct_url(self):
         module = create_module(save=False)
         self.assertEqual(
             module.get_absolute_url(),
-            '/module/hl23/2013/'
+            '/module/hl23/1900/'
         )
 
     def test_second_module_with_identical_code_and_year_cannot_be_saved(self):
@@ -186,7 +186,7 @@ class ModuleTest(TeacherUnitTest):
         module2 = Module(
             title="A different title",
             code="hl23",
-            year="2013"
+            year="1900"
         )
         with self.assertRaises(ValidationError):
             module2.full_clean()
@@ -195,31 +195,31 @@ class ModuleTest(TeacherUnitTest):
         module = create_module(save=False)
         self.assertEqual(
             module.get_add_students_url(),
-            '/add_students_to_module/hl23/2013/')
+            '/add_students_to_module/hl23/1900/')
 
     def test_module_returns_correct_attendance_url(self):
         module = create_module(save=False)
         self.assertEqual(
             module.get_attendance_url('all'),
-            '/attendance/hl23/2013/all/'
+            '/attendance/hl23/1900/all/'
         )
         self.assertEqual(
             module.get_attendance_url(1),
-            '/attendance/hl23/2013/1/'
+            '/attendance/hl23/1900/1/'
         )
 
     def test_module_returns_blank_remove_students_url(self):
         module = create_module(save=False)
         self.assertEqual(
             module.get_blank_remove_student_url(),
-            '/remove_student_from_module/hl23/2013/'
+            '/remove_student_from_module/hl23/1900/'
         )
 
     def test_module_returns_correct_assessment_url(self):
         module = create_module(save=False)
         self.assertEqual(
             module.get_assessment_url(),
-            '/assessment/hl23/2013/'
+            '/assessment/hl23/1900/'
         )
 
     def test_module_returns_all_assessment_titles_in_list(self):
@@ -237,7 +237,7 @@ class ModuleTest(TeacherUnitTest):
         module2 = Module.objects.create(
             title="A different title",
             code="DT42",
-            year="2013",
+            year="1900",
         )
         m_2_assessment_1 = Assessment.objects.create(
             title="Assessment 1",
