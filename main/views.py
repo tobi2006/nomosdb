@@ -185,7 +185,8 @@ def add_or_edit_module(request, code=None, year=None):
 def module_view(request, code, year):
     """Shows all information about a module"""
     module = Module.objects.get(code=code, year=year)
-    performances = Performance.objects.filter(module=module)
+    performances = Performance.objects.filter(
+        module=module, student__active=True)
     seminar_groups = []
     for performance in performances:
         if performance.seminar_group:
@@ -233,7 +234,7 @@ def add_students_to_module(request, code, year):
     years = []
     for number in module.eligible:
         year = int(number)
-        students_this_year = Student.objects.filter(year=year)
+        students_this_year = Student.objects.filter(year=year, active=True)
         for student in students_this_year:
             if student not in students_in_module:
                 for subject_area in module.subject_areas.all():
@@ -634,3 +635,66 @@ def view_staff_by_name(request):
         request, 'all_staff_by_name.html', {'staff_members': staff_members})
 
 
+
+@login_required
+@user_passes_test(is_staff)
+def year_view(request, year):
+    """Shows all students in a particular year and allows bulk changes"""
+    if request.user.staff.main_admin:
+        if year == 'all':
+            students = Student.objects.filter(active=True)
+        elif year == 'unassigned':
+            students = Student.objects.filter(year=None, active=True)
+        elif year == 'inactive':
+            students = Student.objects.filter(active=False)
+        else:
+            students = Student.objects.filter(year=year, active=True)
+    else:
+        staff_subject_areas = request.user.staff.subject_areas.all().values(
+            'name')
+        if year == 'all':
+            students = Student.objects.filter(
+                active=True, course__subject_areas__name__in=staff_subject_areas)
+        elif year == 'unassigned':
+            students = Student.objects.filter(
+                active=True,
+                course__subject_areas__name__in=staff_subject_areas,
+                year=None
+            )
+        elif year == 'inactive':
+            students = Student.objects.filter(
+                active=False,
+                course__subject_areas__name__in=staff_subject_areas,
+            )
+        else:
+            students = Student.objects.filter(
+                active=True,
+                course__subject_areas__name__in=staff_subject_areas,
+                year=year
+            )
+    if year == 'all':
+        headline = 'All Students'
+        show_year = True
+    elif year == 'unassigned':
+        headline = 'Unassigned Students'
+        show_year = True
+    elif year == 'inactive':
+        headline = 'Inactive Students'
+        show_year = True
+    elif year == '9':
+        headline = 'Alumni'
+        show_year = False
+    elif year == '7':
+        headline = 'Masters Students'
+        show_year = False
+    elif year == '8':
+        headline = 'PhD Students'
+        show_year = False
+    else:
+        headline = 'Year ' + year
+        show_year = False
+    return render(
+        request,
+        'year_view.html',
+        {'students': students, 'headline': headline, 'show_year': show_year}
+    )

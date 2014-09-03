@@ -130,6 +130,27 @@ class ModuleViewTest(TeacherUnitTest):
         out_response = module_view(out_request, module.code, module.year)
         self.assertContains(out_response, "Pig, Porky")
 
+    def test_only_active_students_appear_in_module_view(self):
+        module = create_module()
+        student1 = create_student()
+        student2 = Student.objects.create(
+            last_name="Pig",
+            first_name="Porky",
+            student_id="pp2323",
+            active=False
+        )
+        student1.modules.add(module)
+        performance1 = Performance.objects.create(
+            student=student1, module=module)
+        performance2 = Performance.objects.create(
+            student=student2, module=module)
+        student2.modules.add(module)
+        request = self.factory.get(module.get_absolute_url())
+        request.user = self.user
+        response = module_view(request, module.code, module.year)
+        self.assertContains(response, 'Bunny, Bugs')
+        self.assertNotContains(response, 'Pig, Porky')
+
 
 class AddStudentsToModuleTest(TeacherUnitTest):
     """Tests for the function to add students to a module"""
@@ -172,12 +193,21 @@ class AddStudentsToModuleTest(TeacherUnitTest):
             course=course,
             year=2
         )
+        student4 = Student.objects.create(
+            last_name="Runner",
+            first_name="Road",
+            student_id="rr42",
+            course=course,
+            year=1,
+            active=False
+        )
         request = self.factory.get(module.get_add_students_url())
         request.user = self.user
         response = add_students_to_module(request, module.code, module.year)
         self.assertContains(response, 'Bunny')
         self.assertNotContains(response, 'Duck')
         self.assertNotContains(response, 'Pig')
+        self.assertNotContains(response, 'Runner')
 
     def test_submitting_an_empty_form_does_not_break_it(self):
         module = create_module()
@@ -662,3 +692,76 @@ class ViewStaffTest(AdminUnitTest):
         self.assertContains(response, staff1.name())
         self.assertContains(response, staff2.name())
         self.assertContains(response, staff3.name())
+
+
+class YearViewTest(AdminUnitTest):
+    """Tests around the year view function from a teacher's perspective"""
+
+    def test_year_view_uses_right_template(self):
+        request = self.factory.get('/year_view/all')
+        request.user = self.user
+        response = year_view(request, 'all')
+        self.assertTemplateUsed(response, 'year_view')
+
+    def test_teachers_see_all_students_from_their_subject_areas(self):
+        stuff = set_up_stuff()
+        subject_area1 = SubjectArea.objects.create(name="Cartoon Studies")
+        subject_area2 = SubjectArea.objects.create(name="Evil Plotting")
+        self.user.staff.subject_areas.add(subject_area1)
+        course1 = Course.objects.create(
+            title="BA in Cartoon Studies", short_title="Cartoon Studies")
+        course1.subject_areas.add(subject_area1)
+        course2 = Course.objects.create(
+            title="BA in Evil Plotting", short_title="Evil Plotting")
+        course2.subject_areas.add(subject_area2)
+        course3 = Course.objects.create(
+            title="BA in Cartoon Studies with Evil Plotting",
+            short_title="Cartoon Studies / Evil Plotting"
+        )
+        course3.subject_areas.add(subject_area1)
+        course3.subject_areas.add(subject_area2)
+        student1 = stuff[1]
+        student1.year = 1
+        student1.course = course1
+        student1.save()
+        student2 = stuff[2]
+        student2.year = 1
+        student2.course = course1
+        student2.save()
+        student3 = stuff[3]
+        student3.course = course2
+        student3.year = 1
+        student3.save()
+        student4 = stuff[4]
+        student4.course = course3
+        student4.year = 1
+        student4.save()
+        request = self.factory.get('/year_view/1/')
+        request.user = self.user
+        response = year_view(request, '1')
+        self.assertContains(response, student1.last_name)
+        self.assertContains(response, student2.last_name)
+        self.assertNotContains(response, student3.last_name)
+        self.assertContains(response, student4.last_name)
+
+    def test_main_admin_sees_all_active_students_for_a_year_are_shown(self):
+        stuff = set_up_stuff()
+        self.user.staff.main_admin = True
+        self.user.staff.save()
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        student4.year=2
+        student4.save()
+        student5 = stuff[5]
+        student5.active = False
+        student5.save()
+        request = self.factory.get('/year_view/1/')
+        request.user = self.user
+        response = year_view(request, '1')
+        self.assertContains(response, student1.last_name)
+        self.assertContains(response, student2.last_name)
+        self.assertContains(response, student3.last_name)
+        self.assertNotContains(response, student4.last_name)
+        self.assertNotContains(response, student5.last_name)

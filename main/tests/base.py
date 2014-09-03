@@ -97,24 +97,28 @@ def set_up_stuff():
         last_name="Bunny",
         first_name="Bugs",
         student_id="bb23",
+        year=1
     )
     student1.modules.add(module)
     student2 = Student.objects.create(
         last_name="Duck",
         first_name="Daffy",
         student_id="dd42",
+        year=1
     )
     student2.modules.add(module)
     student3 = Student.objects.create(
         last_name="Pig",
         first_name="Porky",
         student_id="pp2323",
+        year=1
     )
     student3.modules.add(module)
     student4 = Student.objects.create(
         last_name="Le Pew",
         first_name="Pepe",
-        student_id="plp42"
+        student_id="plp42",
+        year=1
     )
     student4.modules.add(module)
     student5 = Student.objects.create(
