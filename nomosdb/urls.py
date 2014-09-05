@@ -83,4 +83,5 @@ urlpatterns += patterns(
         'view_staff_by_subject',
         name='view_staff_by_subject'
     ),
+    url(r'^students/(\w+)/$', 'year_view', name='year_view'),
 )

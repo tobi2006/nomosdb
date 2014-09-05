@@ -1,5 +1,5 @@
 # This is essentially just a file to save longer strings, for example sample emails.
-from nomosdb.unisettings import *
+from main.unisettings import *
 
 def new_staff_email(name, username, password):
     message = """

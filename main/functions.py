@@ -1,5 +1,5 @@
 import datetime
-from nomosdb.unisettings import FIRST_WEEK_STARTS
+from main.unisettings import FIRST_WEEK_STARTS
 from main.models import Settings
 
 

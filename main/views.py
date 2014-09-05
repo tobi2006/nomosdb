@@ -7,7 +7,7 @@ from main.forms import *
 from main.functions import week_number
 from main.messages import new_staff_email
 from main.models import *
-from nomosdb.unisettings import *
+from main.unisettings import *
 from random import shuffle
 
 
@@ -696,5 +696,10 @@ def year_view(request, year):
     return render(
         request,
         'year_view.html',
-        {'students': students, 'headline': headline, 'show_year': show_year}
+        {
+            'students': students,
+            'headline': headline,
+            'show_year': show_year,
+            'edit': True
+        }
     )

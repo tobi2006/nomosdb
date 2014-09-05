@@ -1,9 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1>{{ headline }}</h1>
+<h1>Student Overview</h1>
 
 {% if students %}
+
+{% if edit %}
+
+<div class="well">
+    <h2>{{ headline }}</h2>
+
+    <br><br>
+
+    <strong>Apply actions to selected students</strong>
+    <br>
+    <table cellpadding="5">
+        <tr>
+            <select id="action_selector">
+                <option value="blank" selected>Select Action</option>
+                <option value="course">Assign to Course</option>
+                <option value="qld">QLD pathway</option>
+                {% comment %}
+                <option value="nalp">Paralegal pathway</option>
+                {% endcomment %}
+                <option value="since">Set begin of studies</option>
+                <option value="year">Set year of study</option>
+                <option value="inactive">Set students inactive</option>
+                <option value="delete">Delete students</option>
+            </select>
+        </tr>
+        <tr id="second_option">
+        </tr>
+    </table>
+    </div>
+</div>
+
+{% endif %}
 
 <table id ="sortable_table" class="table table-striped table-sortable">
     <thead>
@@ -42,7 +74,7 @@
                     </td>
                 {% endif %}
                 <td>
-                    {{ student.short_name }}
+                    <a href="{{ student.get_absolute_url }}">{{ student.short_name }}</a>
                 </td>
                 <td>
                     {{ student.student_id }}
@@ -70,27 +102,79 @@
 <script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
 {% endblock %}
 
+{% if edit %}
 {% block scripts %}
 
 <script type="text/javascript">
 
-{% comment %}
     $(document).ready(function(){
-
-        $(document).on("click", ".remove", function(e) {
-            bootbox.confirm("Are you sure you want to remove this student from the module and delete all marks the students might have in this module? If the student is just temporary absent, it is better to mark them inactive.", function(confirm) {
-                if (confirm)
-                {
-                var student_id = e.target.id;
-                var remove = "{{ module.get_blank_remove_student_url }}" + student_id;
-                window.location.replace(remove);
-                }
-            });
+        $("#action_selector").change(function() {
+            var option = $(this).val();
+            switch(option)
+            {
+            case 'blank':
+                var toenter = '';
+                break;
+            case "qld":
+                var toenter = 'Mark selected as...<br>\
+                              <input type="radio" name="modify" value="qld_on" checked>\
+                              QLD students<br><input type="radio"\
+                              name="modify" value="qld_off">NOT QLD students\
+                              <br><br><input type="submit" value="Apply" class="btn btn-default">';
+                break;
+            case "course":
+                var toenter = 'Enroll selected on...<br>\
+                {% for course in courses %}<input type="radio" name="modify" value="course_{{ course.title }}">{{ course.title }}<br>{% endfor %}\
+                    <br><br><input type="submit" value="Apply" class="btn btn-default">';
+                break;
+            case "nalp":
+                var toenter = '<br>Mark selected as...<br>\
+                              <input type="radio" name="modify" value="nalp_on" checked>\
+                              On the paralegal pathway<br>\
+                              <input type="radio" name="modify" value="nalp_off">\
+                              NOT on the paralegal pathway\
+                              <br><br><input type="submit" value="Apply" class="btn btn-default">';
+                break;
+            case "since":
+                var toenter = '<br>Selected students started in...<br>\
+                {% for academic_year in academic_years %}<input type="radio" name="modify" value="since_{{ academic_year }}">{{ academic_year }}/{{ academic_year|add:"1" }}<br>{% endfor %}\
+                              <br><br><input type="submit" value="Apply" class="btn btn-default">';
+                break;
+            case "year":
+                var toenter = '<br>Mark selected as...<br>\
+                              <input type="radio" name="modify" value="year_1" checked>\
+                              Year 1<br>\
+                              <input type="radio" name="modify" value="year_2">\
+                              Year 2<br>\
+                              <input type="radio" name="modify" value="year_3">\
+                              Year 3<br>\
+                              <br><br><input type="submit" value="Apply" class="btn btn-default">';
+                break;
+            case "inactive":
+                var toenter = '<br>Mark selected as...<br>\
+                              <input type="radio" name="modify" value="active_yes" checked>\
+                              Active<br>\
+                              <input type="radio" name="modify" value="active_no">\
+                              Inactive<br>\
+                              <br><br><input type="submit" value="Apply" class="btn btn-default">';
+                break;
+            case "delete":
+                var toenter = '<br>This action cannot be undone.<br>\
+                              All records about these students<br>will be deleted.\
+                              <br>If a student is intermitting,<br>it is better to mark him/her as inactive.\
+                              <br><br>Are you sure you want to do this?<br><br>\
+                              <input type="radio" name="modify" value="delete_yes">\
+                              Yes<br>\
+                              <input type="radio" name="modify" value="delete_no" checked>\
+                              No<br>\
+                              <br><br><input type="submit" value="Apply" class="btn btn-default">';
+                break;
+            };
+            $("#second_option").html(toenter);
         });
-
     });
-{% endcomment %}
 
 </script>
 
 {% endblock %}
+{% endif %}

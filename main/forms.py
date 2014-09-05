@@ -3,7 +3,7 @@ from main.models import *
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Field, Fieldset, HTML, Div
 from crispy_forms.bootstrap import TabHolder, Tab, FormActions
-from nomosdb.unisettings import TEACHING_WEEK_HELPTEXT, TEACHING_WEEK_OPTIONS
+from main.unisettings import TEACHING_WEEK_HELPTEXT, TEACHING_WEEK_OPTIONS
 
 NO_STUDENT_ID_ERROR = "You need to specify a unique student ID number"
 
@@ -12,6 +12,7 @@ class SubjectAreaForm(forms.ModelForm):
     """The modelform for the subject area - very simple"""
 
     class Meta:
+        fields = ['name']
         model = SubjectArea
         widgets = {'name': forms.TextInput(attrs={'class': 'form-control'})}
 
@@ -33,6 +34,7 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
+        fields = ['title', 'short_title', 'subject_areas']
 
 
 class AssessmentForm(forms.ModelForm):
@@ -55,6 +57,7 @@ class AssessmentForm(forms.ModelForm):
 
     class Meta:
         model = Assessment
+        fields = ['title', 'value', 'submission_date', 'max_word_count']
 
 
 class StudentForm(forms.ModelForm):
@@ -75,7 +78,6 @@ class StudentForm(forms.ModelForm):
                 'since',
                 'qld',
                 'tier_4',
-                'nalp',
                 'active',
             ),
             Tab(
@@ -102,6 +104,7 @@ class StudentForm(forms.ModelForm):
 
     class Meta:
         model = Student
+        exclude = ['modules', 'nalp', 'achieved_degree']
         error_messages = {
             'student_id': {'required': NO_STUDENT_ID_ERROR}
         }
@@ -144,7 +147,6 @@ class ModuleForm(forms.ModelForm):
                 # 'sucessor_of',
                 'eligible',
                 'foundational',
-                'nalp',
             ),
             Tab(
                 'Sessions',
@@ -165,6 +167,19 @@ class ModuleForm(forms.ModelForm):
 
     class Meta:
         model = Module
+        fields = [
+            'title',
+            'code',
+            'year',
+            'subject_areas',
+            'credits',
+            'eligible',
+            'foundational',
+            'first_session',
+            'no_teaching_in',
+            'last_session'
+        ]
+
 
 
 class StaffForm(forms.Form):

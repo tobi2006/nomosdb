@@ -1,4 +1,4 @@
-from nomosdb.unisettings import *
+from main.unisettings import *
 from main.models import *
 from main.views import is_teacher, is_admin, is_staff
 

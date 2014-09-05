@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.text import slugify
 import datetime
-from nomosdb.unisettings import TEACHING_WEEKS
+from main.unisettings import TEACHING_WEEKS
 
 ACADEMIC_YEARS = (
     [(i, str(i) + "/" + str(i+1)[-2:]) for i in range(2010, 2025)]

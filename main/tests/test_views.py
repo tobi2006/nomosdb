@@ -1,5 +1,5 @@
 from django.test import TestCase
-from nomosdb.unisettings import UNI_NAME
+from main.unisettings import UNI_NAME
 from main.models import *
 from main.views import *
 from bs4 import BeautifulSoup
