@@ -99,6 +99,17 @@ class StudentTest(TeacherUnitTest):
         self.assertEqual(student.short_name(), 'Bunny, Bugs')
         self.assertEqual(student.short_first_name(), 'Bugs')
 
+    def test_student_and_all_performances_can_be_deleted(self):
+        student = create_student()
+        module = create_module()
+        performance = Performance.objects.create(
+            student=student, module=module)
+        self.assertEqual(Student.objects.count(), 1)
+        self.assertEqual(Performance.objects.count(), 1)
+        student.delete()
+        self.assertEqual(Student.objects.count(), 0)
+        self.assertEqual(Performance.objects.count(), 0)
+
 
 class StaffTest(AdminUnitTest):
     """Tests for the Staff class"""

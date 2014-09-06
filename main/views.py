@@ -539,13 +539,12 @@ def add_or_edit_staff(request, username=None):
                 password = User.objects.make_random_password()
                 user = User.objects.create_user(username, email, password)
                 message = new_staff_email(first_name, username, password)
-                #send_mail(
+                # send_mail(
                 #   '%s Login Data' % (NOMOSDB_NAME)
                 #   message,
                 #   ADMIN_EMAIL,
                 #   [email, ]
-                #)
-                print(message)
+                # )
                 staff = Staff.objects.create(user=user)
             for subject_area in staff.subject_areas.all():
                 if subject_area.name not in form.cleaned_data['subject_areas']:
@@ -635,11 +634,67 @@ def view_staff_by_name(request):
         request, 'all_staff_by_name.html', {'staff_members': staff_members})
 
 
-
 @login_required
 @user_passes_test(is_staff)
 def year_view(request, year):
     """Shows all students in a particular year and allows bulk changes"""
+    if request.method == 'POST':
+        selected_students = request.POST.getlist('selected_student_id')
+        selected_option = request.POST.__getitem__('modify')
+        selected = selected_option.split('_')
+        if selected[0] == 'tutor':
+            tutor = User.objects.get(id=selected[1])
+            for student_id in selected_students:
+                student = Student.objects.get(student_id=student_id)
+                student.tutor = tutor
+                student.save()
+        elif selected[0] == 'qld':
+            if selected[1] == 'on':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.qld = True
+                    student.save()
+            elif selected[1] == 'off':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.qld = False
+                    student.save()
+        elif selected[0] == 'course':
+            course = Course.objects.get(title=selected[1])
+            for student_id in selected_students:
+                student = Student.objects.get(student_id=student_id)
+                student.course = course
+                student.save()
+        elif selected[0] == 'since':
+            startyear = selected[1]
+            for student_id in selected_students:
+                student = Student.objects.get(student_id=student_id)
+                student.since = startyear
+                student.save()
+        elif selected[0] == 'year':
+            for student_id in selected_students:
+                student = Student.objects.get(student_id=student_id)
+                student.year = selected[1]
+                student.save()
+        elif selected[0] == 'active':
+            if selected[1] == 'yes':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.active = True
+                    student.save()
+            elif selected[1] == 'no':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.active = False
+                    student.save()
+        elif selected[0] == 'delete':
+            if selected[1] == 'yes':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.delete()
+            if selected[1] == 'no':
+                pass
+        return redirect(reverse('year_view', args=[str(year)]))
     if request.user.staff.main_admin:
         if year == 'all':
             students = Student.objects.filter(active=True)
@@ -649,12 +704,15 @@ def year_view(request, year):
             students = Student.objects.filter(active=False)
         else:
             students = Student.objects.filter(year=year, active=True)
+        courses = Course.objects.all()
     else:
         staff_subject_areas = request.user.staff.subject_areas.all().values(
             'name')
         if year == 'all':
             students = Student.objects.filter(
-                active=True, course__subject_areas__name__in=staff_subject_areas)
+                active=True,
+                course__subject_areas__name__in=staff_subject_areas
+            )
         elif year == 'unassigned':
             students = Student.objects.filter(
                 active=True,
@@ -672,6 +730,8 @@ def year_view(request, year):
                 course__subject_areas__name__in=staff_subject_areas,
                 year=year
             )
+        courses = Course.objects.filter(
+            subject_areas__name__in=staff_subject_areas)
     if year == 'all':
         headline = 'All Students'
         show_year = True
@@ -693,6 +753,19 @@ def year_view(request, year):
     else:
         headline = 'Year ' + year
         show_year = False
+    academic_years = []
+    current_year = int(Settings.objects.get(name='current_year').value)
+    latest_start_year = current_year + 2
+    for academic_year in ACADEMIC_YEARS:
+        if academic_year[0] < latest_start_year:
+            academic_years.append(academic_year[0])
+    if is_admin(request.user):
+        edit = True
+    else:
+        if request.user.staff.programme_director:
+            edit = True
+        else:
+            edit = False
     return render(
         request,
         'year_view.html',
@@ -700,6 +773,8 @@ def year_view(request, year):
             'students': students,
             'headline': headline,
             'show_year': show_year,
-            'edit': True
+            'academic_years': academic_years,
+            'courses': courses,
+            'edit': edit
         }
     )

@@ -7,6 +7,7 @@ def set_year():
     """Sets the current year to 1900"""
     Settings.objects.create(name="current_year", value="1900")
 
+
 def create_subject_area(save=True):
     """Creates one subject area"""
     subject = SubjectArea(name="Cartoon Studies")

@@ -620,7 +620,7 @@ class AddEditStaffTest(AdminUnitTest):
 
 class ViewStaffTest(AdminUnitTest):
     """Tests for Viewing Staff Members"""
-    
+
     def test_staff_view_by_subject_uses_correct_template(self):
         request = self.factory.get('/view_staff_by_subject/')
         request.user = self.user
@@ -752,7 +752,7 @@ class YearViewTest(AdminUnitTest):
         student2 = stuff[2]
         student3 = stuff[3]
         student4 = stuff[4]
-        student4.year=2
+        student4.year = 2
         student4.save()
         student5 = stuff[5]
         student5.active = False
@@ -765,3 +765,135 @@ class YearViewTest(AdminUnitTest):
         self.assertContains(response, student3.last_name)
         self.assertNotContains(response, student4.last_name)
         self.assertNotContains(response, student5.last_name)
+
+    def test_only_admin_and_programme_director_see_edit_stuff(self):
+        stuff = set_up_stuff()
+        subject_area = create_subject_area()
+        course = create_course()
+        course.subject_areas.add(subject_area)
+        self.user.staff.role = 'admin'
+        self.user.staff.subject_areas.add(subject_area)
+        self.user.staff.save()
+        student1 = stuff[1]
+        student1.course = course
+        student1.save()
+        student2 = stuff[2]
+        student2.course = course
+        student2.save()
+        request = self.factory.get('/year_view/1/')
+        request.user = self.user
+        response = year_view(request, '1')
+        self.assertContains(response, 'bulkfunctions')
+        self.user.staff.role = 'teacher'
+        self.user.staff.save()
+        request = self.factory.get('/year_view/1/')
+        request.user = self.user
+        response = year_view(request, '1')
+        self.assertNotContains(response, 'bulkfunctions')
+        self.user.staff.role = 'teacher'
+        self.user.staff.programme_director = True
+        self.user.staff.save()
+        request = self.factory.get('/year_view/1/')
+        request.user = self.user
+        response = year_view(request, '1')
+        self.assertContains(response, 'bulkfunctions')
+
+    def test_bulk_changing_functions_work(self):
+        stuff = set_up_stuff()
+        subject_area = create_subject_area()
+        course1 = create_course()
+        course1.subject_areas.add(subject_area)
+        course2 = Course.objects.create(
+            title='BA in Evil Plotting', short_title='Evil Plotting')
+        subject_area2 = SubjectArea.objects.create(name='Evil Plotting')
+        course2.subject_areas.add(subject_area2)
+        self.user.staff.role = 'admin'
+        self.user.staff.subject_areas.add(subject_area)
+        self.user.staff.save()
+        student1 = stuff[1]
+        student1.course = course1
+        student1.qld = True
+        student1.save()
+        student2 = stuff[2]
+        student2.course = course1
+        student2.qld = True
+        student2.save()
+        student3 = stuff[3]
+        student3.course = course1
+        student3.qld = True
+        student3.save()
+        stuff[4].delete()
+        stuff[5].delete()
+        # Set course
+        request = self.factory.post('/year_view/1/', data={
+            'selected_student_id': [student2.student_id, student3.student_id],
+            'modify': 'course_BA in Evil Plotting'
+        })
+        request.user = self.user
+        response = year_view(request, '1')
+        student1_out = Student.objects.get(student_id=student1.student_id)
+        student2_out = Student.objects.get(student_id=student2.student_id)
+        student3_out = Student.objects.get(student_id=student3.student_id)
+        self.assertEqual(student1_out.course, course1)
+        self.assertEqual(student2_out.course, course2)
+        self.assertEqual(student3_out.course, course2)
+        # Set QLD
+        request = self.factory.post('/year_view/1/', data={
+            'selected_student_id': [student1.student_id, student2.student_id],
+            'modify': 'qld_off'
+        })
+        request.user = self.user
+        response = year_view(request, '1')
+        student1_out = Student.objects.get(student_id=student1.student_id)
+        student2_out = Student.objects.get(student_id=student2.student_id)
+        student3_out = Student.objects.get(student_id=student3.student_id)
+        self.assertEqual(student1_out.qld, False)
+        self.assertEqual(student2_out.qld, False)
+        self.assertEqual(student3_out.qld, True)
+        # Set begin of studies
+        request = self.factory.post('/year_view/1/', data={
+            'selected_student_id': [student1.student_id, student2.student_id],
+            'modify': 'since_1900'
+        })
+        request.user = self.user
+        response = year_view(request, '1')
+        student1_out = Student.objects.get(student_id=student1.student_id)
+        student2_out = Student.objects.get(student_id=student2.student_id)
+        student3_out = Student.objects.get(student_id=student3.student_id)
+        self.assertEqual(student1_out.since, 1900)
+        self.assertEqual(student2_out.since, 1900)
+        self.assertEqual(student3_out.since, None)
+        # Set Year
+        request = self.factory.post('/year_view/1/', data={
+            'selected_student_id': [student1.student_id, student2.student_id],
+            'modify': 'year_2'
+        })
+        request.user = self.user
+        response = year_view(request, '1')
+        student1_out = Student.objects.get(student_id=student1.student_id)
+        student2_out = Student.objects.get(student_id=student2.student_id)
+        student3_out = Student.objects.get(student_id=student3.student_id)
+        self.assertEqual(student1_out.year, 2)
+        self.assertEqual(student2_out.year, 2)
+        self.assertEqual(student3_out.year, 1)
+        # Active
+        request = self.factory.post('/year_view/1/', data={
+            'selected_student_id': [student1.student_id, student2.student_id],
+            'modify': 'active_no'
+        })
+        request.user = self.user
+        response = year_view(request, '1')
+        student1_out = Student.objects.get(student_id=student1.student_id)
+        student2_out = Student.objects.get(student_id=student2.student_id)
+        student3_out = Student.objects.get(student_id=student3.student_id)
+        self.assertEqual(student1_out.active, False)
+        self.assertEqual(student2_out.active, False)
+        self.assertEqual(student3_out.active, True)
+        # Delete
+        request = self.factory.post('/year_view/1/', data={
+            'selected_student_id': [student1.student_id, student2.student_id],
+            'modify': 'delete_yes'
+        })
+        request.user = self.user
+        response = year_view(request, '1')
+        self.assertEqual(Student.objects.count(), 1)

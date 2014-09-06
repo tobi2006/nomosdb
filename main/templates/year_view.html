@@ -1,39 +1,47 @@
 {% extends "base.html" %}
+
+{% block style %}
+td { 
+    padding: 10px;
+}
+{% endblock %}
+
+{% block formstart %}
+<form id="students_form" method="post"> 
+{% csrf_token %}
+{% endblock %}
+
 {% block content %}
 
-<h1>Student Overview</h1>
+<h1>Student Overview - {{ headline }}</h1>
 
 {% if students %}
 
 {% if edit %}
 
-<div class="well">
-    <h2>{{ headline }}</h2>
-
-    <br><br>
-
+<div class="well" id="bulkfunctions">
     <strong>Apply actions to selected students</strong>
-    <br>
-    <table cellpadding="5">
+    <br><br>
+    <table>
         <tr>
-            <select id="action_selector">
-                <option value="blank" selected>Select Action</option>
-                <option value="course">Assign to Course</option>
-                <option value="qld">QLD pathway</option>
-                {% comment %}
-                <option value="nalp">Paralegal pathway</option>
-                {% endcomment %}
-                <option value="since">Set begin of studies</option>
-                <option value="year">Set year of study</option>
-                <option value="inactive">Set students inactive</option>
-                <option value="delete">Delete students</option>
-            </select>
-        </tr>
-        <tr id="second_option">
+            <td>
+                <select id="action_selector">
+                    <option value="blank" selected>Select Action</option>
+                    <option value="course">Course</option>
+                    <option value="qld">QLD status</option>
+                    {% comment %}
+                    <option value="nalp">Paralegal pathway</option>
+                    {% endcomment %}
+                    <option value="since">Begin of studies</option>
+                    <option value="year">Year of study</option>
+                    <option value="inactive">Active / Inactive</option>
+                    <option value="delete">Delete students</option>
+                </select>
+            </td>
+            <td id="second_option"></td>
         </tr>
     </table>
     </div>
-</div>
 
 {% endif %}
 
@@ -41,7 +49,7 @@
     <thead>
         <tr>
             <th>
-                &nbsp;
+                <input type="checkbox" name="select_all">
             </th>
             {% if show_year %}
                 <th>
@@ -70,7 +78,7 @@
                 </td>
                 {% if show_year %}
                     <td>
-                        Year
+                        {{ student.year }}
                     </td>
                 {% endif %}
                 <td>
@@ -98,8 +106,8 @@
 
 {% endblock %}
 
-{% block loadscripts %}
-<script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
+{% block formend %}
+</form>
 {% endblock %}
 
 {% if edit %}
@@ -124,8 +132,9 @@
                 break;
             case "course":
                 var toenter = 'Enroll selected on...<br>\
-                {% for course in courses %}<input type="radio" name="modify" value="course_{{ course.title }}">{{ course.title }}<br>{% endfor %}\
-                    <br><br><input type="submit" value="Apply" class="btn btn-default">';
+                <select>\
+                {% for course in courses %}<option name="modify" value="course_{{ course.title }}">{{ course.title }}<br>{% endfor %}\
+                </select><br><br><input type="submit" value="Apply" class="btn btn-default">';
                 break;
             case "nalp":
                 var toenter = '<br>Mark selected as...<br>\
@@ -137,17 +146,12 @@
                 break;
             case "since":
                 var toenter = '<br>Selected students started in...<br>\
-                {% for academic_year in academic_years %}<input type="radio" name="modify" value="since_{{ academic_year }}">{{ academic_year }}/{{ academic_year|add:"1" }}<br>{% endfor %}\
+                              <select name="modify">{% for academic_year in academic_years %}<option value="since_{{ academic_year }}">{{ academic_year }}/{{ academic_year|add:"1" }}</option>{% endfor %}</select>\
                               <br><br><input type="submit" value="Apply" class="btn btn-default">';
                 break;
             case "year":
                 var toenter = '<br>Mark selected as...<br>\
-                              <input type="radio" name="modify" value="year_1" checked>\
-                              Year 1<br>\
-                              <input type="radio" name="modify" value="year_2">\
-                              Year 2<br>\
-                              <input type="radio" name="modify" value="year_3">\
-                              Year 3<br>\
+                              <select name="modify"><option value="year_1">Year 1</option><option value="year_2">Year 2</option><option value="year_3">Year 3</option></select>\
                               <br><br><input type="submit" value="Apply" class="btn btn-default">';
                 break;
             case "inactive":
@@ -159,10 +163,10 @@
                               <br><br><input type="submit" value="Apply" class="btn btn-default">';
                 break;
             case "delete":
-                var toenter = '<br>This action cannot be undone.<br>\
-                              All records about these students<br>will be deleted.\
-                              <br>If a student is intermitting,<br>it is better to mark him/her as inactive.\
-                              <br><br>Are you sure you want to do this?<br><br>\
+                var toenter = '<p>This action cannot be undone.\
+                              All records about these students will be deleted.\
+                              If a student is intermitting, it is better to mark them as inactive.\
+                              </p><p>Are you sure you want to do this?</p>\
                               <input type="radio" name="modify" value="delete_yes">\
                               Yes<br>\
                               <input type="radio" name="modify" value="delete_no" checked>\

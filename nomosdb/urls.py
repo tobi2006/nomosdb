@@ -28,7 +28,7 @@ urlpatterns += patterns(
     url(r'^add_staff/$', 'add_or_edit_staff', name='add_staff'),
     url(r'^add_student/$', 'add_or_edit_student', name='add_student'),
     url(
-        r'^add_students_to_module/(\w+)/(\d{4})/$', 
+        r'^add_students_to_module/(\w+)/(\d{4})/$',
         'add_students_to_module',
         name='add_students_to_module'
     ),
