@@ -60,6 +60,7 @@ urlpatterns += patterns(
     url(r'^edit_staff/(\w+)/$', 'add_or_edit_staff', name='edit_staff'),
     url(r'^edit_student/(\w+)/$', 'add_or_edit_student', name='edit_student'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),
+    url(r'^parse_csv/(\w+)/$', 'parse_csv', name='parse_csv'),
     url(
         r'^remove_student_from_module/(\w+)/(\d{4})/(\w+)/$',
         'remove_student_from_module',
@@ -72,7 +73,9 @@ urlpatterns += patterns(
     ),
     url(r'^search_student/$', 'search_student', name='search_student'),
     url(r'^student/(\w+)/$', 'student_view', name='student_view'),
+    url(r'^students/(\w+)/$', 'year_view', name='year_view'),
     url(r'^subject_areas/$', 'subject_areas', name='subject_areas'),
+    url(r'^upload_csv_file/$', 'upload_csv', name='upload_csv'),
     url(
         r'^view_staff_by_name/$',
         'view_staff_by_name',
@@ -83,5 +86,4 @@ urlpatterns += patterns(
         'view_staff_by_subject',
         name='view_staff_by_subject'
     ),
-    url(r'^students/(\w+)/$', 'year_view', name='year_view'),
 )

@@ -181,7 +181,6 @@ class ModuleForm(forms.ModelForm):
         ]
 
 
-
 class StaffForm(forms.Form):
     """A form for staff members, to be used by admins"""
     choices = []
@@ -199,7 +198,6 @@ class StaffForm(forms.Form):
     email = forms.EmailField(label="Email Address", required=True)
     subject_areas = forms.MultipleChoiceField(required=True, choices=choices)
     role = forms.ChoiceField(choices=ROLES)
-    
     helper = FormHelper()
     helper.form_method = "POST"
     helper.layout = Layout(
@@ -213,4 +211,12 @@ class StaffForm(forms.Form):
     )
     helper.form_class = "form-horizontal"
     helper.label_class = "col-lg-2"
-    helper.field_class="col-lg-6 col-md-8 col-sm-10"
+    helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+
+
+class CSVUploadForm(forms.Form):
+    csvfile = forms.FileField(
+        label='Select a .csv file',
+        help_text=("Simply save the spreadsheet under Excel or LibreOffice " +
+            "as a .csv File (either under Save As or under Export")
+    )

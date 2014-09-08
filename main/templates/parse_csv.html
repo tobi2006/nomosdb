@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block formstart %}
+    <form method="post">
+    {% csrf_token %}
+{% endblock %}
+
+{% block content %}
+
+<p>
+Please select the appropriate table headers and press the "Import Students" button at the bottom of the page.
+</p>
+
+<p>
+Tick the box next to a row if it does not contain student information or you do not want to import this student (for example the header line of the CSV file).
+</p>
+
+<p>
+If a student is already in the database, new information will be added, and existing information will be overwritten if it is contained in the data below.
+</p>
+
+<br><br>
+
+<table id="sortable_table" class="table table-striped table-sortable">
+    <thead>
+        <tr>
+            <th>&nbsp;</th>
+            {% for number in columns|get_range %}
+                <th>
+                    <select class="form-control" name="column{{ forloop.counter }}">
+                        <option value="ignore">Ignore this column</option>
+                        {% for option in options %}
+                            <option value="{{ option.0 }}">{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for line in csv_list %}
+            <tr>
+                <td>
+                    <input type="checkbox" name="exclude" value="{{ forloop.counter }}">
+                </td>
+                {% for item in line %}
+                    <td>
+                        {{ item }}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<input type="submit" value="Import Students" class="btn btn-primary">
+
+
+{% endblock %}

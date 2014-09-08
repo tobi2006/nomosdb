@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+Select the .csv file to upload. Please make sure that the spreadsheet you are using does not contain any commas, as they will be used by Excel or Libre Office for separating the columns.
+</p>
+
+<form action="{% url "upload_csv" %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>{{ form }}</p>
+    <input type = "submit" value="Upload" class="btn btn-primary" align="right">
+</form>
+
+{% endblock %}

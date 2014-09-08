@@ -897,3 +897,37 @@ class YearViewTest(AdminUnitTest):
         request.user = self.user
         response = year_view(request, '1')
         self.assertEqual(Student.objects.count(), 1)
+
+
+class CSVParsingTests(AdminUnitTest):
+    """Tests for the CSV Parsing"""
+    
+    def test_csv_data_gets_parsed_properly(self):
+        parsed_csvlist = (
+            'bb42,Bunny,Bugs,1900,1,bb42@acme.edu,+112345678/////' +
+            'dd23,Duck,Daffy,1900,1,dd23@acme.edu,+123456789/////' +
+            'pp42,Pig,Porky,1899,2,pp42@acme.edu,+134567890/////' +
+            'test,wrong,entry,to,beignored'
+        )
+        data = Data.objects.create(id='randomstring', value=parsed_csvlist)
+        request = self.factory.post('/parse_csv/randomstring/', data={
+            'column1': 'student_id',
+            'column2': 'last_name',
+            'column3': 'first_name',
+            'column4': 'since',
+            'column5': 'year',
+            'column6': 'email',
+            'column7': 'phone_no',
+            'exclude': '4'
+        })
+        request.user = self.user
+        parse_csv(request, data.id)
+        self.assertEqual(Student.objects.count(), 3)
+        student1 = Student.objects.get(student_id='bb42')
+        student2 = Student.objects.get(student_id='dd23')
+        student3 = Student.objects.get(student_id='pp42')
+        self.assertEqual(student1.last_name, 'Bunny')
+        self.assertEqual(student1.first_name, 'Bugs')
+        self.assertEqual(student1.since, 1900)
+        self.assertEqual(student1.email, 'bb42@acme.edu')
+        self.assertEqual(student1.phone_number, '+112345678')

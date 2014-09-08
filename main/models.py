@@ -27,6 +27,12 @@ class Settings(models.Model):
     value = models.CharField(max_length=200)
 
 
+class Data(models.Model):
+    """Allows to save some data for passing it between functions"""
+    id = models.CharField(max_length=16, primary_key=True)
+    value = models.TextField()
+
+
 class SubjectArea(models.Model):
     """Subject areas are the broader categories - eg "Law" or "Economics".
 

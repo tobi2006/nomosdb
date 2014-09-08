@@ -16,19 +16,19 @@ class StudentFormTest(TestCase):
 
     def test_student_form_validates_unique_id(self):
         Student.objects.create(
-            last_name="Baggins",
-            first_name="Frodo",
-            student_id="FB2342"
+            last_name="Bunny",
+            first_name="Bugs",
+            student_id="BB2342"
         )
         form1 = StudentForm(data={
-            'last_name': "Boffins",
-            'first_name': "Frildo",
-            'student_id': "FB2342"
+            'last_name': "Bunny",
+            'first_name': "Babs",
+            'student_id': "BB2342"
         })
         form2 = StudentForm(data={
-            'last_name': "Boffins",
-            'first_name': "Frildo",
-            'student_id': "FB2343"
+            'last_name': "Bunny",
+            'first_name': "Babs",
+            'student_id': "BB400"
         })
         self.assertFalse(form1.is_valid())
         self.assertTrue(form2.is_valid())

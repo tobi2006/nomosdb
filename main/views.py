@@ -8,7 +8,8 @@ from main.functions import week_number
 from main.messages import new_staff_email
 from main.models import *
 from main.unisettings import *
-from random import shuffle
+from random import shuffle, choice
+from string import ascii_letters, digits
 
 
 def is_teacher(user):
@@ -778,3 +779,158 @@ def year_view(request, year):
             'edit': edit
         }
     )
+
+
+@login_required
+@user_passes_test(is_staff)
+def upload_csv(request):
+    """Upload CSV, saves result in session and redirects to parser"""
+    if request.method == 'POST':
+        form = CSVUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            f = request.FILES['csvfile']
+            f.read()
+            csv_string = ''
+            for line in f:
+                csv_string += line.decode('utf-8') + '/////'
+            chars = ascii_letters + digits
+            data_id = ''.join(choice(chars) for x in range(16))
+            Data.objects.create(id=data_id, value=csv_string)
+            return redirect(reverse('parse_csv', args=[data_id]))
+    else:
+        form = CSVUploadForm()
+    return render(request, 'upload_csv.html', {'form': form})
+
+
+@login_required
+@user_passes_test(is_staff)
+def parse_csv(request, data_id):
+    """Parses CSV Files with Student data, creates / amends Students"""
+    data = Data.objects.get(id=data_id)
+    importdata = data.value.split('/////')
+    table = []
+    no_of_columns = 0
+    for line in importdata:
+        row = line.split(',')
+        if len(row) > no_of_columns:
+            no_of_columns = len(row)
+        table.append(row)
+    if request.method == "POST":
+        list_of_columns = []
+        i = 1
+        while i <= no_of_columns:
+            column = 'column' + str(i)
+            list_of_columns.append(request.POST[column])
+            i += 1
+        successful_entrys = 0
+        output = {'added': [], 'edited': [], 'no_id': []}
+        item_in_table = 0
+        ignore_students = request.POST.getlist('exclude')
+        for row in table:
+            item_in_table += 1
+            if str(item_in_table) not in ignore_students:
+                result = {}
+                counter = 0
+                for entry in row:
+                    column = list_of_columns[counter]
+                    if column != 'ignore':
+                        result[column] = entry
+                    counter += 1
+                try:
+                    student = Student.objects.get(
+                        student_id=result['student_id']
+                    )
+                except Student.DoesNotExist:
+                    student = Student.objects.create(
+                        student_id=result['student_id']
+                    )
+                if 'first_name' in result:
+                    student.first_name = result['first_name']
+                if 'last_name' in result:
+                    student.last_name = result['last_name']
+                if 'since' in result:
+                    student.since = int(result['since'])
+                if 'year' in result:
+                    # Can contain other entries, so necessary to parse
+                    possible_years = ['1', '2', '3', '7', '8', '9']
+                    tmp = result['year'].split()
+                    for part in tmp:
+                        if part in possible_years:
+                            student.year = int(part)
+                            break
+                if 'email' in result:
+                    student.email = result['email']
+                if 'phone_no' in result:
+                    student.phone_number = result['phone_no']
+                if 'permanent_email' in result:
+                    student.permanent_email = result['permanent_email']
+                if 'achieved_degree' in result:
+                    student.achieved_degree = result['achieved_degree']
+                address_fields = [
+                    'address1'
+                    'address2',
+                    'address3',
+                    'address4',
+                    'address5'
+                ]
+                if any(k in result for k in address_fields):
+                    student.address = ""
+                    for field in address_fields:
+                        if field in result:
+                            student.address += result[field] + '\n'
+                home_address_fields = [
+                    'home_address1'
+                    'home_address2',
+                    'home_address3',
+                    'home_address4',
+                    'home_address5'
+                ]
+                if any(k in result for k in home_address_fields):
+                    student.home_address = ''
+                    for field in home_address_fields:
+                        if field in result:
+                            student.home_address += result[field] + '\n'
+                student.save()
+                successful_entrys += 1
+        #request.session['number_of_imports'] = successful_entrys
+        data.delete()
+        return redirect('/')
+    options = (
+        ('student_id', 'Student ID'),
+        ('first_name', 'First Name'),
+        ('last_name', 'Last Name'),
+        ('exam_id', 'Exam ID'),
+        ('since', 'Studying since'),
+        ('year', 'Year of Study'),
+        ('email', 'University email'),
+        ('phone_no', 'Phone Number'),
+        ('permanent_email', 'Private email'),
+        ('achieved_degree', 'Achieved degree'),
+        ('address1', 'Term time address line 1'),
+        ('address2', 'Term time address line 2'),
+        ('address3', 'Term time address line 3'),
+        ('address4', 'Term time address line 4'),
+        ('address5', 'Term time address line 5'),
+        ('home_address1', 'Home address line 1'),
+        ('home_address2', 'Home address line 2'),
+        ('home_address3', 'Home address line 3'),
+        ('home_address4', 'Home address line 4'),
+        ('home_address5', 'Home address line 5')
+    )
+    return render(
+        request,
+        'parse_csv.html',
+        {   
+            'columns': no_of_columns,
+            'csv_list': table,
+            'options': options
+        }
+    )
+
+
+@login_required
+@user_passes_test(is_staff)
+def import_success(request):
+    """Displays successful upload / parsing"""
+    successful_entrys = request.session.get('number_of_imports')
+    return render(request, 'import_success.html', {successful_entries})

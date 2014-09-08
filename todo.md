@@ -12,7 +12,8 @@ Modules
 Students
 
 + Add search (AJAX)
-+ Write student overview
++ Add JS to Year overview
+
 
 Staff
 
