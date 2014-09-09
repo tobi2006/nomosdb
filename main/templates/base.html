@@ -42,7 +42,17 @@
         <ul class="nav navbar-nav">
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" id="menu-students" data-toggle="dropdown">Students <span class="caret"></span></a>
-                <ul class="dropdown-menu" role="menu">
+                <ul class="dropdown-menu" role="menu" id="menu-student-list">
+                    {% for category in menu_student_categories %}
+                        <li><a href="{% url "year_view" category.0 %}">{{ category.1 }}</a></li>
+                    {% endfor %}
+                    {% if menu_other_categories %}
+                        <li class="divider"></li>
+                        {% for category in menu_other_categories %}
+                            <li><a href="{% url "year_view" category.0 %}">{{ category.1 }}</a></li>
+                        {% endfor %}
+                    {% endif %}
+                    <li class="divider"></li>
                     <li><a href="{% url "add_student" %}" id="menu-add-students">Add Student(s)</a></li>
                 </ul>
             </li>
