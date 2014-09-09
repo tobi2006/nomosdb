@@ -28,9 +28,14 @@ class Settings(models.Model):
 
 
 class Data(models.Model):
-    """Allows to save some data for passing it between functions"""
+    """Allows to save some data for passing it between functions
+    
+    A management function set by a Cron job will delete data instances
+    older than 14 days to save space.
+    """
     id = models.CharField(max_length=16, primary_key=True)
     value = models.TextField()
+    timestamp = models.DateTimeField(auto_now=True)
 
 
 class SubjectArea(models.Model):

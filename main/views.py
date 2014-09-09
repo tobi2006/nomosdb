@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from main.forms import *
@@ -10,6 +11,7 @@ from main.models import *
 from main.unisettings import *
 from random import shuffle, choice
 from string import ascii_letters, digits
+from django.core.urlresolvers import resolve
 
 
 def is_teacher(user):
@@ -696,64 +698,72 @@ def year_view(request, year):
             if selected[1] == 'no':
                 pass
         return redirect(reverse('year_view', args=[str(year)]))
-    if request.user.staff.main_admin:
-        if year == 'all':
-            students = Student.objects.filter(active=True)
-        elif year == 'unassigned':
-            students = Student.objects.filter(year=None, active=True)
-        elif year == 'inactive':
-            students = Student.objects.filter(active=False)
-        else:
-            students = Student.objects.filter(year=year, active=True)
+    if year.startswith('imported_'):
+        data = Data.objects.get(id=year)
+        student_ids = data.value.split(',')
+        students = Student.objects.filter(student_id__in=student_ids)
+        headline = 'Recently Added Students'
         courses = Course.objects.all()
+        show_year = True
     else:
-        staff_subject_areas = request.user.staff.subject_areas.all().values(
-            'name')
-        if year == 'all':
-            students = Student.objects.filter(
-                active=True,
-                course__subject_areas__name__in=staff_subject_areas
-            )
-        elif year == 'unassigned':
-            students = Student.objects.filter(
-                active=True,
-                course__subject_areas__name__in=staff_subject_areas,
-                year=None
-            )
-        elif year == 'inactive':
-            students = Student.objects.filter(
-                active=False,
-                course__subject_areas__name__in=staff_subject_areas,
-            )
+        if request.user.staff.main_admin:
+            if year == 'all':
+                students = Student.objects.filter(active=True)
+            elif year == 'unassigned':
+                students = Student.objects.filter(year=None, active=True)
+            elif year == 'inactive':
+                students = Student.objects.filter(active=False)
+            else:
+                students = Student.objects.filter(year=year, active=True)
+            courses = Course.objects.all()
         else:
-            students = Student.objects.filter(
-                active=True,
-                course__subject_areas__name__in=staff_subject_areas,
-                year=year
-            )
-        courses = Course.objects.filter(
-            subject_areas__name__in=staff_subject_areas)
-    if year == 'all':
-        headline = 'All Students'
-        show_year = True
-    elif year == 'unassigned':
-        headline = 'Unassigned Students'
-        show_year = True
-    elif year == 'inactive':
-        headline = 'Inactive Students'
-        show_year = True
-    elif year == '9':
-        headline = 'Alumni'
-        show_year = False
-    elif year == '7':
-        headline = 'Masters Students'
-        show_year = False
-    elif year == '8':
-        headline = 'PhD Students'
-        show_year = False
-    else:
-        headline = 'Year ' + year
-        show_year = False
+            staff_subject_areas = (
+                request.user.staff.subject_areas.all().values('name'))
+            if year == 'all':
+                students = Student.objects.filter(
+                    active=True,
+                    course__subject_areas__name__in=staff_subject_areas
+                )
+            elif year == 'unassigned':
+                students = Student.objects.filter(
+                    active=True,
+                    course__subject_areas__name__in=staff_subject_areas,
+                    year=None
+                )
+            elif year == 'inactive':
+                students = Student.objects.filter(
+                    active=False,
+                    course__subject_areas__name__in=staff_subject_areas,
+                )
+            else:
+                students = Student.objects.filter(
+                    active=True,
+                    course__subject_areas__name__in=staff_subject_areas,
+                    year=year
+                )
+            courses = Course.objects.filter(
+                subject_areas__name__in=staff_subject_areas)
+        if year == 'all':
+            headline = 'All Students'
+            show_year = True
+        elif year == 'unassigned':
+            headline = 'Unassigned Students'
+            show_year = True
+        elif year == 'inactive':
+            headline = 'Inactive Students'
+            show_year = True
+        elif year == '9':
+            headline = 'Alumni'
+            show_year = False
+        elif year == '7':
+            headline = 'Masters Students'
+            show_year = False
+        elif year == '8':
+            headline = 'PhD Students'
+            show_year = False
+        else:
+            headline = 'Year ' + year
+            show_year = False
     academic_years = []
     current_year = int(Settings.objects.get(name='current_year').value)
     latest_start_year = current_year + 2
@@ -794,8 +804,13 @@ def upload_csv(request):
             for line in f:
                 csv_string += line.decode('utf-8') + '/////'
             chars = ascii_letters + digits
-            data_id = ''.join(choice(chars) for x in range(16))
-            Data.objects.create(id=data_id, value=csv_string)
+            data_id = ''
+            while data_id == '':
+                data_id = ''.join(choice(chars) for x in range(16))
+                try:
+                    Data.objects.create(id=data_id, value=csv_string)
+                except IntegrityError:
+                    data_id = ''
             return redirect(reverse('parse_csv', args=[data_id]))
     else:
         form = CSVUploadForm()
@@ -816,14 +831,13 @@ def parse_csv(request, data_id):
             no_of_columns = len(row)
         table.append(row)
     if request.method == "POST":
+        all_ids = ''
         list_of_columns = []
         i = 1
         while i <= no_of_columns:
             column = 'column' + str(i)
             list_of_columns.append(request.POST[column])
             i += 1
-        successful_entrys = 0
-        output = {'added': [], 'edited': [], 'no_id': []}
         item_in_table = 0
         ignore_students = request.POST.getlist('exclude')
         for row in table:
@@ -890,11 +904,18 @@ def parse_csv(request, data_id):
                     for field in home_address_fields:
                         if field in result:
                             student.home_address += result[field] + '\n'
+                all_ids += student.student_id + ','
                 student.save()
-                successful_entrys += 1
-        #request.session['number_of_imports'] = successful_entrys
-        data.delete()
-        return redirect('/')
+        chars = ascii_letters + digits
+        data_id = 'imported_'
+        while data_id == 'imported_':
+            random_string = ''.join(choice(chars) for x in range(8))
+            data_id += random_string
+            try:
+                Data.objects.create(id=data_id, value=all_ids)
+            except IntegrityError:
+                data_id = 'imported_'
+        return redirect(reverse('year_view', args=[data_id]))
     options = (
         ('student_id', 'Student ID'),
         ('first_name', 'First Name'),
@@ -920,7 +941,7 @@ def parse_csv(request, data_id):
     return render(
         request,
         'parse_csv.html',
-        {   
+        {
             'columns': no_of_columns,
             'csv_list': table,
             'options': options
