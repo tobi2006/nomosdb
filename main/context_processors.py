@@ -6,8 +6,8 @@ from main.views import is_teacher, is_admin, is_staff
 def constants(request):
     """A few small variables that are used on most pages"""
     return {
-        'UNI_NAME': UNI_NAME,
-        'UNI_SHORT_NAME': UNI_SHORT_NAME,
+        'UNI_NAME': Settings.objects.get(name='uni_name').value,
+        'UNI_SHORT_NAME': Settings.objects.get(name='uni_short_name').value,
     }
 
 
@@ -78,7 +78,9 @@ def menubar(request):
             other_categories.append(('inactive', 'Inactive Students'))
 
     else:
-        module_dict = None
+        student_list = []
+        module_dict = {}
+        other_categories = []
     return {
         'module_dict': module_dict,
         'menu_student_categories': student_list,

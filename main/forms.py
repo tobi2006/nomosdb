@@ -196,7 +196,7 @@ class StaffForm(forms.Form):
     first_name = forms.CharField(label="First Name", required=True)
     last_name = forms.CharField(label="Last Name", required=True)
     email = forms.EmailField(label="Email Address", required=True)
-    subject_areas = forms.MultipleChoiceField(required=True, choices=choices)
+    subject_areas = forms.MultipleChoiceField(required=False, choices=choices)
     role = forms.ChoiceField(choices=ROLES)
     helper = FormHelper()
     helper.form_method = "POST"

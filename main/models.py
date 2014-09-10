@@ -2,8 +2,8 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.text import slugify
-import datetime
 from main.unisettings import TEACHING_WEEKS
+import datetime
 
 ACADEMIC_YEARS = (
     [(i, str(i) + "/" + str(i+1)[-2:]) for i in range(2010, 2025)]
@@ -77,6 +77,34 @@ class Course(models.Model):
         return reverse('edit_course', args=[self.id])
 
 
+class Staff(models.Model):
+    """The class representing a teacher with additional information"""
+    ROLES = (
+        ('admin', 'Admin'),
+        ('teacher', 'Teacher'),
+    )
+
+    user = models.OneToOneField(User)
+    subject_areas = models.ManyToManyField(SubjectArea, blank=True, null=True)
+    role = models.CharField(
+        choices=ROLES, max_length=6, default='teacher')
+    pastoral_care = models.BooleanField(default=False)
+    programme_director = models.BooleanField(default=False)
+    main_admin = models.BooleanField(default=False)  # Sees all subjects
+
+    class Meta:
+        ordering = ['user']
+
+    def __str__(self):
+        return "%s, %s" % (self.user.last_name, self.user.first_name)
+
+    def name(self):
+        return "%s %s" % (self.user.first_name, self.user.last_name)
+
+    def get_edit_url(self):
+        return reverse('edit_staff', args=[self.user.username])
+
+
 class Module(models.Model):
     """Modules are the subjects - eg "Law of Contracts".
 
@@ -103,12 +131,6 @@ class Module(models.Model):
 
     title = models.CharField(max_length=100)
     code = models.CharField(max_length=20)
-    #    instructors = models.ManyToManyField(
-    #        User,
-    #        limit_choices_to={'groups__name': 'teachers'},
-    #        blank=True,
-    #        null=True
-    #        )
     year = models.IntegerField(
         choices=ACADEMIC_YEARS,
         default=this_year()
@@ -156,6 +178,9 @@ class Module(models.Model):
         null=True
     )
     sessions_recorded = models.IntegerField(blank=True, null=True, default=0)
+    teachers = models.ManyToManyField(
+        Staff, limit_choices_to={'role': 'teacher'}, related_name='modules'
+    )
 
     class Meta:
         unique_together = ('code', 'year')
@@ -395,6 +420,12 @@ class Student(models.Model):
     )
     achieved_degree = models.IntegerField(
         choices=DEGREES, blank=True, null=True)
+    tutor = models.ForeignKey(
+        Staff,
+        blank=True,
+        null=True,
+        related_name="tutees"
+    )
 
     class Meta:
         ordering = ['last_name', 'first_name']
@@ -417,46 +448,6 @@ class Student(models.Model):
 
     def get_edit_url(self):
         return reverse('edit_student', args=[self.student_id])
-
-
-class Staff(models.Model):
-    """The class representing a teacher with additional information"""
-    ROLES = (
-        ('admin', 'Admin'),
-        ('teacher', 'Teacher'),
-    )
-
-    user = models.OneToOneField(User)
-    subject_areas = models.ManyToManyField(SubjectArea, blank=True, null=True)
-    modules = models.ManyToManyField(
-        Module,
-        blank=True,
-        null=True,
-        related_name="teacher"
-    )
-    tutees = models.ManyToManyField(
-        Student,
-        blank=True,
-        null=True,
-        related_name="tutor"
-    )
-    role = models.CharField(
-        choices=ROLES, max_length=6, default='teacher')
-    pastoral_care = models.BooleanField(default=False)
-    programme_director = models.BooleanField(default=False)
-    main_admin = models.BooleanField(default=False)  # Sees all subjects
-
-    class Meta:
-        ordering = ['user']
-
-    def __str__(self):
-        return "%s, %s" % (self.user.last_name, self.user.first_name)
-
-    def name(self):
-        return "%s %s" % (self.user.first_name, self.user.last_name)
-
-    def get_edit_url(self):
-        return reverse('edit_staff', args=[self.user.username])
 
 
 class Performance(models.Model):

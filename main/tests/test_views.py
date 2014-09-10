@@ -1,5 +1,4 @@
 from django.test import TestCase
-from main.unisettings import UNI_NAME
 from main.models import *
 from main.views import *
 from bs4 import BeautifulSoup
@@ -35,7 +34,7 @@ class HomePageTest(TeacherUnitTest):
         request = self.factory.get('/')
         request.user = self.user
         response = home(request)
-        self.assertContains(response, UNI_NAME)
+        self.assertContains(response, 'Acme University')
 
 
 class StudentViewTest(TeacherUnitTest):
@@ -562,7 +561,6 @@ class AddEditStaffTest(AdminUnitTest):
             'first_name': 'Elmar',
             'last_name': 'Fudd',
             'email': 'elmar.fudd@acme.edu',
-            'subject_areas': ['Cartoon Studies'],
             'role': 'teacher'
         })
         request.user = self.user
@@ -572,7 +570,6 @@ class AddEditStaffTest(AdminUnitTest):
         self.assertEqual(user.staff, staff)
         self.assertEqual(user.first_name, 'Elmar')
         self.assertEqual(user.email, 'elmar.fudd@acme.edu')
-        self.assertIn(subject_area, staff.subject_areas.all())
         self.assertEqual(staff.role, 'teacher')
 
     def test_form_for_existing_staff_shows_right_details(self):
@@ -608,7 +605,6 @@ class AddEditStaffTest(AdminUnitTest):
             'first_name': 'Elmar',
             'last_name': 'Fudd',
             'email': 'elmar.fudd@acme.edu',
-            'subject_areas': ['Cartoon Studies'],
             'role': 'admin'
         })
         request.user = self.user

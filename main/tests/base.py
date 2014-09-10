@@ -3,9 +3,14 @@ from django.contrib.auth.models import User
 from django.test import TestCase, RequestFactory
 
 
-def set_year():
+def set_initial_values():
     """Sets the current year to 1900"""
     Settings.objects.create(name="current_year", value="1900")
+    Settings.objects.create(name="uni_name", value="Acme University")
+    Settings.objects.create(name="uni_short_name", value="ACME")
+    Settings.objects.create(name="nomosdb_url", value="www.warner.com")
+    Settings.objects.create(name="admin_email", value="chuck.jones@warner.com")
+    Settings.objects.create(name="admin_name", value="Chuck Jones")
 
 
 def create_subject_area(save=True):
@@ -140,7 +145,7 @@ class TeacherUnitTest(TestCase):
     """Sets up the testing environment for a teacher"""
 
     def setUp(self):
-        set_year()
+        set_initial_values()
         self.factory = RequestFactory()
         user = User.objects.create_user(
             username="mtm23",
@@ -157,7 +162,7 @@ class AdminUnitTest(TestCase):
     """Sets up the testing environment for an admin"""
 
     def setUp(self):
-        set_year()
+        set_initial_values()
         self.factory = RequestFactory()
         user = User.objects.create_user(
             username="cj123",

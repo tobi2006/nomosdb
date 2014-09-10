@@ -156,7 +156,12 @@ def add_or_edit_module(request, code=None, year=None):
         if edit:
             form = ModuleForm(instance=module)
         else:
-            form = ModuleForm()
+            list_of_subject_areas = []
+            if request.user.staff.subject_areas:
+                for subject_area in request.user.staff.subject_areas:
+                    list_of_subject_areas.append(subject_area.pk)
+            form = ModuleForm(
+                initial={'subject_areas': list_of_subject_areas})
     if TEACHING_WEEK_OPTIONS:  # Ugly, but it works fine...
         javascript = '<script type="text/javascript">'
         javascript += '$(document).ready(function(){'
@@ -548,6 +553,7 @@ def add_or_edit_staff(request, username=None):
                 #   ADMIN_EMAIL,
                 #   [email, ]
                 # )
+                print(message)
                 staff = Staff.objects.create(user=user)
             for subject_area in staff.subject_areas.all():
                 if subject_area.name not in form.cleaned_data['subject_areas']:
@@ -563,6 +569,8 @@ def add_or_edit_staff(request, username=None):
             user.email = email
             user.save()
             return redirect(reverse('view_staff_by_name'))
+        else:
+            print(form.errors)
     else:
         if edit:
             form = StaffForm(initial={

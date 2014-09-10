@@ -1,7 +1,12 @@
 # This is essentially just a file to save longer strings, for example sample emails.
 from main.unisettings import *
+from main.models import Settings
 
 def new_staff_email(name, username, password):
+    uni_name = Settings.objects.get(name='uni_name').value
+    nomosdb_url = Settings.objects.get(name='nomosdb_url').value
+    admin_email = Settings.objects.get(name='admin_email').value
+    admin_name = Settings.objects.get(name='admin_name').value
     message = """
 Dear %s,
 
@@ -21,11 +26,11 @@ Enjoy the experience,
 
 %s """ % (
         name,
-        UNI_NAME,
-        NOMOSDB_URL,
+        uni_name,
+        nomosdb_url,
         username,
         password,
-        ADMIN_EMAIL,
-        ADMIN_NAME
+        admin_email,
+        admin_name
     )
     return message
