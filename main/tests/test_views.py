@@ -13,12 +13,28 @@ class StatusCheckTest(TestCase):
         self.assertTrue(is_staff(elmar.user))
         self.assertTrue(is_teacher(elmar.user))
         self.assertFalse(is_admin(elmar.user))
+        self.assertFalse(is_student(elmar.user))
 
     def test_staff_admin_status_is_properly_undertood_at_login(self):
         admin = create_admin()
         self.assertTrue(is_staff(admin.user))
         self.assertFalse(is_teacher(admin.user))
         self.assertTrue(is_admin(admin.user))
+        self.assertFalse(is_student(admin.user))
+
+    def test_student_is_student_and_neither_admin_nor_teacher(self):
+        bugs_user = User.objects.create_user(
+            username='bb42', password='ilovecarrots')
+        bugs = Student.objects.create(
+            student_id='bb42',
+            last_name='Bunny',
+            first_name='Bugs',
+            user=bugs_user
+        )
+        self.assertTrue(is_student(bugs_user))
+        self.assertFalse(is_staff(bugs_user))
+        self.assertFalse(is_admin(bugs_user))
+        self.assertFalse(is_teacher(bugs_user))
 
 
 class HomePageTest(TeacherUnitTest):

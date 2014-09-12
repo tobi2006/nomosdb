@@ -42,6 +42,13 @@ def is_staff(user):
         return False
 
 
+def is_student(user):
+    if hasattr(user, 'student'):
+        return True
+    else:
+        return False
+
+
 @login_required
 def home(request):
     """Simply the home page, redirects to settings if none made"""
