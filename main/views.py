@@ -28,6 +28,13 @@ def is_admin(user):
     return False
 
 
+def is_main_admin(user):
+    if hasattr(user, 'staff'):
+        if user.staff.main_admin == True:
+            return True
+    return False
+
+
 def is_staff(user):
     if hasattr(user, 'staff'):
         return True
@@ -37,16 +44,124 @@ def is_staff(user):
 
 @login_required
 def home(request):
-    """Simply the home page, nothing there yet"""
-    # use if to show different pages for students and teachers!
-    return render(request, 'home.html', {})
+    """Simply the home page, redirects to settings if none made"""
+    if Setting.objects.exists():
+        # use if to show different pages for students and teachers!
+        return render(request, 'home.html', {})
+    else:
+        return redirect(reverse('main_settings'))
 
 
 @login_required
 @user_passes_test(is_admin)
 def admin(request):
     """Opens the admin dashboard"""
-    return render(request, 'admin.html', {})
+    if request.user.staff.main_admin:
+        main_admin = True
+    else:
+        main_admin = False
+    return render(request, 'admin.html', {'main_admin': main_admin})
+
+
+@login_required
+@user_passes_test(is_main_admin)
+def main_settings(request):
+    """Allows the Main Admin to set the basic settings"""
+    if request.method == 'POST':
+        form = MainSettingsForm(data=request.POST)
+        if form.is_valid():
+            current_year = form.cleaned_data['current_year']
+            try:
+                model = Setting.objects.get(name="current_year")
+                model.value = current_year
+                model.save()
+            except Setting.DoesNotExist:
+                Setting.objects.create(name="current_year", value=current_year)
+            uni_name = form.cleaned_data['uni_name']
+            try:
+                model = Setting.objects.get(name="uni_name")
+                model.value = uni_name
+                model.save()
+            except Setting.DoesNotExist:
+                Setting.objects.create(name="uni_name", value=uni_name)
+            uni_short_name = form.cleaned_data['uni_short_name']
+            try:
+                model = Setting.objects.get(name="uni_short_name")
+                model.value = uni_short_name
+                model.save()
+            except Setting.DoesNotExist:
+                Setting.objects.create(
+                    name="uni_short_name", value=uni_short_name)
+            nomosdb_url = form.cleaned_data['nomosdb_url']
+            try:
+                model = Setting.objects.get(name='nomosdb_url')
+                model.value = nomosdb_url
+                model.save()
+            except Setting.DoesNotExist:
+                Setting.objects.create(name='nomosdb_url', value=nomosdb_url)
+            admin_name = form.cleaned_data['admin_name']
+            try:
+                model = Setting.objects.get(name='admin_name')
+                model.value = admin_name
+                model.save()
+            except Setting.DoesNotExist:
+                Setting.objects.create(name='admin_name', value=admin_name)
+            admin_email = form.cleaned_data['admin_email']
+            try:
+                model = Setting.objects.get(name='admin_email')
+                model.value = admin_email
+                model.save()
+            except Setting.DoesNotExist:
+                Setting.objects.create(name='admin_email', value=admin_email)
+            example_email = form.cleaned_data['example_email']
+            try:
+                model = Setting.objects.get(name='example_email')
+                model.value = example_email
+                model.save()
+            except Setting.DoesNotExist:
+                Setting.objects.create(
+                    name='example_email', value='example_email')
+        return redirect(reverse('home'))
+    try:
+        current_year = Setting.objects.get(name="current_year").value
+    except Setting.DoesNotExist:
+        current_year = str(datetime.date.today().year)
+    try:
+        uni_name = Setting.objects.get(name="uni_name").value
+    except Setting.DoesNotExist:
+        uni_name = 'Acme University'
+    try:
+        uni_short_name = Setting.objects.get(name="uni_short_name").value
+    except Setting.DoesNotExist:
+        uni_short_name = 'ACME U'
+    try:
+        nomosdb_url = Setting.objects.get(name="nomosdb_url").value
+    except Setting.DoesNotExist:
+        nomosdb_url = 'acme.nomosdb.org'
+    try:
+        admin_name = Setting.objects.get(name="admin_name").value
+    except Setting.DoesNotExist:
+        admin_name = "Chuck Jones"
+    try:
+        admin_email = Setting.objects.get(name="admin_email").value
+    except Setting.DoesNotExist:
+        admin_email = 'chuck.jones@acme.edu'
+    try:
+        example_email = Setting.objects.get(name="example_email").value
+    except Setting.DoesNotExist:
+        example_email = 'b.bunny23@acme.edu'
+    form = MainSettingsForm(
+        initial={
+            'current_year': current_year,
+            'uni_name': uni_name,
+            'uni_short_name': uni_short_name,
+            'nomosdb_url': nomosdb_url,
+            'admin_name': admin_name,
+            'admin_email': admin_email,
+            'example_email': example_email,
+        }
+    )
+    return render(request, 'main_settings_form.html', {'form': form})
 
 
 @login_required
@@ -511,7 +626,7 @@ def seminar_group_overview(request, code, year):
 
 @login_required
 @user_passes_test(is_admin)
-def add_or_edit_staff(request, username=None):
+def add_or_edit_staff(request, username=None, testing=False):
     """Allows to edit or add a staff member.
 
     The classes concerned are the User class and the Staff class
@@ -547,13 +662,20 @@ def add_or_edit_staff(request, username=None):
                 password = User.objects.make_random_password()
                 user = User.objects.create_user(username, email, password)
                 message = new_staff_email(first_name, username, password)
-                # send_mail(
-                #   '%s Login Data' % (NOMOSDB_NAME)
-                #   message,
-                #   ADMIN_EMAIL,
-                #   [email, ]
-                # )
-                print(message)
+                subject = 'NOMOSDB Login Data'
+                sender = Setting.objects.get(name='admin_email').value
+                if not testing:
+                    send_mail(
+                       subject,
+                       message,
+                       sender,
+                       [email, ]
+                    )
+                else:
+                    print('\n')
+                    print('Subject: %s' % (subject,))
+                    print('---')
+                    print(message)
                 staff = Staff.objects.create(user=user)
             for subject_area in staff.subject_areas.all():
                 if subject_area.name not in form.cleaned_data['subject_areas']:
@@ -569,8 +691,6 @@ def add_or_edit_staff(request, username=None):
             user.email = email
             user.save()
             return redirect(reverse('view_staff_by_name'))
-        else:
-            print(form.errors)
     else:
         if edit:
             form = StaffForm(initial={
@@ -773,7 +893,7 @@ def year_view(request, year):
             headline = 'Year ' + year
             show_year = False
     academic_years = []
-    current_year = int(Settings.objects.get(name='current_year').value)
+    current_year = int(Setting.objects.get(name='current_year').value)
     latest_start_year = current_year + 2
     for academic_year in ACADEMIC_YEARS:
         if academic_year[0] < latest_start_year:
@@ -963,3 +1083,31 @@ def import_success(request):
     """Displays successful upload / parsing"""
     successful_entrys = request.session.get('number_of_imports')
     return render(request, 'import_success.html', {successful_entries})
+
+
+def reset_password(request):
+    """Sends out a new password by email"""
+    if 'email' in request.GET and request.GET['email']:
+        email = request.GET['email']
+        try:
+            user = User.objects.get(email=email)
+            username = user.username
+            new_password = User.objects.make_random_password()
+            user.set_password(new_password)
+            user.save()
+            if is_staff(user):
+                name = user.first_name
+            else:
+                name = user.student.short_first_name()
+            message = password_reset_email(name, username, new_password)
+        except user.DoesNotExist:
+            return redirect(reverse(wrong_email))
+
+def wrong_email(request):
+    """Small page to show that the password was wrong"""
+    example_email = Setting.objects.get(name='example_email').value
+    return render(
+        request,
+        'wrong_password.html',
+        {'example_email': example_email}
+    )

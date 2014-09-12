@@ -59,6 +59,7 @@ urlpatterns += patterns(
     ),
     url(r'^edit_staff/(\w+)/$', 'add_or_edit_staff', name='edit_staff'),
     url(r'^edit_student/(\w+)/$', 'add_or_edit_student', name='edit_student'),
+    url(r'^main_settings/$', 'main_settings', name='main_settings'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),
     url(r'^parse_csv/(\w+)/$', 'parse_csv', name='parse_csv'),
     url(
@@ -86,4 +87,5 @@ urlpatterns += patterns(
         'view_staff_by_subject',
         name='view_staff_by_subject'
     ),
+    url(r'^wrong_email/$', 'wrong_email', name='wrong_email'),
 )

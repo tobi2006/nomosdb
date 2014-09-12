@@ -8,6 +8,41 @@ from main.unisettings import TEACHING_WEEK_HELPTEXT, TEACHING_WEEK_OPTIONS
 NO_STUDENT_ID_ERROR = "You need to specify a unique student ID number"
 
 
+class MainSettingsForm(forms.Form):
+    """The form for all the main settings"""
+    current_year = forms.CharField(label="Current Year", required=True)
+    uni_name = forms.CharField(label="Name of the University", required=True)
+    uni_short_name = forms.CharField(
+        label="Short name for the University", required=True)
+    nomosdb_url = forms.CharField(
+        label="URL for this Data System", required=True)
+    admin_name = forms.CharField(
+        label="Name of the admin for signing emails (could be a team as well)",
+        required=True
+    )
+    admin_email = forms.CharField(
+        label="Email of the admin team", required=True)
+    example_email = forms.CharField(
+        label="Example Email for a user", required=True
+    )
+    helper = FormHelper()
+    helper.layout = Layout(
+        'current_year',
+        'uni_name',
+        'uni_short_name',
+        'nomosdb_url',
+        'admin_name',
+        'admin_email',
+        'example_email',
+        FormActions(
+            Submit('save', 'Save Settings', css_class="btn btn-primary")
+        )
+    )
+    helper.form_class = "form-horizontal"
+    helper.label_class = "col-lg-4 col-md-2 col-sm-2"
+    helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+        
+    
 class SubjectAreaForm(forms.ModelForm):
     """The modelform for the subject area - very simple"""
 

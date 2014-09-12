@@ -21,7 +21,7 @@ def this_year():
     return current_year
 
 
-class Settings(models.Model):
+class Setting(models.Model):
     """Allows to save some general settings in the database"""
     name = models.CharField(max_length=100, unique=True)
     value = models.CharField(max_length=200)
@@ -365,12 +365,7 @@ class Student(models.Model):
         verbose_name="Exam ID",
         default=None
     )
-    #    belongs_to = models.ForeignKey(
-    #        User,
-    #        limit_choices_to={'groups__name': 'students'},
-    #        blank=True,
-    #        null=True
-    #    )
+    user = models.OneToOneField(User, blank=True, null=True)
     since = models.IntegerField(
         verbose_name="Studying since",
         choices=ACADEMIC_YEARS,
@@ -389,13 +384,12 @@ class Student(models.Model):
     email = models.CharField(max_length=100, blank=True)
     course = models.ForeignKey(Course, blank=True, null=True)
     qld = models.BooleanField(verbose_name="QLD Status", default=True)
-    #    tutor = models.ForeignKey(
-    #        User,
-    #        limit_choices_to={'groups__name': 'teachers'},
-    #        blank=True,
-    #        null=True,
-    #        related_name="tutee"
-    #    )
+    tutor = models.ForeignKey(
+        Staff,
+        blank=True,
+        null=True,
+        related_name="tutees"
+    )
     modules = models.ManyToManyField(Module, blank=True)
     notes = models.TextField(blank=True)
     active = models.BooleanField(default=True)

@@ -37,6 +37,20 @@ class HomePageTest(TeacherUnitTest):
         self.assertContains(response, 'Acme University')
 
 
+class AdminDashboardTest(AdminUnitTest):
+    """Quick check of the Admin Dashboard"""
+
+    def test_admin_page_uses_right_template(self):
+        request = self.factory.get('/admin_dashboard/')
+        request.user = self.user
+        response = admin(request)
+        self.assertNotContains(response, 'Main Settings')
+        self.user.staff.main_admin = True
+        request = self.factory.get('/admin_dashboard/')
+        request.user = self.user
+        response = admin(request)
+        self.assertContains(response, 'Main Settings')
+
 class StudentViewTest(TeacherUnitTest):
     """Tests for the student view function"""
 
@@ -564,7 +578,7 @@ class AddEditStaffTest(AdminUnitTest):
             'role': 'teacher'
         })
         request.user = self.user
-        add_or_edit_staff(request)
+        add_or_edit_staff(request, testing=True)
         user = User.objects.get(last_name='Fudd')
         staff = Staff.objects.get(user=user)
         self.assertEqual(user.staff, staff)
@@ -608,7 +622,7 @@ class AddEditStaffTest(AdminUnitTest):
             'role': 'admin'
         })
         request.user = self.user
-        add_or_edit_staff(request, user_in.username)
+        add_or_edit_staff(request, user_in.username, testing=True)
         staff_out = Staff.objects.get(user=user_in)
         self.assertEqual(staff_out.user.last_name, 'Fudd')
         self.assertEqual(staff_out.role, 'admin')

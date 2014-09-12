@@ -7,7 +7,7 @@ class WeekFunctionsTest(TestCase):
     """Testing the functions around the numbers of academic weeks"""
 
     def set_up_year(self):
-        year = Settings.objects.create(name='current_year', value='1900')
+        year = Setting.objects.create(name='current_year', value='1900')
         return year
 
     def test_week_numbers_are_returned_correctly(self):

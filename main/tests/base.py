@@ -5,12 +5,12 @@ from django.test import TestCase, RequestFactory
 
 def set_initial_values():
     """Sets the current year to 1900"""
-    Settings.objects.create(name="current_year", value="1900")
-    Settings.objects.create(name="uni_name", value="Acme University")
-    Settings.objects.create(name="uni_short_name", value="ACME")
-    Settings.objects.create(name="nomosdb_url", value="www.warner.com")
-    Settings.objects.create(name="admin_email", value="chuck.jones@warner.com")
-    Settings.objects.create(name="admin_name", value="Chuck Jones")
+    Setting.objects.create(name="current_year", value="1900")
+    Setting.objects.create(name="uni_name", value="Acme University")
+    Setting.objects.create(name="uni_short_name", value="ACME")
+    Setting.objects.create(name="nomosdb_url", value="www.warner.com")
+    Setting.objects.create(name="admin_email", value="chuck.jones@warner.com")
+    Setting.objects.create(name="admin_name", value="Chuck Jones")
 
 
 def create_subject_area(save=True):

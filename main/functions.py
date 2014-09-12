@@ -1,6 +1,6 @@
 import datetime
 from main.unisettings import FIRST_WEEK_STARTS
-from main.models import Settings
+from main.models import Setting
 
 
 def week_dict(year):
@@ -24,7 +24,7 @@ def week_dict(year):
 def week_number(chosen_date=False):
     """Returns the current week number"""
     try:
-        current_year = int(Settings.objects.get(name='current_year').value)
+        current_year = int(Setting.objects.get(name='current_year').value)
         if chosen_date:
             today = chosen_date
         else:
@@ -38,6 +38,6 @@ def week_number(chosen_date=False):
                 break
             else:
                 day += datetime.timedelta(days=7)
-    except Settings.DoesNotExist:
+    except Setting.DoesNotExist:
         week_number = None
     return week_number

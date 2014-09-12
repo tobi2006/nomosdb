@@ -5,9 +5,25 @@ from main.views import is_teacher, is_admin, is_staff
 
 def constants(request):
     """A few small variables that are used on most pages"""
+    show_admin_menu = False
+    if is_staff(request.user):
+        if request.user.staff.role == 'admin':
+            show_admin_menu = True
+        elif request.user.staff.programme_director:
+            show_admin_menu = True
+    try:
+        uni_name = Setting.objects.get(name='uni_name').value
+    except Setting.DoesNotExist:
+        uni_name = ''
+    try:
+        uni_short_name = Setting.objects.get(name='uni_short_name').value
+        uni_short_name += '@Nomos DB'
+    except Setting.DoesNotExist:
+        uni_short_name = 'Nomos DB'
     return {
-        'UNI_NAME': Settings.objects.get(name='uni_name').value,
-        'UNI_SHORT_NAME': Settings.objects.get(name='uni_short_name').value,
+        'UNI_NAME': uni_name,
+        'UNI_SHORT_NAME': uni_short_name,
+        'show_admin_menu': show_admin_menu,
     }
 
 
@@ -19,10 +35,9 @@ def menubar(request):
         current = []
         past = []
         try:
-            current_year = int(Settings.objects.get(name="current_year").value)
-        except Settings.DoesNotExist:
-            current_year = int(START_YEAR)
-            Settings.objects.create(name="current_year", value=current_year)
+            current_year = int(Setting.objects.get(name="current_year").value)
+        except Setting.DoesNotExist:
+            current_year = 2014
         staff_subject_areas = staff.subject_areas.all().values('name')
         if staff.role == 'teacher':
             if staff.programme_director:

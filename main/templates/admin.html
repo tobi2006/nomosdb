@@ -2,6 +2,15 @@
 {% block content %}
 <h1>Admin Dashboard</h1>
 
+{% if main_admin %}
+
+<h2>Main Settings</h2>
+<ul>
+    <li><a href="{% url "main_settings" %}" id="main_settings">Main Settings</a></li>
+</ul>
+
+{% endif %}
+
 <h2>Courses</h2>
 <ul>
     <li><a href="{% url "course_overview" %}" id="edit_courses">Edit Courses</a></li>
