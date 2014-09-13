@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ STATIC_URL }}css/datepicker3.css" type="text/css" media="screen">
+{% endblock %}
+
+{% block style %}
+td {
+    padding: 10px;
+}
+{% endblock %}
+
 {% block content %}
 <h1>{{ module }} - Assessment</h1>
 
@@ -8,20 +19,37 @@
 {% if assessments %}
     {% for assessment in assessments %}
         <div class="panel panel-default">
+            <div class="panel-heading">
+                <h5>{{ assessment.title }}{% if assessment.value %} ({{ assessment.value }} %){% endif %}
+                    <div class="buttons pull-right">
+                        <a href="#" id="delete_{{ assessment.slug }}"><span class="glyphicon glyphicon-trash"></span></a>
+                        <a href="{{ assessment.get_absolute_url }}"><span class="glyphicon glyphicon-pencil"></span></a>
+                    </div>
+                </h5>
+            </div>
             <div class="panel-body">
-                <h4>{{ assessment.title }}</h4>
-                {{ assessment.value }} % of the module mark<br>
-                {% if assessment.submission_date %}
-                    Deadline: {{ assessment.submission_date }}
-                {% endif %}
-                {% if assessment.max_word_count %}
-                    Word Count: {{ assessment.max_word_count }}
-                {% endif %}
-                <br>
-                <div class="btn-group">
-                    <a href="{{ assessment.get_delete_url }}" class="btn btn-default" id="delete_{{ assessment.slug }}">Remove</a>
-                    <a href="{{ assessment.get_absolute_url }}" class="btn btn-default">Edit</a>
-                </div>
+                <table>
+                    {% if assessment.submission_date %}
+                    <tr>
+                        <td>
+                            Submission Date
+                        </td>
+                        <td>
+                            {{ assessment.submission_date }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% if assessment.max_word_count %}
+                    <tr>
+                        <td>
+                            Word Count
+                        </td>
+                        <td>
+                            {{ assessment.max_word_count }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </table>
             </div>
         </div>
     {% endfor %}
@@ -30,7 +58,7 @@
 <br>
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h4 class="panel-title">{% if edit %}{{ edit }}{% else %}Add{% endif %}</h4>
+        <h5 class="panel-title">{% if edit %}{{ edit }}{% else %}Add{% endif %}</h5>
     </div>
     <div class="panel-body">
         {% crispy form %}
@@ -39,24 +67,39 @@
 
 {% endblock %}
 
-{% block scripts %}
-
+{% block loadscripts %}
 <script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
+<script src="{{ STATIC_URL }}js/bootstrap-datepicker.js"></script>
+{% endblock %}
+
+{% block scripts %}
 
 <script type="text/javascript">
 
 $(document).ready(function() {
     $('#id_value').val({{ value_left }});
     $('#id_value').keyup(function() {
-        if ($(this).val() > {{ value_left }}){
+        var value = parseInt($(this).val());
+        if (isNaN(value)) {
+            $('#error').text('Please enter a number between 0 and {{ value_left }}');
             $('input[type="submit"]').attr('disabled', 'disabled');
-            $('#error').text('Your assessments exceed 100 % in their values!');
         }
         else {
-            $('input[type="submit"]').removeAttr('disabled');
-            $('#error').text('');
-        }
-   });
+            if (value > {{ value_left }}) {
+                $('input[type="submit"]').attr('disabled', 'disabled');
+                $('#error').text('Your assessments exceed 100 % in their values!');
+            }
+            else {
+                $('input[type="submit"]').removeAttr('disabled');
+                $('#error').text('');
+            }
+        };
+    });
+
+    $(".datepicker").datepicker({
+        format: "dd/mm/yyyy",
+        weekstart: 1
+    });
 });
 
 {% if assessments %}

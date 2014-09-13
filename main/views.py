@@ -14,6 +14,8 @@ from string import ascii_letters, digits
 from django.core.urlresolvers import resolve
 
 
+# Authentication
+
 def is_teacher(user):
     if hasattr(user, 'staff'):
         if user.staff.role == 'teacher':
@@ -30,7 +32,7 @@ def is_admin(user):
 
 def is_main_admin(user):
     if hasattr(user, 'staff'):
-        if user.staff.main_admin == True:
+        if user.staff.main_admin is True:
             return True
     return False
 
@@ -47,6 +49,38 @@ def is_student(user):
         return True
     else:
         return False
+
+
+def reset_password(request):
+    """Sends out a new password by email"""
+    if 'email' in request.GET and request.GET['email']:
+        email = request.GET['email']
+        try:
+            user = User.objects.get(email=email)
+            username = user.username
+            new_password = User.objects.make_random_password()
+            user.set_password(new_password)
+            user.save()
+            if is_staff(user):
+                name = user.first_name
+            else:
+                name = user.student.short_first_name()
+            message = password_reset_email(name, username, new_password)
+        except user.DoesNotExist:
+            return redirect(reverse(wrong_email))
+
+
+def wrong_email(request):
+    """Small page to show that the password was wrong"""
+    example_email = Setting.objects.get(name='example_email').value
+    return render(
+        request,
+        'wrong_password.html',
+        {'example_email': example_email}
+    )
+
+
+# Overview pages / general settings
 
 
 @login_required
@@ -222,6 +256,110 @@ def add_or_edit_course(request, course_id=None):
 
 
 @login_required
+@user_passes_test(is_admin)
+def add_or_edit_staff(request, username=None, testing=False):
+    """Allows to edit or add a staff member.
+
+    The classes concerned are the User class and the Staff class
+    for additional details
+    """
+    if username:
+        edit = True
+        user = User.objects.get(username=username)
+        staff = user.staff
+    else:
+        edit = False
+    if request.method == 'POST':
+        form = StaffForm(data=request.POST)
+        if form.is_valid():
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            email = form.cleaned_data['email']
+            if not edit:
+                initials = ''
+                for word in first_name.split():
+                    initials += word[0]
+                initials = initials[:3]
+                initials += last_name[0]
+                initials = initials.lower()
+                number = 1
+                still_searching = True
+                while still_searching:
+                    username = initials + str(number)
+                    if User.objects.filter(username=username).exists():
+                        number += 1
+                    else:
+                        still_searching = False
+                password = User.objects.make_random_password()
+                user = User.objects.create_user(username, email, password)
+                message = new_staff_email(first_name, username, password)
+                subject = 'NomosDB Login Data'
+                sender = Setting.objects.get(name='admin_email').value
+                if not testing:
+                    #send_mail(subject, message, sender, [email, ])
+                    print(password)
+                else:
+                    print('\n')
+                    print('Subject: %s' % (subject,))
+                    print('---')
+                    print(message)
+                staff = Staff.objects.create(user=user)
+            for subject_area in staff.subject_areas.all():
+                if subject_area.name not in form.cleaned_data['subject_areas']:
+                    staff.subject_areas.remove(subject_area)
+            for name in form.cleaned_data['subject_areas']:
+                subject_area = SubjectArea.objects.get(name=name)
+                if subject_area not in staff.subject_areas.all():
+                    staff.subject_areas.add(subject_area)
+            staff.role = form.cleaned_data['role']
+            staff.save()
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save()
+            return redirect(reverse('view_staff_by_name'))
+    else:
+        if edit:
+            form = StaffForm(initial={
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'subject_areas': user.staff.subject_areas.all(),
+                'role': staff.role
+            })
+        else:
+            form = StaffForm(initial={'role': 'teacher'})
+    return render(request, 'staff_form.html', {'form': form, 'edit': edit})
+
+
+@login_required
+@user_passes_test(is_admin)
+def view_staff_by_subject(request):
+    """Shows all staff members, sorted by subject"""
+    subject_dict = {}
+    for staff in Staff.objects.all():
+        for subject_area in staff.subject_areas.all():
+            if subject_area in subject_dict:
+                subject_dict[subject_area].append(staff)
+            else:
+                subject_dict[subject_area] = [staff]
+    return render(
+        request, 'all_staff_by_subject.html', {'subject_dict': subject_dict})
+
+
+@login_required
+@user_passes_test(is_admin)
+def view_staff_by_name(request):
+    """Shows all staff members, sorted by name"""
+    staff_members = Staff.objects.all()
+    return render(
+        request, 'all_staff_by_name.html', {'staff_members': staff_members})
+
+
+# Student views
+
+
+@login_required
 @user_passes_test(is_staff)
 def add_or_edit_student(request, student_id=None):
     """The form to manually add or edit a student"""
@@ -259,6 +397,199 @@ def student_view(request, student_id):
 
 @login_required
 @user_passes_test(is_staff)
+def search_student(request):
+    """Little search function. Can at some point be replaced with AJAX"""
+    if 'q' in request.GET and request.GET['q']:
+        q = request.GET['q']
+        students = []
+        if len(q) > 1:
+            if "," in q:
+                search = q.split(",")
+                first_name = search[-1].strip()
+                last_name = search[0].strip()
+            else:
+                search = q.split()
+                first_name = search[0]
+                last_name = search[-1]
+            students = Student.objects.filter(
+                last_name__icontains=last_name,
+                first_name__icontains=first_name
+                )
+        if len(students) == 0:
+            students = Student.objects.filter(
+                Q(last_name__istartswith=q) | Q(first_name__istartswith=q))
+        if len(students) == 1:
+            student = students[0]
+            return redirect(student.get_absolute_url())
+        else:
+            return render(
+                request,
+                'search_results.html',
+                {'students': students, 'query': q},
+            )
+    else:
+        return redirect(reverse('home'))
+
+
+@login_required
+@user_passes_test(is_staff)
+def year_view(request, year):
+    """Shows all students in a particular year and allows bulk changes"""
+    if request.method == 'POST':
+        selected_students = request.POST.getlist('selected_student_id')
+        selected_option = request.POST.__getitem__('modify')
+        selected = selected_option.split('_')
+        if selected[0] == 'tutor':
+            tutor = User.objects.get(id=selected[1])
+            for student_id in selected_students:
+                student = Student.objects.get(student_id=student_id)
+                student.tutor = tutor
+                student.save()
+        elif selected[0] == 'qld':
+            if selected[1] == 'on':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.qld = True
+                    student.save()
+            elif selected[1] == 'off':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.qld = False
+                    student.save()
+        elif selected[0] == 'course':
+            course = Course.objects.get(title=selected[1])
+            for student_id in selected_students:
+                student = Student.objects.get(student_id=student_id)
+                student.course = course
+                student.save()
+        elif selected[0] == 'since':
+            startyear = selected[1]
+            for student_id in selected_students:
+                student = Student.objects.get(student_id=student_id)
+                student.since = startyear
+                student.save()
+        elif selected[0] == 'year':
+            for student_id in selected_students:
+                student = Student.objects.get(student_id=student_id)
+                student.year = selected[1]
+                student.save()
+        elif selected[0] == 'active':
+            if selected[1] == 'yes':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.active = True
+                    student.save()
+            elif selected[1] == 'no':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.active = False
+                    student.save()
+        elif selected[0] == 'delete':
+            if selected[1] == 'yes':
+                for student_id in selected_students:
+                    student = Student.objects.get(student_id=student_id)
+                    student.delete()
+            if selected[1] == 'no':
+                pass
+        return redirect(reverse('year_view', args=[str(year)]))
+    if year.startswith('imported_'):
+        data = Data.objects.get(id=year)
+        student_ids = data.value.split(',')
+        students = Student.objects.filter(student_id__in=student_ids)
+        headline = 'Recently Added Students'
+        courses = Course.objects.all()
+        show_year = True
+    else:
+        if request.user.staff.main_admin:
+            if year == 'all':
+                students = Student.objects.filter(active=True)
+            elif year == 'unassigned':
+                students = Student.objects.filter(year=None, active=True)
+            elif year == 'inactive':
+                students = Student.objects.filter(active=False)
+            else:
+                students = Student.objects.filter(year=year, active=True)
+            courses = Course.objects.all()
+        else:
+            staff_subject_areas = (
+                request.user.staff.subject_areas.all().values('name'))
+            if year == 'all':
+                students = Student.objects.filter(
+                    active=True,
+                    course__subject_areas__name__in=staff_subject_areas
+                )
+            elif year == 'unassigned':
+                students = Student.objects.filter(
+                    active=True,
+                    course__subject_areas__name__in=staff_subject_areas,
+                    year=None
+                )
+            elif year == 'inactive':
+                students = Student.objects.filter(
+                    active=False,
+                    course__subject_areas__name__in=staff_subject_areas,
+                )
+            else:
+                students = Student.objects.filter(
+                    active=True,
+                    course__subject_areas__name__in=staff_subject_areas,
+                    year=year
+                )
+            courses = Course.objects.filter(
+                subject_areas__name__in=staff_subject_areas)
+        if year == 'all':
+            headline = 'All Students'
+            show_year = True
+        elif year == 'unassigned':
+            headline = 'Unassigned Students'
+            show_year = True
+        elif year == 'inactive':
+            headline = 'Inactive Students'
+            show_year = True
+        elif year == '9':
+            headline = 'Alumni'
+            show_year = False
+        elif year == '7':
+            headline = 'Masters Students'
+            show_year = False
+        elif year == '8':
+            headline = 'PhD Students'
+            show_year = False
+        else:
+            headline = 'Year ' + year
+            show_year = False
+    academic_years = []
+    current_year = int(Setting.objects.get(name='current_year').value)
+    latest_start_year = current_year + 2
+    for academic_year in ACADEMIC_YEARS:
+        if academic_year[0] < latest_start_year:
+            academic_years.append(academic_year[0])
+    if is_admin(request.user):
+        edit = True
+    else:
+        if request.user.staff.programme_director:
+            edit = True
+        else:
+            edit = False
+    return render(
+        request,
+        'year_view.html',
+        {
+            'students': students,
+            'headline': headline,
+            'show_year': show_year,
+            'academic_years': academic_years,
+            'courses': courses,
+            'edit': edit
+        }
+    )
+
+
+# Module views
+
+
+@login_required
+@user_passes_test(is_staff)
 def add_or_edit_module(request, code=None, year=None):
     """The form to add or edit a module"""
     if code and year:
@@ -278,12 +609,15 @@ def add_or_edit_module(request, code=None, year=None):
         if edit:
             form = ModuleForm(instance=module)
         else:
-            list_of_subject_areas = []
+            initial = {}
             if request.user.staff.subject_areas:
-                for subject_area in request.user.staff.subject_areas:
+                list_of_subject_areas = []
+                for subject_area in request.user.staff.subject_areas.all():
                     list_of_subject_areas.append(subject_area.pk)
-            form = ModuleForm(
-                initial={'subject_areas': list_of_subject_areas})
+                initial['subject_areas'] = list_of_subject_areas
+            if request.user.staff.role == 'teacher':
+                initial['teachers'] = [request.user.staff.pk]
+            form = ModuleForm(initial=initial)
     if TEACHING_WEEK_OPTIONS:  # Ugly, but it works fine...
         javascript = '<script type="text/javascript">'
         javascript += '$(document).ready(function(){'
@@ -603,7 +937,7 @@ def delete_assessment(request, code, year, slug):
     for result in results:
         result.delete()
     assessment.delete()
-    return redirect(module.get_absolute_url())
+    return redirect(module.get_assessment_url())
 
 
 @login_required
@@ -631,299 +965,7 @@ def seminar_group_overview(request, code, year):
     )
 
 
-@login_required
-@user_passes_test(is_admin)
-def add_or_edit_staff(request, username=None, testing=False):
-    """Allows to edit or add a staff member.
-
-    The classes concerned are the User class and the Staff class
-    for additional details
-    """
-    if username:
-        edit = True
-        user = User.objects.get(username=username)
-        staff = user.staff
-    else:
-        edit = False
-    if request.method == 'POST':
-        form = StaffForm(data=request.POST)
-        if form.is_valid():
-            first_name = form.cleaned_data['first_name']
-            last_name = form.cleaned_data['last_name']
-            email = form.cleaned_data['email']
-            if not edit:
-                initials = ''
-                for word in first_name.split():
-                    initials += word[0]
-                initials = initials[:3]
-                initials += last_name[0]
-                initials = initials.lower()
-                number = 1
-                still_searching = True
-                while still_searching:
-                    username = initials + str(number)
-                    if User.objects.filter(username=username).exists():
-                        number += 1
-                    else:
-                        still_searching = False
-                password = User.objects.make_random_password()
-                user = User.objects.create_user(username, email, password)
-                message = new_staff_email(first_name, username, password)
-                subject = 'NOMOSDB Login Data'
-                sender = Setting.objects.get(name='admin_email').value
-                if not testing:
-                    send_mail(
-                       subject,
-                       message,
-                       sender,
-                       [email, ]
-                    )
-                else:
-                    print('\n')
-                    print('Subject: %s' % (subject,))
-                    print('---')
-                    print(message)
-                staff = Staff.objects.create(user=user)
-            for subject_area in staff.subject_areas.all():
-                if subject_area.name not in form.cleaned_data['subject_areas']:
-                    staff.subject_areas.remove(subject_area)
-            for name in form.cleaned_data['subject_areas']:
-                subject_area = SubjectArea.objects.get(name=name)
-                if subject_area not in staff.subject_areas.all():
-                    staff.subject_areas.add(subject_area)
-            staff.role = form.cleaned_data['role']
-            staff.save()
-            user.first_name = first_name
-            user.last_name = last_name
-            user.email = email
-            user.save()
-            return redirect(reverse('view_staff_by_name'))
-    else:
-        if edit:
-            form = StaffForm(initial={
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'email': user.email,
-                'subject_areas': staff.subject_areas.all(),
-                'role': staff.role
-            })
-        else:
-            form = StaffForm(initial={'role': 'teacher'})
-    return render(request, 'staff_form.html', {'form': form, 'edit': edit})
-
-
-@login_required
-@user_passes_test(is_staff)
-def search_student(request):
-    """Little search function. Can at some point be replaced with AJAX"""
-    if 'q' in request.GET and request.GET['q']:
-        q = request.GET['q']
-        students = []
-        if len(q) > 1:
-            if "," in q:
-                search = q.split(",")
-                first_name = search[-1].strip()
-                last_name = search[0].strip()
-            else:
-                search = q.split()
-                first_name = search[0]
-                last_name = search[-1]
-            students = Student.objects.filter(
-                last_name__icontains=last_name,
-                first_name__icontains=first_name
-                )
-        if len(students) == 0:
-            students = Student.objects.filter(
-                Q(last_name__istartswith=q) | Q(first_name__istartswith=q))
-        if len(students) == 1:
-            student = students[0]
-            return redirect(student.get_absolute_url())
-        else:
-            return render(
-                request,
-                'search_results.html',
-                {'students': students, 'query': q},
-            )
-    else:
-        return redirect(reverse('home'))
-
-
-@login_required
-@user_passes_test(is_admin)
-def view_staff_by_subject(request):
-    """Shows all staff members, sorted by subject"""
-    subject_dict = {}
-    for staff in Staff.objects.all():
-        for subject_area in staff.subject_areas.all():
-            if subject_area in subject_dict:
-                subject_dict[subject_area].append(staff)
-            else:
-                subject_dict[subject_area] = [staff]
-    return render(
-        request, 'all_staff_by_subject.html', {'subject_dict': subject_dict})
-
-
-@login_required
-@user_passes_test(is_admin)
-def view_staff_by_name(request):
-    """Shows all staff members, sorted by name"""
-    staff_members = Staff.objects.all()
-    return render(
-        request, 'all_staff_by_name.html', {'staff_members': staff_members})
-
-
-@login_required
-@user_passes_test(is_staff)
-def year_view(request, year):
-    """Shows all students in a particular year and allows bulk changes"""
-    if request.method == 'POST':
-        selected_students = request.POST.getlist('selected_student_id')
-        selected_option = request.POST.__getitem__('modify')
-        selected = selected_option.split('_')
-        if selected[0] == 'tutor':
-            tutor = User.objects.get(id=selected[1])
-            for student_id in selected_students:
-                student = Student.objects.get(student_id=student_id)
-                student.tutor = tutor
-                student.save()
-        elif selected[0] == 'qld':
-            if selected[1] == 'on':
-                for student_id in selected_students:
-                    student = Student.objects.get(student_id=student_id)
-                    student.qld = True
-                    student.save()
-            elif selected[1] == 'off':
-                for student_id in selected_students:
-                    student = Student.objects.get(student_id=student_id)
-                    student.qld = False
-                    student.save()
-        elif selected[0] == 'course':
-            course = Course.objects.get(title=selected[1])
-            for student_id in selected_students:
-                student = Student.objects.get(student_id=student_id)
-                student.course = course
-                student.save()
-        elif selected[0] == 'since':
-            startyear = selected[1]
-            for student_id in selected_students:
-                student = Student.objects.get(student_id=student_id)
-                student.since = startyear
-                student.save()
-        elif selected[0] == 'year':
-            for student_id in selected_students:
-                student = Student.objects.get(student_id=student_id)
-                student.year = selected[1]
-                student.save()
-        elif selected[0] == 'active':
-            if selected[1] == 'yes':
-                for student_id in selected_students:
-                    student = Student.objects.get(student_id=student_id)
-                    student.active = True
-                    student.save()
-            elif selected[1] == 'no':
-                for student_id in selected_students:
-                    student = Student.objects.get(student_id=student_id)
-                    student.active = False
-                    student.save()
-        elif selected[0] == 'delete':
-            if selected[1] == 'yes':
-                for student_id in selected_students:
-                    student = Student.objects.get(student_id=student_id)
-                    student.delete()
-            if selected[1] == 'no':
-                pass
-        return redirect(reverse('year_view', args=[str(year)]))
-    if year.startswith('imported_'):
-        data = Data.objects.get(id=year)
-        student_ids = data.value.split(',')
-        students = Student.objects.filter(student_id__in=student_ids)
-        headline = 'Recently Added Students'
-        courses = Course.objects.all()
-        show_year = True
-    else:
-        if request.user.staff.main_admin:
-            if year == 'all':
-                students = Student.objects.filter(active=True)
-            elif year == 'unassigned':
-                students = Student.objects.filter(year=None, active=True)
-            elif year == 'inactive':
-                students = Student.objects.filter(active=False)
-            else:
-                students = Student.objects.filter(year=year, active=True)
-            courses = Course.objects.all()
-        else:
-            staff_subject_areas = (
-                request.user.staff.subject_areas.all().values('name'))
-            if year == 'all':
-                students = Student.objects.filter(
-                    active=True,
-                    course__subject_areas__name__in=staff_subject_areas
-                )
-            elif year == 'unassigned':
-                students = Student.objects.filter(
-                    active=True,
-                    course__subject_areas__name__in=staff_subject_areas,
-                    year=None
-                )
-            elif year == 'inactive':
-                students = Student.objects.filter(
-                    active=False,
-                    course__subject_areas__name__in=staff_subject_areas,
-                )
-            else:
-                students = Student.objects.filter(
-                    active=True,
-                    course__subject_areas__name__in=staff_subject_areas,
-                    year=year
-                )
-            courses = Course.objects.filter(
-                subject_areas__name__in=staff_subject_areas)
-        if year == 'all':
-            headline = 'All Students'
-            show_year = True
-        elif year == 'unassigned':
-            headline = 'Unassigned Students'
-            show_year = True
-        elif year == 'inactive':
-            headline = 'Inactive Students'
-            show_year = True
-        elif year == '9':
-            headline = 'Alumni'
-            show_year = False
-        elif year == '7':
-            headline = 'Masters Students'
-            show_year = False
-        elif year == '8':
-            headline = 'PhD Students'
-            show_year = False
-        else:
-            headline = 'Year ' + year
-            show_year = False
-    academic_years = []
-    current_year = int(Setting.objects.get(name='current_year').value)
-    latest_start_year = current_year + 2
-    for academic_year in ACADEMIC_YEARS:
-        if academic_year[0] < latest_start_year:
-            academic_years.append(academic_year[0])
-    if is_admin(request.user):
-        edit = True
-    else:
-        if request.user.staff.programme_director:
-            edit = True
-        else:
-            edit = False
-    return render(
-        request,
-        'year_view.html',
-        {
-            'students': students,
-            'headline': headline,
-            'show_year': show_year,
-            'academic_years': academic_years,
-            'courses': courses,
-            'edit': edit
-        }
-    )
+# Data import / export
 
 
 @login_required
@@ -1090,31 +1132,3 @@ def import_success(request):
     """Displays successful upload / parsing"""
     successful_entrys = request.session.get('number_of_imports')
     return render(request, 'import_success.html', {successful_entries})
-
-
-def reset_password(request):
-    """Sends out a new password by email"""
-    if 'email' in request.GET and request.GET['email']:
-        email = request.GET['email']
-        try:
-            user = User.objects.get(email=email)
-            username = user.username
-            new_password = User.objects.make_random_password()
-            user.set_password(new_password)
-            user.save()
-            if is_staff(user):
-                name = user.first_name
-            else:
-                name = user.student.short_first_name()
-            message = password_reset_email(name, username, new_password)
-        except user.DoesNotExist:
-            return redirect(reverse(wrong_email))
-
-def wrong_email(request):
-    """Small page to show that the password was wrong"""
-    example_email = Setting.objects.get(name='example_email').value
-    return render(
-        request,
-        'wrong_password.html',
-        {'example_email': example_email}
-    )

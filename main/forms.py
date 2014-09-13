@@ -79,8 +79,12 @@ class AssessmentForm(forms.ModelForm):
         'title',
         'value',
         HTML('<div id="error" class="has-error"></div>'),
-        'submission_date',
-        'max_word_count',
+        Field(
+            'submission_date',
+            placeholder='Leave blank if not applicable',
+            css_class="datepicker",
+        ),
+        Field('max_word_count', placeholder='Leave blank if not applicable'),
         # 'marksheet_type',
         FormActions(
             Submit('save', 'Save Assessment', css_class="btn btn-primary")
@@ -178,6 +182,7 @@ class ModuleForm(forms.ModelForm):
                 'code',
                 'year',
                 Field('subject_areas', css_class='chosen-select'),
+                Field('teachers', css_class='chosen-select'),
                 'credits',
                 # 'sucessor_of',
                 'eligible',
@@ -206,6 +211,7 @@ class ModuleForm(forms.ModelForm):
             'title',
             'code',
             'year',
+            'teachers',
             'subject_areas',
             'credits',
             'eligible',

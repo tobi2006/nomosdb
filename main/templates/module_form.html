@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 
 {% block stylesheets %}
-<link rel="stylesheet" href="{{ STATIC_URL }}js/chosen/chosen.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{ STATIC_URL }}js/chosen/chosen.css" type="text/css" media="screen">
 {% endblock %}
 
 {% block style %}
@@ -28,13 +28,14 @@ $('#assessment_6').hide()
 {% endcomment %}
 
 {% block loadscripts %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/chosen/chosen.jquery.min.js"> </script>
+<script src="{{ STATIC_URL }}js/chosen/chosen.jquery.min.js"> </script>
 {% endblock %}
 
 {% block scripts %}
 
 <script type="text/javascript">
-    $(".chosen-select").chosen()
+    $(document).ready(function(){
+        $(".chosen-select").chosen();
 </script>
 
 {{ javascript|safe }}

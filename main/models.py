@@ -96,7 +96,12 @@ class Staff(models.Model):
         ordering = ['user']
 
     def __str__(self):
-        return "%s, %s" % (self.user.last_name, self.user.first_name)
+        subject_list = []
+        for subject in self.subject_areas.all():
+            subject_list.append(subject.name)
+        subjects = '/'.join(subject_list)
+        return "%s %s (%s)" % (
+            self.user.first_name, self.user.last_name, subjects)
 
     def name(self):
         return "%s %s" % (self.user.first_name, self.user.last_name)
@@ -120,12 +125,13 @@ class Module(models.Model):
         ('123', 'All years'),
         ('12', 'Years 1 and 2'),
         ('23', 'Years 2 and 3')
-        )  # With these kinds of strings, we can check "if '1' in eligible:"
+    )  # With these kinds of strings, we can check "if '1' in eligible:"
     CREDITS = (
         (10, '10'),
         (20, '20'),
+        (30, '20'),
         (40, '40')
-        )
+    )
     NO_TEACHING_STR = "No teaching in these weeks (reading weeks, cancelled "
     NO_TEACHING_STR += "seminars etc, separated by a comma)"
 
