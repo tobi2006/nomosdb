@@ -28,6 +28,12 @@
         overflow:hidden;
       }
     }
+    
+    #random-assignment-header
+    {
+        cursor: pointer;
+    }
+
 {% endblock %}
 
 {% block content %}
@@ -35,7 +41,7 @@
     <div class="col-sm-4 col-md-3 sidebar" id="side">
         <h3>Seminar Groups</h3>
         <div class="panel panel-default">
-            <div class="panel-heading" data-toggle="collapse" data-target="#random">
+            <div class="panel-heading" data-toggle="collapse" data-target="#random" id="random-assignment-header">
                     Random Assignment
             </div>
             <div id="random" class="collapse panel-body">
@@ -60,7 +66,7 @@
                 <span class="glyphicon glyphicon-info-sign pull-right" id="help" data-placement="bottom" title="Start moving students into the groups. New groups will appear once you fill the last empty group, empty groups will disappear. After you have divided the groups, press the Save button at the bottom of the page."></span>
                 <span class="badge pull-right" id="badge_0">10</span>
             </div>
-            <div class="panel-body">
+            <div class="panel-body student-panel">
                 <ul id="0" class="list-unstyled connectedLists">
                 {% for performance in dictionary.0 %}
                     <li class="panel panel-primary innerpanel" id="{{ performance.student.student_id }}">
@@ -85,7 +91,7 @@
                     Group {{ i|add:"1" }}
                     <span class="badge pull-right" id="badge_{{ i|add:"1" }}">{{ i|add:"1" }}</span>
                 </div>
-                <div class="panel-body">
+                <div class="panel-body student-panel">
                     <ul id="{{ i|add:"1" }}" class="list-unstyled connectedLists">
                     {% for performance in dictionary|get_item_plus_1:i %}
                         <li class="panel panel-primary innerpanel" id="{{ performance.student.student_id }}">
@@ -175,13 +181,13 @@
             });
         });
 
-        $('.panel-body').mousedown(function(){
+        $('.student-panel').mousedown(function(){
             $('.sidebar').css('overflow-y','');
             
         });
 
 
-        $('.panel-body').mouseup(function(){
+        $('.student-panel').mouseup(function(){
             $('.sidebar').css('overflow-y','scroll');
         });        
 

@@ -665,13 +665,20 @@ def module_view(request, code, year):
     seminar_group_links.append(
         ('all', module.get_attendance_url('all'))
     )
+    if request.user.staff in module.teachers.all():
+        admin_or_instructor = True
+    elif request.user.staff.role == 'admin':
+        admin_or_instructor = True
+    else:
+        admin_or_instructor = False
     return render(
         request,
         'module_view.html',
         {
             'module': module,
             'performances': performances,
-            'seminar_group_links': seminar_group_links
+            'seminar_group_links': seminar_group_links,
+            'admin_or_instructor': admin_or_instructor,
         }
     )
 
@@ -689,7 +696,7 @@ def add_students_to_module(request, code, year):
             student.save()
             Performance.objects.create(module=module, student=student)
         return redirect(module.get_absolute_url())
-    students_in_module = module.student_set.all()
+    students_in_module = module.students.all()
     if len(module.eligible) > 1:
         more_than_one_year = True
     else:
@@ -732,10 +739,22 @@ def remove_student_from_module(request, code, year, student_id):
 
 @login_required
 @user_passes_test(is_staff)
+def delete_module(request, code, year):
+    """Deletes a module and related performances, assessments and results"""
+    module = Module.objects.get(code=code, year=year)
+    if is_admin(request.user) or request.user in module.teachers.all():
+        module.delete()
+        return redirect(reverse('home'))
+    else:
+        return redirect(module.get_absolute_url())
+
+
+@login_required
+@user_passes_test(is_staff)
 def assign_seminar_groups(request, code, year):
     """Allows to assign the students to seminar groups graphically"""
     module = Module.objects.get(code=code, year=year)
-    students = module.student_set.all()
+    students = module.students.all()
     if request.method == 'POST':
         save_these = True
         randomize = False

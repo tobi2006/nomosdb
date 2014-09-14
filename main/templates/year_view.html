@@ -49,7 +49,7 @@ td {
     <thead>
         <tr>
             <th>
-                <input type="checkbox" name="select_all">
+                <input type="checkbox" id="select_all">
             </th>
             {% if show_year %}
                 <th>
@@ -74,7 +74,7 @@ td {
         {% for student in students %}
             <tr>
                 <td>
-                    <input type="checkbox" name="selected_student_id" value="{{ student.student_id }}">
+                    <input type="checkbox" name="selected_student_id" value="{{ student.student_id }}" class="checkbox">
                 </td>
                 {% if show_year %}
                     <td>
@@ -116,6 +116,19 @@ td {
 <script type="text/javascript">
 
     $(document).ready(function(){
+
+        $('#select_all').click(function(event) {
+            if(this.checked) {
+                $('.checkbox').each(function() {
+                    this.checked = true;
+                });
+            }else{
+                $('.checkbox').each(function() {
+                    this.checked = false;
+                });        
+            }
+        });
+
         $("#action_selector").change(function() {
             var option = $(this).val();
             switch(option)
@@ -132,8 +145,8 @@ td {
                 break;
             case "course":
                 var toenter = 'Enroll selected on...<br>\
-                <select>\
-                {% for course in courses %}<option name="modify" value="course_{{ course.title }}">{{ course.title }}<br>{% endfor %}\
+                <select name="modify">\
+                {% for course in courses %}<option value="course_{{ course.title }}">{{ course.title }}<br>{% endfor %}\
                 </select><br><br><input type="submit" value="Apply" class="btn btn-default">';
                 break;
             case "nalp":

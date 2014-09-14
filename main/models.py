@@ -183,7 +183,6 @@ class Module(models.Model):
         blank=True,
         null=True
     )
-    sessions_recorded = models.IntegerField(blank=True, null=True, default=0)
     teachers = models.ManyToManyField(
         Staff, limit_choices_to={'role': 'teacher'}, related_name='modules'
     )
@@ -208,6 +207,9 @@ class Module(models.Model):
     def get_attendance_url(self, group):
         group = str(group)
         return reverse('attendance', args=[self.code, self.year, group])
+
+    def get_delete_self_url(self):
+        return reverse('delete_module', args=[self.code, self.year])
 
     def get_seminar_groups_url(self):
         return reverse('assign_seminar_groups', args=[self.code, self.year])
@@ -396,7 +398,8 @@ class Student(models.Model):
         null=True,
         related_name="tutees"
     )
-    modules = models.ManyToManyField(Module, blank=True)
+    modules = models.ManyToManyField(
+        Module, blank=True, related_name="students")
     notes = models.TextField(blank=True)
     active = models.BooleanField(default=True)
     lsp = models.TextField(

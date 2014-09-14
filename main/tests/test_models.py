@@ -92,7 +92,7 @@ class StudentTest(TeacherUnitTest):
         module = Module.objects.create(code="hl23", year="1900")
         student.modules.add(module)
         student.save()
-        self.assertEqual(student, module.student_set.first())
+        self.assertEqual(student, module.students.first())
 
     def test_student_short_names_return_correctly(self):
         student = create_student(save=False)

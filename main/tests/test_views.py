@@ -274,6 +274,84 @@ class RemoveStudentFromModuleTest(TeacherUnitTest):
         self.assertEqual(student.modules.count(), 0)
 
 
+class DeleteModuleTest(TeacherUnitTest):
+    """Tests that the Delete Module Function removes performances and marks"""
+
+    def test_deleting_module_deletes_everything_else(self):
+        module = create_module()
+        module.teachers.add(self.user.staff)
+        student = create_student()
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Dissertation",
+            value=100,
+        )
+        result = AssessmentResult.objects.create(
+            module=module,
+            part_of=performance,
+            mark=60
+        )
+        request = self.factory.get(module.get_delete_self_url())
+        request.user = self.user
+        delete_module(request, module.code, module.year)
+        self.assertEqual(Module.objects.count(), 0)
+        self.assertEqual(Student.objects.count(), 1)
+        self.assertEqual(Performance.objects.count(), 1)
+        self.assertEqual(Assessment.objects.count(), 0)
+        self.assertEqual(AssessmentResult.objects.count(), 0)
+
+    def test_only_instructor_or_admin_can_delete_a_module(self):
+        module = create_module()
+        student = create_student()
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Dissertation",
+            value=100,
+        )
+        result = AssessmentResult.objects.create(
+            module=module,
+            part_of=performance,
+            mark=60
+        )
+        request = self.factory.get(module.get_delete_self_url())
+        request.user = self.user
+        response = delete_module(request, module.code, module.year)
+        self.assertEqual(Module.objects.count(), 0)
+        self.assertEqual(Student.objects.count(), 1)
+        self.assertEqual(Performance.objects.count(), 1)
+        self.assertEqual(Assessment.objects.count(), 0)
+        self.assertEqual(AssessmentResult.objects.count(), 0)
+
+
+class DeleteModuleTest(TeacherUnitTest):
+    """Tests that the Delete Module Function removes performances and marks"""
+
+    def test_only_instructor_or_admin_can_delete_a_module(self):
+        module = create_module()
+        student = create_student()
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Dissertation",
+            value=100,
+        )
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            part_of=performance,
+            mark=60
+        )
+        request = self.factory.get(module.get_delete_self_url())
+        request.user = self.user
+        response = delete_module(request, module.code, module.year)
+
 class SeminarGroupTest(TeacherUnitTest):
     """Tests involving the seminar group setup"""
 

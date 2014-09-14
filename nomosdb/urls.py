@@ -47,6 +47,11 @@ urlpatterns += patterns(
         name='delete_assessment'
     ),
     url(
+        r'^delete_module/(\w+)/(\d{4})/$',
+        'delete_module',
+        name='delete_module'
+    ),
+    url(
         r'^edit_assessment/(\w+)/(\d{4})/([-\w]+)/$',
         'assessment',
         name='edit_assessment'
