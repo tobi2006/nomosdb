@@ -11,6 +11,7 @@
             <th>Role</th>
             <th>Subjects</th>
             <th>&nbsp;</th>
+            <th>&nbsp;</th>
         </tr>
     </thead>
     <tbody>
@@ -20,10 +21,31 @@
             <td>{{ staff_member.role|upper_case_first_letter }}</td>
             <td>{{ staff_member.subject_areas.all|joinby:", " }}</td>
             <th><a href="{{ staff_member.get_edit_url }}">Edit</a></th>
+            <th><a href="#" class="delete" id="{{ staff_member.user.username }}">Delete</a></th>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
+{% endblock %}
 
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+
+        $(document).on("click", ".delete", function(e) {
+            bootbox.confirm("Are you sure you want to remove this staff member from the database?", function(confirm) {
+                if (confirm)
+                {
+                var staff_id = e.target.id;
+                var remove = "/delete_staff_member/" + staff_id + '/';
+                window.location.replace(remove);
+                }
+            });
+        });
+
+</script>
 {% endblock %}

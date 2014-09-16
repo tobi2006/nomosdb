@@ -27,7 +27,7 @@
                         <td><strong>Email</strong></td>
                         <td><a href="mailto:{{ student.email }}">{{ student.email }}</a></td>
                         <td><strong>Tutor</strong></td>
-                        <td><a href="mailto:{{ student.tutor.email }}?Subject={{ student }}">{{ student.tutor.first_name }} {{ student.tutor.last_name }}</a></td>
+                        <td><a href="mailto:{{ student.tutor.user.email }}?Subject={{ student }}">{{ student.tutor.name }}</a></td>
                     </tr>
                     <tr>
                         <td><strong>Year</strong></td>

@@ -29,7 +29,7 @@ class Setting(models.Model):
 
 class Data(models.Model):
     """Allows to save some data for passing it between functions
-    
+
     A management function set by a Cron job will delete data instances
     older than 14 days to save space.
     """
@@ -45,15 +45,17 @@ class SubjectArea(models.Model):
     "Law with Economics", for example, can be enlisted in modules that list
     "Law" and "Economics" in their subject areas, and a "Law of Corporations"
     module can be open to Law and Economics students. A short title is
-    optional ("IR" for "International Relations")."""
-
+    optional ("IR" for "International Relations").
+    """
     name = models.CharField(max_length=100, unique=True, verbose_name="Add...")
+    slug = models.CharField(max_length=100, primary_key=True)
 
     def __str__(self):
         return self.name
 
-    def slug(self):
-        return slugify(self.name)
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(SubjectArea, self).save(*args, **kwargs)
 
 
 class Course(models.Model):
@@ -65,7 +67,8 @@ class Course(models.Model):
         null=True,
         unique=True
     )
-    subject_areas = models.ManyToManyField(SubjectArea, blank=True)
+    subject_areas = models.ManyToManyField(
+        SubjectArea, blank=True, related_name='courses')
 
     def __str__(self):
         return self.title
@@ -109,6 +112,9 @@ class Staff(models.Model):
     def get_edit_url(self):
         return reverse('edit_staff', args=[self.user.username])
 
+    def get_delete_url(self):
+        return reverse('delete_staff_member', args=[self.user.username])
+
 
 class Module(models.Model):
     """Modules are the subjects - eg "Law of Contracts".
@@ -122,6 +128,8 @@ class Module(models.Model):
         ('1', 'Year 1 only'),
         ('2', 'Year 2 only'),
         ('3', 'Year 3 only'),
+        ('7', 'Masters Students only'),
+        ('8', 'PhD Students only'),
         ('123', 'All years'),
         ('12', 'Years 1 and 2'),
         ('23', 'Years 2 and 3')
@@ -449,6 +457,16 @@ class Student(models.Model):
     def get_absolute_url(self):
         return reverse('student_view', args=[self.student_id])
 
+    def get_link(self):
+        html = (
+            '<a href="' +
+            self.get_absolute_url() +
+            '">' +
+            self.short_name() +
+            '</a>'
+        )
+        return html
+
     def get_edit_url(self):
         return reverse('edit_student', args=[self.student_id])
 
@@ -644,3 +662,18 @@ class AssessmentResult(models.Model):
             if self.concessions in [self.NO_CONCESSIONS, self.PENDING]:
                 return True
         return False
+#
+#
+# class TuteeSession(models.Model):
+#    tutee = models.ForeignKey(Student)
+#    tutor = models.ForeignKey(User)
+#    date_of_meet = models.DateField()
+#    notes = models.TextField()
+#
+#    class Meta:
+#        ordering = ['date_of_meet', 'tutor']
+#
+#    def get_absolute_url(self):
+#        tutee_url = reverse('student_view', args=[self.tutee.student_id])
+#        tutee_url += "#" + str(self.id)
+#        return tutee_url

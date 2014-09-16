@@ -39,6 +39,11 @@ urlpatterns += patterns(
         'assign_seminar_groups',
         name='assign_seminar_groups'
     ),
+    url(
+        r'^assign_tutors/([-\w]+)/(\w+)/$',
+        'assign_tutors',
+        name='assign_tutors'
+    ),
     url(r'^attendance/(\w+)/(\d{4})/(\w+)/$', 'attendance', name='attendance'),
     url(r'^course_overview/$', 'course_overview', name='course_overview'),
     url(
@@ -50,6 +55,11 @@ urlpatterns += patterns(
         r'^delete_module/(\w+)/(\d{4})/$',
         'delete_module',
         name='delete_module'
+    ),
+    url(
+        r'^delete_staff_member/(\w+)/$',
+        'delete_staff_member',
+        name='delete_staff_member'
     ),
     url(
         r'^edit_assessment/(\w+)/(\d{4})/([-\w]+)/$',

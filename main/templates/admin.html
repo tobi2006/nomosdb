@@ -5,28 +5,50 @@
 {% if main_admin %}
 
 <h2>Main Settings</h2>
-<ul>
-    <li><a href="{% url "main_settings" %}" id="main_settings">Main Settings</a></li>
-</ul>
+<a href="{% url "main_settings" %}" id="main_settings" class="btn btn-default">Institution Settings</a>
 
 {% endif %}
 
 <h2>Courses</h2>
-<ul>
-    <li><a href="{% url "course_overview" %}" id="edit_courses">Edit Courses</a></li>
-    <li><a href="#">Show Course and Subject Overview (not ready yet)</a></li>
-    <li><a href="{% url "subject_areas" %}" id="subject_areas">Subject Areas</a></li>
-</ul>
+<div class="btn-group">
+    <a href="{% url "course_overview" %}" id="edit_courses" class="btn btn-default">Edit Courses</a>
+    <a href="#" class="btn btn-default">Show Course and Subject Overview (not ready yet)</a>
+    <a href="{% url "subject_areas" %}" id="subject_areas" class="btn btn-default">Subject Areas</a>
+</div>
 
 <h2>Students</h2>
-<ul>
-    <li><a href="{% url "upload_csv" %}">Import Students by CSV file</a></li>
-</ul>
+
+<h3>Add Students</h3>
+
+<div class="btn-group">
+    <a href="{% url "add_student" %}" class="btn btn-default">Add Student</a>
+    <a href="{% url "upload_csv" %}" class="btn btn-default">Import Students by CSV file</a>
+</div>
+
+<h3>Pastoral Care</h3>
+
+<h4>Assign Tutors</h4>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+                <li><a href="{% url "assign_tutors" subject_area.slug year.0 %}">{{ year.1 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
 
 <h2>Staff</h2>
-<ul>
-    <li><a href="{% url "add_staff" %}" id="add_staff">Add a new staff member</a></li>
-    <li><a href="{% url "view_staff_by_name" %}" id="view_staff_by_name">View Staff sorted by name</a></li>
-    <li><a href="{% url "view_staff_by_subject" %}" id="view_staff_by_name">View Staff sorted by subject areas</a></li>
-</ul>
+
+<div class="btn-group">
+    <a href="{% url "add_staff" %}" id="add_staff" class="btn btn-default">Add a new staff member</a>
+    <a href="{% url "view_staff_by_name" %}" id="view_staff_by_name" class="btn btn-default">View Staff sorted by name</a>
+    <a href="{% url "view_staff_by_subject" %}" id="view_staff_by_name" class="btn btn-default">View Staff sorted by subject areas</a>
+</div>
 {% endblock %}

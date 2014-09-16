@@ -54,7 +54,7 @@ class HomePageTest(TeacherUnitTest):
 
 
 class AdminDashboardTest(AdminUnitTest):
-    """Quick check of the Admin Dashboard"""
+    """Checks the Admin Dashboard"""
 
     def test_admin_page_uses_right_template(self):
         request = self.factory.get('/admin_dashboard/')
@@ -66,6 +66,154 @@ class AdminDashboardTest(AdminUnitTest):
         request.user = self.user
         response = admin(request)
         self.assertContains(response, 'Main Settings')
+
+    def test_admin_page_shows_all_subjects_and_years_for_main_admin(self):
+        self.user.staff.main_admin = True
+        self.user.staff.save()
+        subject_area_1 = SubjectArea.objects.create(name='Cartoon Studies')
+        subject_area_2 = SubjectArea.objects.create(name='Evil Plotting')
+        course_1 = Course.objects.create(
+            title = 'BA in Cartoon Studies',
+            short_title = 'Cartoon Studies',
+        )
+        course_1.subject_areas.add(subject_area_1)
+        course_2 = Course.objects.create(
+            title = 'BA in Evil Plotting',
+            short_title = 'Evil Plotting',
+        )
+        course_2.subject_areas.add(subject_area_2)
+        course_3 = Course.objects.create(
+            title = 'BA in Cartoon Studies with Evil Plotting',
+            short_title = 'Cartoon Studies / Evil Plotting',
+        )
+        course_3.subject_areas.add(subject_area_1)
+        course_3.subject_areas.add(subject_area_2)
+        stuff = set_up_stuff()
+        student_1 = stuff[1]
+        student_1.course = course_1
+        student_1.year = 1
+        student_1.save()
+        student_2 = stuff[2]
+        student_2.course = course_2
+        student_2.year = 2
+        student_2.save()
+        student_3 = stuff[3]
+        student_3.course = course_3
+        student_3.year = 3
+        student_3.save()
+        request = self.factory.get('/admin_dashboard/')
+        request.user = self.user
+        response = admin(request)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_1.slug +
+            '/1/">'
+        )
+        self.assertContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_1.slug +
+            '/2/">'
+        )
+        self.assertNotContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_1.slug +
+            '/3/">'
+        )
+        self.assertContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_2.slug +
+            '/1/">'
+        )
+        self.assertNotContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_2.slug +
+            '/2/">'
+        )
+        self.assertContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_2.slug +
+            '/3/">'
+        )
+        self.assertContains(response, url)
+        
+    def test_admin_page_shows_own_subjects_and_years_for_normal_admin(self):
+        subject_area_1 = SubjectArea.objects.create(name='Cartoon Studies')
+        self.user.staff.subject_areas.add(subject_area_1)
+        subject_area_2 = SubjectArea.objects.create(name='Evil Plotting')
+        course_1 = Course.objects.create(
+            title = 'BA in Cartoon Studies',
+            short_title = 'Cartoon Studies',
+        )
+        course_1.subject_areas.add(subject_area_1)
+        course_2 = Course.objects.create(
+            title = 'BA in Evil Plotting',
+            short_title = 'Evil Plotting',
+        )
+        course_2.subject_areas.add(subject_area_2)
+        course_3 = Course.objects.create(
+            title = 'BA in Cartoon Studies with Evil Plotting',
+            short_title = 'Cartoon Studies / Evil Plotting',
+        )
+        course_3.subject_areas.add(subject_area_1)
+        course_3.subject_areas.add(subject_area_2)
+        stuff = set_up_stuff()
+        student_1 = stuff[1]
+        student_1.course = course_1
+        student_1.year = 1
+        student_1.save()
+        student_2 = stuff[2]
+        student_2.course = course_2
+        student_2.year = 2
+        student_2.save()
+        student_3 = stuff[3]
+        student_3.course = course_3
+        student_3.year = 3
+        student_3.save()
+        request = self.factory.get('/admin_dashboard/')
+        request.user = self.user
+        response = admin(request)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_1.slug +
+            '/1/">'
+        )
+        self.assertContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_1.slug +
+            '/2/">'
+        )
+        self.assertNotContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_1.slug +
+            '/3/">'
+        )
+        self.assertContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_2.slug +
+            '/1/">'
+        )
+        self.assertNotContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_2.slug +
+            '/2/">'
+        )
+        self.assertNotContains(response, url)
+        url = (
+            '<a href="/assign_tutors/' +
+            subject_area_2.slug +
+            '/3/">'
+        )
+        self.assertNotContains(response, url)
+        
 
 class StudentViewTest(TeacherUnitTest):
     """Tests for the student view function"""
@@ -351,6 +499,7 @@ class DeleteModuleTest(TeacherUnitTest):
         request = self.factory.get(module.get_delete_self_url())
         request.user = self.user
         response = delete_module(request, module.code, module.year)
+
 
 class SeminarGroupTest(TeacherUnitTest):
     """Tests involving the seminar group setup"""
@@ -758,11 +907,11 @@ class ViewStaffTest(AdminUnitTest):
         request.user = self.user
         response = view_staff_by_subject(request)
         soup = BeautifulSoup(response.content)
-        table1 = str(soup.find(id=subject_area_1.slug()))
+        table1 = str(soup.find(id=subject_area_1.slug))
         self.assertTrue(staff1.name() in table1)
         self.assertTrue(staff2.name() in table1)
         self.assertTrue(staff3.name() in table1)
-        table2 = str(soup.find(id=subject_area_2.slug()))
+        table2 = str(soup.find(id=subject_area_2.slug))
         self.assertFalse(staff1.name() in table2)
         self.assertTrue(staff2.name() in table2)
         self.assertFalse(staff3.name() in table2)
@@ -805,9 +954,9 @@ class YearViewTest(AdminUnitTest):
         request = self.factory.get('/year_view/all')
         request.user = self.user
         response = year_view(request, 'all')
-        self.assertTemplateUsed(response, 'year_view')
+        self.assertTemplateUsed(response, 'year_view.html')
 
-    def test_teachers_see_all_students_from_their_subject_areas(self):
+    def test_teachers_see_all_students_from_their_only_subject_area(self):
         stuff = set_up_stuff()
         subject_area1 = SubjectArea.objects.create(name="Cartoon Studies")
         subject_area2 = SubjectArea.objects.create(name="Evil Plotting")
@@ -846,6 +995,48 @@ class YearViewTest(AdminUnitTest):
         self.assertContains(response, student1.last_name)
         self.assertContains(response, student2.last_name)
         self.assertNotContains(response, student3.last_name)
+        self.assertContains(response, student4.last_name)
+
+    def test_teachers_see_all_students_from_their_many_subject_areas(self):
+        stuff = set_up_stuff()
+        subject_area1 = SubjectArea.objects.create(name="Cartoon Studies")
+        subject_area2 = SubjectArea.objects.create(name="Evil Plotting")
+        self.user.staff.subject_areas.add(subject_area1)
+        self.user.staff.subject_areas.add(subject_area2)
+        course1 = Course.objects.create(
+            title="BA in Cartoon Studies", short_title="Cartoon Studies")
+        course1.subject_areas.add(subject_area1)
+        course2 = Course.objects.create(
+            title="BA in Evil Plotting", short_title="Evil Plotting")
+        course2.subject_areas.add(subject_area2)
+        course3 = Course.objects.create(
+            title="BA in Cartoon Studies with Evil Plotting",
+            short_title="Cartoon Studies / Evil Plotting"
+        )
+        course3.subject_areas.add(subject_area1)
+        course3.subject_areas.add(subject_area2)
+        student1 = stuff[1]
+        student1.year = 1
+        student1.course = course1
+        student1.save()
+        student2 = stuff[2]
+        student2.year = 1
+        student2.course = course1
+        student2.save()
+        student3 = stuff[3]
+        student3.course = course2
+        student3.year = 1
+        student3.save()
+        student4 = stuff[4]
+        student4.course = course3
+        student4.year = 1
+        student4.save()
+        request = self.factory.get('/year_view/1/')
+        request.user = self.user
+        response = year_view(request, '1')
+        self.assertContains(response, student1.last_name)
+        self.assertContains(response, student2.last_name)
+        self.assertContains(response, student3.last_name)
         self.assertContains(response, student4.last_name)
 
     def test_main_admin_sees_all_active_students_for_a_year_are_shown(self):
@@ -1035,3 +1226,173 @@ class CSVParsingTests(AdminUnitTest):
         self.assertEqual(student1.since, 1900)
         self.assertEqual(student1.email, 'bb42@acme.edu')
         self.assertEqual(student1.phone_number, '+112345678')
+
+
+
+class AssignTutorsTest(AdminUnitTest):
+    """Tests for the assigning tutors view from an admin perspective"""
+
+    def test_right_template_used(self):
+        SubjectArea.objects.create(name="Cartoon Studies")
+        request = self.factory.get('/assign_tutors/cartoon-studies/1')
+        request.user = self.user
+        response = assign_tutors(request, 'cartoon-studies', '1')
+        self.assertTemplateUsed(response, 'assign_tutors.html')
+
+    def test_assign_tutors_view_shows_right_tutors(self):
+        subject_area1 = SubjectArea.objects.create(name="Cartoon Studies")
+        subject_area2 = SubjectArea.objects.create(name="Evil Plotting")
+        user1 = User.objects.create_user(
+            username='ef1',
+            password='rabbitseason',
+            last_name='Fudd',
+            first_name='Elmar'
+        )
+        staff1 = Staff.objects.create(user=user1, role='teacher')
+        staff1.subject_areas.add(subject_area1)
+        user2 = User.objects.create_user(
+            username='ys2',
+            password='squaredance',
+            last_name='Sam',
+            first_name='Yosemite'
+        )
+        staff2 = Staff.objects.create(user=user2, role='teacher')
+        staff2.subject_areas.add(subject_area2)
+        user3 = User.objects.create_user(
+            username='mtm3',
+            password='zapp',
+            last_name='The Martian',
+            first_name='Marvin'
+        )
+        staff3 = Staff.objects.create(user=user3, role='teacher')
+        staff3.subject_areas.add(subject_area1)
+        staff3.subject_areas.add(subject_area2)
+        request = self.factory.get('/assign_tutors/cartoon-studies/1')
+        request.user = self.user
+        response = assign_tutors(request, 'cartoon-studies', '1')
+        soup = BeautifulSoup(response.content)
+        table = str(soup.select('#teachers')[0])
+        self.assertTrue(user1.last_name in table)
+        self.assertFalse(user2.last_name in table)
+        self.assertTrue(user3.last_name in table)
+
+    def test_assign_tutors_view_shows_right_students(self):
+        subject_area1 = SubjectArea.objects.create(name="Cartoon Studies")
+        subject_area2 = SubjectArea.objects.create(name="Evil Plotting")
+        course1 = Course.objects.create(title='BA in Cartoon Studies')
+        course1.subject_areas.add(subject_area1)
+        course2 = Course.objects.create(title='BA in Evil Plotting')
+        course2.subject_areas.add(subject_area2)
+        course3 = Course.objects.create(
+            title='BA in Cartoon Studies with Evil Plotting')
+        course3.subject_areas.add(subject_area1, subject_area2)
+        user1 = User.objects.create_user(
+            username='ef1',
+            password='rabbitseason',
+            last_name='Fudd',
+            first_name='Elmar'
+        )
+        staff1 = Staff.objects.create(user=user1, role='teacher')
+        staff1.subject_areas.add(subject_area1)
+        student1 = Student.objects.create(
+            student_id='bb42',
+            first_name='Bugs',
+            last_name='Bunny',
+            course=course1,
+            year=1
+        )
+        student2 = Student.objects.create(
+            student_id='dd23',
+            first_name='Duck',
+            last_name='Daffy',
+            course=course2,
+            year=1
+        )
+        student3 = Student.objects.create(
+            student_id='pp23',
+            first_name='Porky',
+            last_name='Pig',
+            course=course3,
+            year=1
+        )
+        student4 = Student.objects.create(
+            student_id='rr23',
+            first_name='Road',
+            last_name='Runner',
+            course=course1,
+            year=2
+        )
+        request = self.factory.get('/assign_tutors/cartoon-studies/1')
+        request.user = self.user
+        response = assign_tutors(request, 'cartoon-studies', '1')
+        self.assertContains(response, 'Bunny')
+        self.assertNotContains(response, 'Duck')
+        self.assertContains(response, 'Pig')
+        self.assertNotContains(response, 'Runner')
+
+    def test_tutors_can_be_assigned(self):
+        subject_area = SubjectArea.objects.create(name="Cartoon Studies")
+        course = Course.objects.create(title='BA in Cartoon Studies')
+        course.subject_areas.add(subject_area)
+        user1 = User.objects.create_user(
+            username='ef1',
+            password='rabbitseason',
+            last_name='Fudd',
+            first_name='Elmar'
+        )
+        staff1 = Staff.objects.create(user=user1, role='teacher')
+        staff1.subject_areas.add(subject_area)
+        user2 = User.objects.create_user(
+            username='ys2',
+            password='squaredance',
+            last_name='Sam',
+            first_name='Yosemite'
+        )
+        staff2 = Staff.objects.create(user=user2, role='teacher')
+        staff2.subject_areas.add(subject_area)
+        student1 = Student.objects.create(
+            student_id='bb42',
+            first_name='Bugs',
+            last_name='Bunny',
+            course=course,
+            year=1
+        )
+        student2 = Student.objects.create(
+            student_id='dd23',
+            first_name='Duck',
+            last_name='Daffy',
+            course=course,
+            year=1
+        )
+        student3 = Student.objects.create(
+            student_id='pp23',
+            first_name='Porky',
+            last_name='Pig',
+            course=course,
+            year=1
+        )
+        student4 = Student.objects.create(
+            student_id='rr23',
+            first_name='Road',
+            last_name='Runner',
+            course=course,
+            year=1
+        )
+        request = self.factory.post(
+            '/assign_tutors/cartoon-studies/1',
+            data={
+                'bb42': 'ef1',
+                'dd23': 'ys2',
+                'pp23': 'ef1'
+            }
+        )
+        request.user = self.user
+        response = assign_tutors(request, 'cartoon-studies', '1')
+        student1_out = Student.objects.get(student_id='bb42')
+        self.assertEqual(student1_out.tutor, staff1)
+        student2_out = Student.objects.get(student_id='dd23')
+        self.assertEqual(student2_out.tutor, staff2)
+        student3_out = Student.objects.get(student_id='pp23')
+        self.assertEqual(student3_out.tutor, staff1)
+        student4_out = Student.objects.get(student_id='rr23')
+        self.assertEqual(student4_out.tutor, None)

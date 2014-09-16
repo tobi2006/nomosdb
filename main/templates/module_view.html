@@ -98,7 +98,7 @@
                     {{ performance.seminar_group|default_if_none:"" }}
                 </td>
                 <td>
-                    <a href="{{ performance.student.get_absolute_url }}">{{ performance.student.short_name }}</a>
+                    {{ performance.student.get_link|safe }}
                 </td>
                 <td>
                     {% if performance.student.lsp %}<span class="glyphicon glyphicon-warning-sign"></span>{% endif %}

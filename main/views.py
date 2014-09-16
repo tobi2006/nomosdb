@@ -99,9 +99,35 @@ def admin(request):
     """Opens the admin dashboard"""
     if request.user.staff.main_admin:
         main_admin = True
+        staff_subject_areas = SubjectArea.objects.all()
     else:
         main_admin = False
-    return render(request, 'admin.html', {'main_admin': main_admin})
+        staff_subject_areas = request.user.staff.subject_areas.all()
+    subject_areas = {}
+    for subject_area in staff_subject_areas:
+        if subject_area.courses.exists():
+            for course in subject_area.courses.all():
+                for year in [1, 2, 3, 7, 8]:
+                    if Student.objects.filter(
+                            year=year, course=course).exists():
+                        if year == 7:
+                            year_tpl = (7, 'Masters')
+                        elif year == 8:
+                            year_tpl = (8, 'PhD')
+                        else:
+                            year_str = 'Year ' + str(year)
+                            year_tpl = (year, year_str)
+                        if subject_area in subject_areas:
+                            if year_tpl not in subject_areas[subject_area]:
+                                subject_areas[subject_area].append(year_tpl)
+                        else:
+                            subject_areas[subject_area] = [year_tpl]
+    
+    return render(
+        request,
+        'admin.html',
+        {'main_admin': main_admin, 'subject_areas': subject_areas}
+    )
 
 
 @login_required
@@ -296,7 +322,7 @@ def add_or_edit_staff(request, username=None, testing=False):
                 subject = 'NomosDB Login Data'
                 sender = Setting.objects.get(name='admin_email').value
                 if not testing:
-                    #send_mail(subject, message, sender, [email, ])
+                    # send_mail(subject, message, sender, [email, ])
                     print(password)
                 else:
                     print('\n')
@@ -307,8 +333,8 @@ def add_or_edit_staff(request, username=None, testing=False):
             for subject_area in staff.subject_areas.all():
                 if subject_area.name not in form.cleaned_data['subject_areas']:
                     staff.subject_areas.remove(subject_area)
-            for name in form.cleaned_data['subject_areas']:
-                subject_area = SubjectArea.objects.get(name=name)
+            for slug in form.cleaned_data['subject_areas']:
+                subject_area = SubjectArea.objects.get(slug=slug)
                 if subject_area not in staff.subject_areas.all():
                     staff.subject_areas.add(subject_area)
             staff.role = form.cleaned_data['role']
@@ -356,7 +382,18 @@ def view_staff_by_name(request):
         request, 'all_staff_by_name.html', {'staff_members': staff_members})
 
 
-# Student views
+@login_required
+@user_passes_test(is_admin)
+def delete_staff_member(request, username):
+    """Deletes a staff member and the user belonging to it"""
+    user = User.objects.get(username=username)
+    staff = user.staff
+    staff.delete()
+    user.delete()
+    return redirect('admin')
+
+
+# Student related
 
 
 @login_required
@@ -584,6 +621,52 @@ def year_view(request, year):
         }
     )
 
+
+@login_required
+@user_passes_test(is_staff)
+def assign_tutors(request, subject_area, year):
+    """Allows admin or PD to assign tutees to tutors"""
+    if is_admin(request.user) or request.user.staff.programme_director:
+        subject_area = SubjectArea.objects.get(slug=subject_area)
+        all_students = Student.objects.filter(active=True, year=year)
+        students = []
+        for student in all_students:
+            if subject_area in student.course.subject_areas.all():
+                students.append(student)
+
+        if request.method == 'POST':
+            for student in students:
+                if student.student_id in request.POST:
+                    if request.POST[student.student_id]:
+                        user = User.objects.get(
+                            username=request.POST[student.student_id])
+                        student.tutor = user.staff
+                        student.save()
+                    else:
+                        student.tutor = None
+                        student.save()
+            return redirect(reverse('admin'))
+
+        else:
+
+            all_teachers = Staff.objects.filter(role="teacher")
+            teachers = []
+            for teacher in all_teachers:
+                if subject_area in teacher.subject_areas.all():
+                    teacher_tpl = (
+                        teacher.user.username,
+                        teacher.name(),
+                        teacher.tutees.count()
+                    )
+                    teachers.append(teacher_tpl)
+            return render(
+                request,
+                'assign_tutors.html',
+                {'students': students, 'teachers': teachers}
+            )
+    else:
+        return redirect(reverse('home'))
+            
 
 # Module views
 

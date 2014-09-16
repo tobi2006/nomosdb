@@ -227,7 +227,7 @@ class StaffForm(forms.Form):
     choices = []
     queryset = SubjectArea.objects.all()
     for area in queryset:
-        tpl = (area.name, area.name)
+        tpl = (area.slug, area.name)
         choices.append(tpl)
     choices = tuple(choices)
     ROLES = (
@@ -253,6 +253,11 @@ class StaffForm(forms.Form):
     helper.form_class = "form-horizontal"
     helper.label_class = "col-lg-2"
     helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+
+
+class TutorSessionForm(forms.Form):
+    """The form to enter tutee sessions"""
+    pass
 
 
 class CSVUploadForm(forms.Form):

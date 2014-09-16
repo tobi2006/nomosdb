@@ -1,0 +1,83 @@
+{% extends "sidebar.html" %}
+
+{% block formstart %}
+<form method="post">
+{% csrf_token %}
+{% endblock %}
+
+{% block sidebar %}
+
+<div class="well">
+    <h3>Teachers</h3>
+    <table id='teachers'>
+        {% for teacher in teachers %}
+        <tr>
+            <td>
+                {{ teacher.1 }}
+            </td>
+            <td id="{{ teacher.0 }}">
+                {{ teacher.2 }}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}
+
+{% block content %}
+
+<h1>Assign Personal Tutors</h1>
+
+{% if students %}
+<table class="table table-striped" id='students'>
+    <thead>
+        <th>
+            Student
+        </th>
+        <th>
+            ID
+        </th>
+        <th>
+            Course
+        </th>
+        <th>
+            Tutor
+        </th>
+    </thead>
+    <tbody>
+        {% for student in students %}
+           <tr>
+                <td>
+                    {{ student.get_link|safe }}
+                </td>
+                <td>
+                    {{ student.student_id }}
+                </td>
+                <td>
+                    {{ student.course.short_title }}
+                </td>
+                <td>
+                    <select name="{{ student.student_id }}" class="form-control">
+                        <option value=""{% if not student.tutor %} selected{% endif %}>No tutor assigned</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.0 }}"{% if teacher.1 ==  student.tutor.name %} selected{% endif %}>{{ teacher.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<input type="submit" name="action" value="Save Tutors" class="btn btn-primary" align=right>
+
+{% else %}
+<p>There are no students in this category</p>
+{% endif %}
+
+{% endblock %}
+
+{% block formend %}
+</form>
+{% endblock %}
