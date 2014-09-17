@@ -1,5 +1,13 @@
 {% extends "sidebar.html" %}
 
+{% block style %}
+
+.tt {
+    padding: 10px;
+}
+
+{% endblock %}
+
 {% block formstart %}
 <form method="post">
 {% csrf_token %}
@@ -7,15 +15,15 @@
 
 {% block sidebar %}
 
-<div class="well">
-    <h3>Teachers</h3>
+<div class="well" data-spy="affix">
+    <h3>Distribution (all years)</h3>
     <table id='teachers'>
         {% for teacher in teachers %}
         <tr>
-            <td>
+            <td class="tt">
                 {{ teacher.1 }}
             </td>
-            <td id="{{ teacher.0 }}">
+            <td id="{{ teacher.0 }}_number" class="tt">
                 {{ teacher.2 }}
             </td>
         </tr>
@@ -58,7 +66,7 @@
                     {{ student.course.short_title }}
                 </td>
                 <td>
-                    <select name="{{ student.student_id }}" class="form-control">
+                    <select name="{{ student.student_id }}" class="form-control tutor-field">
                         <option value=""{% if not student.tutor %} selected{% endif %}>No tutor assigned</option>
                         {% for teacher in teachers %}
                         <option value="{{ teacher.0 }}"{% if teacher.1 ==  student.tutor.name %} selected{% endif %}>{{ teacher.1 }}</option>
@@ -80,4 +88,31 @@
 
 {% block formend %}
 </form>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+    var previous_old;
+    var old_cell_id;
+
+    $(".tutor-field").on('focus', function () {
+        var old = this.value;
+        old_cell_id = '#' + old + '_number';
+        previous_old = parseInt($(old_cell_id).html());
+    }).change(function() {
+        var new_old = previous_old - 1;
+        $(old_cell_id).html(new_old);
+        var new_cell = $(this).val();
+        var new_cell_id = '#' + new_cell + '_number';
+        var previous_new = parseInt($(new_cell_id).html());
+        var new_value = previous_new + 1;
+        $(new_cell_id).html(new_value);
+    }); 
+
+});
+
+</script>
 {% endblock %}
