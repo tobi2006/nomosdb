@@ -439,9 +439,9 @@ class DeleteModuleTest(TeacherUnitTest):
         )
         result = AssessmentResult.objects.create(
             module=module,
-            part_of=performance,
             mark=60
         )
+        performance.assessment_results.add(result)
         request = self.factory.get(module.get_delete_self_url())
         request.user = self.user
         delete_module(request, module.code, module.year)
@@ -493,9 +493,9 @@ class DeleteModuleTest(TeacherUnitTest):
         )
         result = AssessmentResult.objects.create(
             assessment=assessment,
-            part_of=performance,
             mark=60
         )
+        performance.assessment_results.add(result)
         request = self.factory.get(module.get_delete_self_url())
         request.user = self.user
         response = delete_module(request, module.code, module.year)
@@ -677,9 +677,9 @@ class AssessmentTest(TeacherUnitTest):
         )
         result = AssessmentResult.objects.create(
             assessment=assessment,
-            part_of=performance,
             mark=40
         )
+        performance.assessment_results.add(result)
         self.assertEqual(Assessment.objects.count(), 1)
         self.assertEqual(AssessmentResult.objects.count(), 1)
         request = self.factory.get(assessment.get_delete_url())
@@ -1226,7 +1226,6 @@ class CSVParsingTests(AdminUnitTest):
         self.assertEqual(student1.since, 1900)
         self.assertEqual(student1.email, 'bb42@acme.edu')
         self.assertEqual(student1.phone_number, '+112345678')
-
 
 
 class AssignTutorsTest(AdminUnitTest):

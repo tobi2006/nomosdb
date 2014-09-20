@@ -100,6 +100,40 @@
             </div>
         </div>
     </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapsePerformance">
+                    Performance
+                </a>
+            </h4>
+        </div>
+        <div id="collapseAddress" class="panel-collapse collapse">
+            <div class="panel-body">
+                {% if performance.8 %}
+                    <h4>PhD</h4>
+                    {% for performance in performances.8 %}
+                        <h5>{{ performance.module }}</h5>
+                        <table class="table">
+                            {% for result in performance.all_assessment_results_as_tpls %}
+                            <tr>
+                                <td>
+                                    {{ result.0|safe }}
+                                </td>
+                                <td>
+                                    {{ result.1|safe }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                        <br>
+                    {% endfor %}
+                {% endif %}
+                                
+
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

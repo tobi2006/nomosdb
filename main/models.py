@@ -471,6 +471,113 @@ class Student(models.Model):
         return reverse('edit_student', args=[self.student_id])
 
 
+class AssessmentResult(models.Model):
+    """How a particular student does in an assessment"""
+    NO_CONCESSIONS = 'N'
+    PENDING = 'P'
+    GRANTED = 'G'
+    CONCESSIONS = (
+        (NO_CONCESSIONS, 'No concession'),
+        (PENDING, 'Concession pending'),
+        (GRANTED, 'Concession granted')
+    )
+    assessment = models.ForeignKey(Assessment)
+    mark = models.IntegerField(blank=True, null=True)
+    resit_mark = models.IntegerField(blank=True, null=True)
+    concessions = models.CharField(
+        choices=CONCESSIONS,
+        max_length=1,
+        blank=True,
+        null=True,
+        default=NO_CONCESSIONS
+    )
+    second_resit_mark = models.IntegerField(blank=True, null=True)
+    second_concessions = models.CharField(
+        choices=CONCESSIONS,
+        max_length=1,
+        blank=True,
+        null=True,
+        default=NO_CONCESSIONS
+    )
+    assessment_group = models.IntegerField(blank=True, null=True)
+    qld_resit = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['assessment']
+
+    def result_as_string(self):
+        if self.mark is None:
+            returnstring = None
+        else:
+            returnstring = str(self.mark)
+            if self.resit_mark:
+                if self.concessions == self.GRANTED:
+                    if self.assessment.title == 'Exam':
+                        resit_type = 'Sit'
+                    else:
+                        resit_type = 'Submission'
+                else:
+                    if self.assessment.title == 'Exam':
+                        resit_type = 'Resit'
+                    else:
+                        resit_type = 'Resubmission'
+                returnstring += " (%s: %s" % (resit_type, self.resit_mark)
+                if self.second_resit_mark:
+                    if self.second_concessions == self.GRANTED:
+                        if self.assessment.title == 'Exam':
+                            resit_type = 'Sit'
+                        else:
+                            resit_type = 'Submission'
+                    else:
+                        if self.assessment.title == 'Exam':
+                            resit_type = 'Resit'
+                        else:
+                            resit_type = 'Resubmission'
+                    returnstring += ", Second %s: %s" % (
+                        resit_type, self.second_resit_mark)
+                elif self.qld_resit:
+                    returnstring += (
+                        ", QLD Resit: %s" % (self.qld_resit)
+                    )
+                returnstring += ")"
+        return returnstring
+
+    def module_needs_to_be_capped(self):
+        cap = False
+        if self.resit_mark:
+            if self.concessions in [self.NO_CONCESSIONS, self.PENDING]:
+                cap = True
+        if self.second_resit_mark:
+            if self.second_concessions in [self.NO_CONCESSIONS, self.PENDING]:
+                cap = True
+        return cap
+
+    def result(self):
+        result = self.mark
+        if self.resit_mark:
+            if self.resit_mark > result:
+                result = self.resit_mark
+            if self.second_resit_mark:
+                if self.second_resit_mark > result:
+                    result = self.second_resit_mark
+        return result
+
+    def no_qld_problems(self):
+        if self.mark:
+            if self.mark > 40:
+                return True
+            elif self.resit_mark and self.resit_mark > 40:
+                return True
+            else:
+                if self.second_resit_mark:
+                    if self.second_resit_mark > 40:
+                        return True
+                elif self.qld_resit:
+                    if self.qld_resit > 40:
+                        return True
+        return False
+
+
 class Performance(models.Model):
     """The Performance class connects a student with a module"""
     ATTENDANCE_ENTRIES = (
@@ -479,10 +586,12 @@ class Performance(models.Model):
         ('e', 'Excused Absence')
     )
 
-    student = models.ForeignKey(Student)
-    module = models.ForeignKey(Module)
+    student = models.ForeignKey(Student, related_name="performances")
+    module = models.ForeignKey(Module, related_name="performances")
     seminar_group = models.IntegerField(blank=True, null=True)
-    student_year = models.IntegerField(blank=True, null=True)
+    belongs_to_year = models.IntegerField(blank=True, null=True)
+    assessment_results = models.ManyToManyField(
+        AssessmentResult, related_name="part_of")
     # Average
     average = models.IntegerField(blank=True, null=True)  # For display
     real_average = models.FloatField(blank=True, null=True)  # For calculation
@@ -516,6 +625,92 @@ class Performance(models.Model):
         if there_is_an_exam:
             return_list.append(exam)
         return return_list
+
+    def all_assessment_results_as_tpls(self):
+        return_list = []
+        there_is_an_exam = False
+        all_results = {}
+        for result in self.assessment_results.all():
+            all_results[result.assessment] = result
+        for assessment in self.module.all_assessments():
+            if assessment.title != 'Exam':
+                if assessment in all_results:
+                    result = all_results[assessment]
+                    return_tpl = (assessment.title, result.result_as_string())
+                    return_list.append(return_tpl)
+                else:
+                    return_list.append((assessment.title, None))
+            else:
+                there_is_an_exam = True
+                if assessment in all_results:
+                    result = all_results[assessment]
+                    exam = result.result_as_string()
+                else:
+                    exam = None
+        if there_is_an_exam:
+            return_list.append(('Exam', exam))
+        return return_list
+
+    def calculate_average(self):
+        sum_of_marks = 0
+        for assessment in self.module.assessments.all():
+            try:
+                assessment_result = AssessmentResult.objects.get(
+                    assessment=assessment, part_of=self)
+                this = assessment_result.result() * assessment.value
+                sum_of_marks += this
+            except AssessmentResult.DoesNotExist:
+                pass
+        average = sum_of_marks / 100
+        self.real_average = average
+        self.average = round(average)
+        self.save()
+
+    def set_assessment_result(self, assessment_slug, mark, attempt='first'):
+        assessment = Assessment.objects.get(
+            module=self.module,
+            slug=assessment_slug
+        )
+        if self.assessment_results.filter(assessment=assessment).exists():
+            assessment_result = self.assessment_results.get(
+                assessment=assessment)
+        else:
+            assessment_result = AssessmentResult.objects.create(
+                assessment=assessment)
+            self.assessment_results.add(assessment_result)
+        if attempt == 'first':
+            assessment_result.mark = int(mark)
+        elif attempt == 'resit':
+            assessment_result.resit_mark = int(mark)
+        elif attempt == 'second_resit':
+            assessment_result.second_resit_mark = int(mark)
+        elif attempt == 'qld_resit':
+            assessment_result.qld_resit = int(mark)
+        assessment_result.save()
+        self.calculate_average()
+
+    def get_assessment_result(self, assessment_slug, attempt='all'):
+        assessment = Assessment.objects.get(
+            module=self.module,
+            slug=assessment_slug
+        )
+        if self.assessment_results.filter(assessment=assessment).exists():
+            assessment_result = self.assessment_results.get(
+                assessment=assessment)
+        else:
+            return None
+        if attempt == 'all':
+            return assessment_result.result()
+        elif attempt == 'string':
+            return assessment_result.result_as_string()
+        elif attempt == 'first':
+            return assessment_result.mark
+        elif attempt == 'resit':
+            return assessment_result.resit_mark
+        elif attempt == 'second_resit':
+            return assessment_result.second_resit_mark
+        elif attempt == 'qld_resit':
+            return assessment_result.qld_resit
 
     def attendance_as_dict(self):
         return_dict = {}
@@ -586,83 +781,6 @@ class Performance(models.Model):
                 return True
         return False
 
-    # def safe(self, *args, **kwargs):
-    #    marks = 0
-    #        cap = False
-    #        if self.assessment_1:
-    #            if self.r_assessment_1:
-    #                if self.r_assessment_1 > self.assessment_1:
-    #                    marks =
-    #            else:
-    #                all += self.assessment_1
-    # after: super(Performance, self).save(*args, **kwargs)
-
-
-class AssessmentResult(models.Model):
-    """How a particular student does in an assessment"""
-    NO_CONCESSIONS = 'N'
-    PENDING = 'P'
-    GRANTED = 'G'
-    CONCESSIONS = (
-        (NO_CONCESSIONS, 'No concession'),
-        (PENDING, 'Concession pending'),
-        (GRANTED, 'Concession granted')
-    )
-    assessment = models.ForeignKey(Assessment)
-    part_of = models.ForeignKey(Performance, related_name="assessment_results")
-    mark = models.IntegerField(blank=True, null=True)
-    resit_mark = models.IntegerField(blank=True, null=True)
-    concessions = models.CharField(
-        choices=CONCESSIONS,
-        max_length=1,
-        blank=True,
-        null=True,
-        default=NO_CONCESSIONS
-    )
-    second_resit_mark = models.IntegerField(blank=True, null=True)
-    second_concessions = models.CharField(
-        choices=CONCESSIONS,
-        max_length=1,
-        blank=True,
-        null=True,
-        default=NO_CONCESSIONS
-    )
-    assessment_group = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        ordering = ['assessment']
-
-    def result_as_string(self):
-        if self.mark is None:
-            returnstring = None
-        else:
-            returnstring = str(self.mark)
-            if self.resit_mark:
-                if self.concessions == self.GRANTED:
-                    if self.assessment.title == 'Exam':
-                        resit_type = 'Sit'
-                    else:
-                        resit_type = 'Submission'
-                else:
-                    if self.assessment.title == 'Exam':
-                        resit_type = 'Resit'
-                    else:
-                        resit_type = 'Resubmission'
-                returnstring += " (%s: %s" % (resit_type, self.resit_mark)
-                # The following needs to be changed to allow second resits
-                if self.second_resit_mark:
-                    returnstring += (
-                        ", Second resubmission: %s" % (self.second_resit_mark)
-                    )
-                returnstring += ")"
-        return returnstring
-
-    def module_needs_to_be_capped(self):
-        if self.resit_mark:
-            if self.concessions in [self.NO_CONCESSIONS, self.PENDING]:
-                return True
-        return False
-#
 #
 # class TuteeSession(models.Model):
 #    tutee = models.ForeignKey(Student)

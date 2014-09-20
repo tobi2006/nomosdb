@@ -319,9 +319,9 @@ class PerformanceTest(TeacherUnitTest):
         module.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
-            part_of=performance1,
             mark=20
         )
+        performance1.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="Assessment 2",
             value=20
@@ -329,9 +329,9 @@ class PerformanceTest(TeacherUnitTest):
         module.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
-            part_of=performance1,
             mark=30
         )
+        performance1.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="Assessment 3",
             value=20,
@@ -339,9 +339,9 @@ class PerformanceTest(TeacherUnitTest):
         module.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
-            part_of=performance1,
             mark=40
         )
+        performance1.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="Exam",
             value=40
@@ -365,9 +365,9 @@ class PerformanceTest(TeacherUnitTest):
         module2.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
-            part_of=performance2,
             mark=50
         )
+        performance2.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="And another assessment",
             value=10
@@ -375,19 +375,19 @@ class PerformanceTest(TeacherUnitTest):
         module2.assessments.add(assessment)
         result = AssessmentResult.objects.create(
             assessment=assessment,
-            part_of=performance2,
             mark=35,
             resit_mark=38,
             concessions='G',
             second_resit_mark=40
         )
+        performance2.assessment_results.add(result)
         assessment = Assessment.objects.create(
             title="Middle Assessment",
             value=10
         )
         module2.assessments.add(assessment)
         expected_list_2 = [
-            '35 (Submission: 38, Second resubmission: 40)',
+            '35 (Submission: 38, Second Resubmission: 40)',
             None,
             '50'
         ]
@@ -397,6 +397,107 @@ class PerformanceTest(TeacherUnitTest):
         )
         self.assertEqual(
             performance2.all_assessment_results_as_strings(),
+            expected_list_2
+        )
+
+    def test_performance_returns_all_assessment_tpls(self):
+        student = create_student()
+        # First module with all marks
+        module = create_module()
+        performance1 = Performance.objects.create(
+            module=module,
+            student=student
+        )
+        assessment = Assessment.objects.create(
+            title="Assessment 1",
+            value=20
+        )
+        module.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=20
+        )
+        performance1.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="Assessment 2",
+            value=20
+        )
+        module.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=30
+        )
+        performance1.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="Assessment 3",
+            value=20,
+        )
+        module.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=40
+        )
+        performance1.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="Exam",
+            value=40
+        )
+        module.assessments.add(assessment)
+        # No result for the exam - should return "None"
+        expected_list_1 = [
+            ('Assessment 1', '20'),
+            ('Assessment 2', '30'),
+            ('Assessment 3', '40'),
+            ('Exam', None)
+        ]
+
+        module2 = Module.objects.create(
+            title="And another one",
+            code="AAO4223"
+        )
+        performance2 = Performance.objects.create(
+            module=module2,
+            student=student
+        )
+        assessment = Assessment.objects.create(
+            title="Zo far back in the alphabet",
+            value=30
+        )
+        module2.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=50
+        )
+        performance2.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="A",
+            value=10
+        )
+        module2.assessments.add(assessment)
+        result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=35,
+            resit_mark=38,
+            concessions='G',
+            second_resit_mark=40
+        )
+        performance2.assessment_results.add(result)
+        assessment = Assessment.objects.create(
+            title="Middle Assessment",
+            value=10
+        )
+        module2.assessments.add(assessment)
+        expected_list_2 = [
+            ('A', '35 (Submission: 38, Second Resubmission: 40)'),
+            ('Middle Assessment', None),
+            ('Zo far back in the alphabet', '50')
+        ]
+        self.assertEqual(
+            performance1.all_assessment_results_as_tpls(),
+            expected_list_1
+        )
+        self.assertEqual(
+            performance2.all_assessment_results_as_tpls(),
             expected_list_2
         )
 
@@ -428,3 +529,178 @@ class PerformanceTest(TeacherUnitTest):
             ['p', 'a', 'e', 'p', 'p', 'p', 'p', 'a', 'a', 'a']
         )
         self.assertTrue(performance.missed_the_last_two_sessions())
+
+    def test_marks_can_be_set_over_performance_functions(self):
+        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        module.teachers.add(self.user.staff)
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Essay",
+            value=30
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Exam",
+            value=70
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        performance.set_assessment_result('essay', 48)
+        result = AssessmentResult.objects.first()
+        self.assertEqual(result.mark, 48)
+        performance.set_assessment_result('exam', 60)
+        self.assertEqual(AssessmentResult.objects.count(), 2)
+        second_result = AssessmentResult.objects.get(
+            assessment=assessment2, part_of=performance)
+        self.assertEqual(second_result.mark, 60)
+        performance.set_assessment_result('essay', 50, 'resit')
+        result = AssessmentResult.objects.get(
+            assessment__slug='essay', part_of=performance)
+        self.assertEqual(result.mark, 48)
+        self.assertEqual(result.resit_mark, 50)
+        self.assertEqual(result.result(), 50)
+
+    def test_average_is_calculated_when_mark_is_set(self):
+        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        module.teachers.add(self.user.staff)
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Essay",
+            value=30
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Exam",
+            value=70
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        performance.set_assessment_result('essay', 48)
+        self.assertEqual(performance.real_average, 14.4)
+        self.assertEqual(performance.average, 14)
+
+    def test_set_and_get_marks_over_performance_functions(self):
+        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        module.teachers.add(self.user.staff)
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Essay",
+            value=30
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Exam",
+            value=70
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        performance.set_assessment_result('essay', 30)
+        performance.set_assessment_result('exam', 60)
+        self.assertEqual(performance.get_assessment_result('exam'), 60)
+        self.assertEqual(performance.get_assessment_result('essay'), 30)
+        performance.set_assessment_result('essay', 35, 'resit')
+        performance.set_assessment_result('essay', 38, 'second_resit')
+        result = performance.get_assessment_result('essay', 'string')
+        self.assertEqual(
+            result, '30 (Resubmission: 35, Second Resubmission: 38)')
+
+
+class AssessmentResultTest(TeacherUnitTest):
+    """Testing the Assessment Result class"""
+
+    def test_result_returns_highest_mark(self):
+        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        module.teachers.add(self.user.staff)
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Dissertation",
+            value=100
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+            resit_mark=42
+        )
+        performance.assessment_results.add(assessment_result_1)
+        self.assertEqual(assessment_result_1.result(), 42)
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+            resit_mark=36
+        )
+        performance.assessment_results.add(assessment_result_2)
+        self.assertEqual(assessment_result_2.result(), 38)
+
+    def test_qld_status_is_returned_correctly(self):
+        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        module.teachers.add(self.user.staff)
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Dissertation",
+            value=100
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+            resit_mark=42
+        )
+        performance.assessment_results.add(assessment_result_1)
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+            resit_mark=36
+        )
+        performance.assessment_results.add(assessment_result_2)
+        assessment_result_3 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+            resit_mark=35,
+            second_resit_mark=33,
+            qld_resit=45
+        )  # Only 3 attempts should be counted
+        performance.assessment_results.add(assessment_result_3)
+        assessment_result_4 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+            resit_mark=35,
+            qld_resit=45
+        )
+        performance.assessment_results.add(assessment_result_4)
+        self.assertEqual(assessment_result_1.no_qld_problems(), True)
+        self.assertEqual(assessment_result_2.no_qld_problems(), False)
+        self.assertEqual(assessment_result_3.no_qld_problems(), False)
+        self.assertEqual(assessment_result_4.no_qld_problems(), True)

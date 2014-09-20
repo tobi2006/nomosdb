@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.urlresolvers import resolve
 from django.core.urlresolvers import reverse
-from django.db.models import Q
 from django.db import IntegrityError
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from main.forms import *
@@ -11,7 +12,6 @@ from main.models import *
 from main.unisettings import *
 from random import shuffle, choice
 from string import ascii_letters, digits
-from django.core.urlresolvers import resolve
 
 
 # Authentication
@@ -122,7 +122,6 @@ def admin(request):
                                 subject_areas[subject_area].append(year_tpl)
                         else:
                             subject_areas[subject_area] = [year_tpl]
-    
     return render(
         request,
         'admin.html',
@@ -429,7 +428,33 @@ def add_or_edit_student(request, student_id=None):
 def student_view(request, student_id):
     """Shows all information about a student"""
     student = Student.objects.get(student_id=student_id)
-    return render(request, 'student_view.html', {'student': student})
+    if student in request.user.staff.tutees.all():
+        tutor = True
+        allowed_to_see_notes = True
+    elif request.user.staff.programme_director:
+        tutor = False
+        allowed_to_see_notes = True
+    else:
+        tutor = False
+        allowed_to_see_notes = False
+    performances = {}
+    for performance in student.performances.all():
+        if performances[str(performance.belongs_to_year)]:
+            performances[str(performance.belongs_to_year)].append(performance)
+        else:
+            performances[str(performance.belongs_to_year)] = [performance]
+
+    
+    return render(
+        request,
+        'student_view.html',
+        {
+            'student': student,
+            'tutor': tutor,
+            'allowed_to_see_notes': allowed_to_see_notes,
+            'performances': performances,
+        }
+    )
 
 
 @login_required
@@ -666,7 +691,7 @@ def assign_tutors(request, subject_area, year):
             )
     else:
         return redirect(reverse('home'))
-            
+
 
 # Module views
 
@@ -777,7 +802,8 @@ def add_students_to_module(request, code, year):
             student = Student.objects.get(student_id=student_id)
             student.modules.add(module)
             student.save()
-            Performance.objects.create(module=module, student=student)
+            Performance.objects.create(
+                module=module, student=student, belongs_to_year=student.year)
         return redirect(module.get_absolute_url())
     students_in_module = module.students.all()
     if len(module.eligible) > 1:
@@ -1226,11 +1252,3 @@ def parse_csv(request, data_id):
             'options': options
         }
     )
-
-
-@login_required
-@user_passes_test(is_staff)
-def import_success(request):
-    """Displays successful upload / parsing"""
-    successful_entrys = request.session.get('number_of_imports')
-    return render(request, 'import_success.html', {successful_entries})
