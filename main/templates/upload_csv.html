@@ -3,7 +3,7 @@
 {% block content %}
 
 <p>
-Select the .csv file to upload. Please make sure that the spreadsheet you are using does not contain any commas, as they will be used by Excel or Libre Office for separating the columns.
+Select the .csv file to upload. You need to tell Excel or LibreOffice Calc that you want to use semicolons for separating the cells. Please make sure that the spreadsheet you are using does not contain any semicolons itself.
 </p>
 
 <form action="{% url "upload_csv" %}" method="post" enctype="multipart/form-data">

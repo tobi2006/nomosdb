@@ -448,7 +448,8 @@ class PerformanceTest(TeacherUnitTest):
             ('Assessment 1', '20'),
             ('Assessment 2', '30'),
             ('Assessment 3', '40'),
-            ('Exam', None)
+            ('Exam', None),
+            ('<strong>Result</strong>', None)
         ]
 
         module2 = Module.objects.create(
@@ -490,7 +491,8 @@ class PerformanceTest(TeacherUnitTest):
         expected_list_2 = [
             ('A', '35 (Submission: 38, Second Resubmission: 40)'),
             ('Middle Assessment', None),
-            ('Zo far back in the alphabet', '50')
+            ('Zo far back in the alphabet', '50'),
+            ('<strong>Result</strong>', None)
         ]
         self.assertEqual(
             performance1.all_assessment_results_as_tpls(),

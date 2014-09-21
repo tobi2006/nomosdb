@@ -417,7 +417,8 @@ class Student(models.Model):
     )
     permanent_email = models.CharField(max_length=100, blank=True, null=True)
     address = models.TextField(blank=True, verbose_name="Term Time Address")
-    phone_number = models.CharField(max_length=100, blank=True)
+    phone_number = models.CharField(max_length=50, blank=True, null=True)
+    cell_number = models.CharField(max_length=50, blank=True, null=True)
     home_address = models.TextField(blank=True)
     nalp = models.BooleanField(
         verbose_name="Paralegal Pathway",
@@ -469,6 +470,14 @@ class Student(models.Model):
 
     def get_edit_url(self):
         return reverse('edit_student', args=[self.student_id])
+
+    def html_address(self):
+        address = self.address.replace("\n", "<br>")
+        return address
+
+    def html_home_address(self):
+        address = self.home_address.replace("\n", "<br>")
+        return address
 
 
 class AssessmentResult(models.Model):
@@ -649,6 +658,7 @@ class Performance(models.Model):
                     exam = None
         if there_is_an_exam:
             return_list.append(('Exam', exam))
+        return_list.append(('<strong>Result</strong>', self.average))
         return return_list
 
     def calculate_average(self):

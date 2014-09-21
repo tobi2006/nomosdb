@@ -439,11 +439,10 @@ def student_view(request, student_id):
         allowed_to_see_notes = False
     performances = {}
     for performance in student.performances.all():
-        if performances[str(performance.belongs_to_year)]:
-            performances[str(performance.belongs_to_year)].append(performance)
+        if performance.belongs_to_year in performances:
+            performances[performance.belongs_to_year].append(performance)
         else:
-            performances[str(performance.belongs_to_year)] = [performance]
-
+            performances[performance.belongs_to_year] = [performance]
     
     return render(
         request,
@@ -796,14 +795,17 @@ def module_view(request, code, year):
 def add_students_to_module(request, code, year):
     """Simple form to add students to a module and create Performance items"""
     module = Module.objects.get(code=code, year=year)
+    current_year = int(Setting.objects.get(name="current_year").value)
     if request.method == 'POST':
         students_to_add = request.POST.getlist('student_ids')
         for student_id in students_to_add:
             student = Student.objects.get(student_id=student_id)
             student.modules.add(module)
             student.save()
+            time_difference =  current_year - module.year
+            belongs_to = student.year - time_difference
             Performance.objects.create(
-                module=module, student=student, belongs_to_year=student.year)
+                module=module, student=student, belongs_to_year=belongs_to)
         return redirect(module.get_absolute_url())
     students_in_module = module.students.all()
     if len(module.eligible) > 1:
@@ -814,6 +816,9 @@ def add_students_to_module(request, code, year):
     years = []
     for number in module.eligible:
         year = int(number)
+        time_difference = module.year - current_year
+        year = year - time_difference
+        years.append(year)
         students_this_year = Student.objects.filter(year=year, active=True)
         for student in students_this_year:
             if student not in students_in_module:
@@ -851,7 +856,7 @@ def remove_student_from_module(request, code, year, student_id):
 def delete_module(request, code, year):
     """Deletes a module and related performances, assessments and results"""
     module = Module.objects.get(code=code, year=year)
-    if is_admin(request.user) or request.user in module.teachers.all():
+    if is_admin(request.user) or request.user.staff in module.teachers.all():
         module.delete()
         return redirect(reverse('home'))
     else:
@@ -1131,7 +1136,7 @@ def parse_csv(request, data_id):
     table = []
     no_of_columns = 0
     for line in importdata:
-        row = line.split(',')
+        row = line.split(';')
         if len(row) > no_of_columns:
             no_of_columns = len(row)
         table.append(row)
@@ -1179,8 +1184,20 @@ def parse_csv(request, data_id):
                             break
                 if 'email' in result:
                     student.email = result['email']
-                if 'phone_no' in result:
-                    student.phone_number = result['phone_no']
+                if 'phone_number' in result:
+                    number = ''
+                    if result['phone_number'][0] not in ['0', '+']:
+                        number = '0' + result['phone_number']
+                    else:
+                        number = result['phone_number']
+                    student.phone_number = number
+                if 'cell_number' in result:
+                    number = ''
+                    if not result['cell_number'].startswith('0'):
+                        number = '0' + result['cell_number']
+                    else:
+                        number = result['cell_number']
+                    student.cell_number = number
                 if 'permanent_email' in result:
                     student.permanent_email = result['permanent_email']
                 if 'achieved_degree' in result:
@@ -1229,7 +1246,8 @@ def parse_csv(request, data_id):
         ('since', 'Studying since'),
         ('year', 'Year of Study'),
         ('email', 'University email'),
-        ('phone_no', 'Phone Number'),
+        ('phone_number', 'Phone Number'),
+        ('cell_number', 'Mobile Number'),
         ('permanent_email', 'Private email'),
         ('achieved_degree', 'Achieved degree'),
         ('address1', 'Term time address line 1'),

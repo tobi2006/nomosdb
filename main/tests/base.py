@@ -37,7 +37,8 @@ def create_student(save=True):
     student = Student(
         student_id='bb23',
         last_name='Bunny',
-        first_name='Bugs Middle Names'
+        first_name='Bugs Middle Names',
+        year=1
     )
     if save:
         student.save()

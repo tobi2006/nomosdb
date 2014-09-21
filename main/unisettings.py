@@ -30,13 +30,13 @@ TEACHING_WEEK_OPTIONS = {
         'Short/Fat, term 1',
         '5',
         '15',
-        '9'
+        ''
     ),
     2: (
         'Short/Fat, term 2',
         '19',
         '29',
-        '25'
+        ''
     ),
     3: (
         'Long/Thin, even weeks',

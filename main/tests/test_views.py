@@ -1199,10 +1199,10 @@ class CSVParsingTests(AdminUnitTest):
     
     def test_csv_data_gets_parsed_properly(self):
         parsed_csvlist = (
-            'bb42,Bunny,Bugs,1900,1,bb42@acme.edu,+112345678/////' +
-            'dd23,Duck,Daffy,1900,1,dd23@acme.edu,+123456789/////' +
-            'pp42,Pig,Porky,1899,2,pp42@acme.edu,+134567890/////' +
-            'test,wrong,entry,to,beignored'
+            'bb42;Bunny;Bugs;1900;1;bb42@acme.edu;+112345678/////' +
+            'dd23;Duck;Daffy;1900;1;dd23@acme.edu;+123456789/////' +
+            'pp42;Pig;Porky;1899;2;pp42@acme.edu;+134567890/////' +
+            'test;wrong;entry;to;beignored'
         )
         data = Data.objects.create(id='randomstring', value=parsed_csvlist)
         request = self.factory.post('/parse_csv/randomstring/', data={
@@ -1212,7 +1212,7 @@ class CSVParsingTests(AdminUnitTest):
             'column4': 'since',
             'column5': 'year',
             'column6': 'email',
-            'column7': 'phone_no',
+            'column7': 'phone_number',
             'exclude': '4'
         })
         request.user = self.user

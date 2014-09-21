@@ -54,10 +54,17 @@
         </div>
         <div id="collapseAddress" class="panel-collapse collapse">
             <div class="panel-body">
-                {% if student.phone_no %}
-                <p>
-                    <strong>Phone No:</strong> {{ student.phone_no }}
-                </p>
+                {% if student.phone_number or student.cell_number %}
+                    {% if student.phone_number %}
+                    <p>
+                        <strong>Phone No:</strong> {{ student.phone_number }}
+                    </p>
+                    {% endif %}
+                    {% if student.cell_number %}
+                    <p>
+                        <strong>Mobile No:</strong> {{ student.cell_number }}
+                    </p>
+                    {% endif %}
                 {% else %}
                 <p><em>No phone number in the database</em></p>
                 {% endif %}
@@ -83,7 +90,7 @@
                         </td>
                     </tr>
                 </table>
-                <p><em>No term time address in the database</em></p>
+                <br><p><em>No term time address in the database</em></p>
                 {% elif student.address %}
                 <table cellpadding="10">
                     <tr>
@@ -100,40 +107,201 @@
             </div>
         </div>
     </div>
+    {% if performances.8 %}
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapsePerformance">
-                    Performance
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseP8">
+                    Performance for PhD
                 </a>
             </h4>
         </div>
-        <div id="collapseAddress" class="panel-collapse collapse">
+        <div id="collapseP8" class="panel-collapse collapse">
             <div class="panel-body">
-                {% if performance.8 %}
-                    <h4>PhD</h4>
-                    {% for performance in performances.8 %}
-                        <h5>{{ performance.module }}</h5>
-                        <table class="table">
-                            {% for result in performance.all_assessment_results_as_tpls %}
-                            <tr>
-                                <td>
-                                    {{ result.0|safe }}
-                                </td>
-                                <td>
-                                    {{ result.1|safe }}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </table>
-                        <br>
-                    {% endfor %}
-                {% endif %}
-                                
-
+                {% for performance in performances.8 %}
+                    <h3>{{ performance.module }}</h3>
+                    <table class="table">
+                        <tr>
+                            <td>
+                                Attendance
+                            </td>
+                            <td>
+                                {{ performance.count_attendance }}
+                            </td>
+                        </tr>
+                        {% for result in performance.all_assessment_results_as_tpls %}
+                        <tr>
+                            <td>
+                                {{ result.0|safe }}
+                            </td>
+                            <td>
+                                {{ result.1|safe }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <br>
+                {% endfor %}
             </div>
         </div>
     </div>
+    {% endif %}
+    {% if performances.7 %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseP8">
+                    Performance in Masters
+                </a>
+            </h4>
+        </div>
+        <div id="collapseP7" class="panel-collapse collapse">
+            <div class="panel-body">
+                {% for performance in performances.7 %}
+                    <h3>{{ performance.module }}</h3>
+                    <table class="table">
+                        <tr>
+                            <td>
+                                Attendance
+                            </td>
+                            <td>
+                                {{ performance.count_attendance }}
+                            </td>
+                        </tr>
+                        {% for result in performance.all_assessment_results_as_tpls %}
+                        <tr>
+                            <td>
+                                {{ result.0|safe }}
+                            </td>
+                            <td>
+                                {{ result.1|safe }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <br>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if performances.3 %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseP3">
+                    Performance in Level 6
+                </a>
+            </h4>
+        </div>
+        <div id="collapseP3" class="panel-collapse collapse">
+            <div class="panel-body">
+                {% for performance in performances.3 %}
+                    <h3>{{ performance.module }}</h3>
+                    <table class="table">
+                        <tr>
+                            <td>
+                                Attendance
+                            </td>
+                            <td>
+                                {{ performance.count_attendance }}
+                            </td>
+                        </tr>
+                        {% for result in performance.all_assessment_results_as_tpls %}
+                        <tr>
+                            <td>
+                                {{ result.0|safe }}
+                            </td>
+                            <td>
+                                {{ result.1|safe }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <br>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if performances.2 %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseP2">
+                    Performance in Level 5
+                </a>
+            </h4>
+        </div>
+        <div id="collapseP2" class="panel-collapse collapse">
+            <div class="panel-body">
+                {% for performance in performances.2 %}
+                    <h3>{{ performance.module }}</h3>
+                    <table class="table">
+                        <tr>
+                            <td>
+                                Attendance
+                            </td>
+                            <td>
+                                {{ performance.count_attendance }}
+                            </td>
+                        </tr>
+                        {% for result in performance.all_assessment_results_as_tpls %}
+                        <tr>
+                            <td>
+                                {{ result.0|safe }}
+                            </td>
+                            <td>
+                                {{ result.1|safe }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <br>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if performances.1 %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseP1">
+                    Performance in Level 4
+                </a>
+            </h4>
+        </div>
+        <div id="collapseP1" class="panel-collapse collapse">
+            <div class="panel-body">
+                {% for performance in performances.1 %}
+                    <h3>{{ performance.module }}</h3>
+                    <table class="table">
+                        <tr>
+                            <td>
+                                Attendance
+                            </td>
+                            <td>
+                                {{ performance.count_attendance }}
+                            </td>
+                        </tr>
+                        {% for result in performance.all_assessment_results_as_tpls %}
+                        <tr>
+                            <td>
+                                {{ result.0|safe }}
+                            </td>
+                            <td>
+                                {{ result.1|safe }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <br>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 {% endblock %}
