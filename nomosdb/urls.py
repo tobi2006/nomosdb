@@ -33,6 +33,11 @@ urlpatterns += patterns(
         name='add_students_to_module'
     ),
     url(r'^admin_dashboard/$', 'admin', name='admin'),
+    url(
+        r'^all_attendances/([-\w]+)/(\w+)/$',
+        'all_attendances',
+        name='all_attendances'
+    ),
     url(r'^assessment/(\w+)/(\d{4})/$', 'assessment', name='assessment'),
     url(
         r'^assign_seminar_groups/(\w+)/(\d{4})/$',

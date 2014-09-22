@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from main.forms import *
 from main.functions import week_number
-from main.messages import new_staff_email
+from main.messages import new_staff_email, attendance_email
 from main.models import *
 from main.unisettings import *
 from random import shuffle, choice
@@ -443,7 +443,6 @@ def student_view(request, student_id):
             performances[performance.belongs_to_year].append(performance)
         else:
             performances[performance.belongs_to_year] = [performance]
-    
     return render(
         request,
         'student_view.html',
@@ -652,7 +651,7 @@ def assign_tutors(request, subject_area, year):
     """Allows admin or PD to assign tutees to tutors"""
     if is_admin(request.user) or request.user.staff.programme_director:
         subject_area = SubjectArea.objects.get(slug=subject_area)
-        all_students = Student.objects.filter(active=True, year=year)
+        all_students = Student.objects.filter(active=True, year=int(year))
         students = []
         for student in all_students:
             if subject_area in student.course.subject_areas.all():
@@ -690,6 +689,58 @@ def assign_tutors(request, subject_area, year):
             )
     else:
         return redirect(reverse('home'))
+
+
+@login_required
+@user_passes_test(is_staff)
+def all_attendances(request, subject_area, year):
+    subject_area = SubjectArea.objects.get(slug=subject_area)
+    all_students = Student.objects.filter(active=True, year=year)
+    current_year = int(Setting.objects.get(name="current_year").value)
+    rows = []
+    weeks = WEEKS_TO_LOOK_AT
+    admin_name = request.user.staff.name()
+    for student in all_students:
+        if subject_area in student.course.subject_areas.all():
+            performances = Performance.objects.filter(
+                student=student, module__year=current_year)
+            problems = []
+            attendances = []
+            row = {}
+            for performance in performances:
+                if performance.missed_the_last_two_sessions():
+                    attendancestr = performance.count_attendance()
+                    attendancestr = attendancestr.replace('/', ' of ')
+                    problems.append((performance.module.title, attendancestr))
+                attendance = [performance.module.link()]
+                attendance_dict = performance.attendance_as_dict()
+                for week in weeks:
+                    if str(week) in attendance_dict:
+                        attendance.append(attendance_dict[str(week)])
+                    else:
+                        attendance.append('')
+                attendances.append(attendance)
+            row['student'] = student
+            row['attendances'] = attendances
+            if problems:
+                row['message'] = attendance_email(student, problems, admin_name)
+            else:
+                row['message'] = ''
+            row['counter'] = (len(performances) + 1)
+            rows.append(row)
+    return render(
+        request,
+        'all_attendances.html',
+        {
+            'rows': rows,
+            'subject_area': subject_area,
+            'year': year,
+            'weeks': weeks
+        }
+    )
+            
+
+
 
 
 # Module views
@@ -802,7 +853,7 @@ def add_students_to_module(request, code, year):
             student = Student.objects.get(student_id=student_id)
             student.modules.add(module)
             student.save()
-            time_difference =  current_year - module.year
+            time_difference = current_year - module.year
             belongs_to = student.year - time_difference
             Performance.objects.create(
                 module=module, student=student, belongs_to_year=belongs_to)

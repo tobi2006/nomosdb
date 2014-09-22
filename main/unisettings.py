@@ -13,6 +13,11 @@ TEACHING_WEEKS = (
     [(i, 'Week ' + str(i)) for i in range(1, 53)]
 )
 
+WEEKS_TO_LOOK_AT = [
+    5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+    19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
+]
+
 TEACHING_WEEK_HELPTEXT = (
     'Enter the teaching weeks for the sessions with recorded attendance ' +
     'below. If you need more information, refer to the <a href="http://' +

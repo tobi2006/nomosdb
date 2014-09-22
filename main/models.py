@@ -206,6 +206,16 @@ class Module(models.Model):
     def get_absolute_url(self):
         return reverse('module_view', args=[self.code, self.year])
 
+    def link(self):
+        link = (
+            '<a href="' +
+            self.get_absolute_url() +
+            '">' +
+            self.title +
+            '</a>'
+        )
+        return link
+
     def get_edit_url(self):
         return reverse('edit_module', args=[self.code, self.year])
 
@@ -786,9 +796,10 @@ class Performance(models.Model):
 
     def missed_the_last_two_sessions(self):
         attendancelist = self.attendance_as_list()
-        if attendancelist[-1] == 'a':
-            if attendancelist[-2] == 'a':
-                return True
+        if len(attendancelist) >= 2:
+            if attendancelist[-1] == 'a':
+                if attendancelist[-2] == 'a':
+                    return True
         return False
 
 #

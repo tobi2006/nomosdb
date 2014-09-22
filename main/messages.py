@@ -74,3 +74,81 @@ Best wishes,
     )
     return message
 
+def attendance_email(student, modules, admin_name):
+    if len(modules) == 1:
+        if modules[0][1].startswith('0'):
+            lacking = 'did not attend any sessions in %s' % (modules[0][0])
+        else:
+            lacking = 'only attended %s sessions in %s' % (
+                modules[0][1], modules[0][0])
+    elif len(modules) == 2:
+        if modules[0][1].startswith('0'):
+            lacking = 'did not attend any sessions in %s' % (modules[0][0])
+            none_1 = True
+        else:
+            lacking = 'only attended %s sessions in %s' % (
+                modules[0][1], modules[0][0])
+            none_1 = False
+        if modules[1][1].startswith('0'):
+            if none_1:
+                lacking += ' and %s' % (modules[1][0])
+            else:
+                lacking += ' and no sessions in %s' % (modules[1][0])
+    else:
+        no_attendance = []
+        some_attendance = []
+        for module in modules:
+            if module[1].startswith('0'):
+                no_attendance.append(module)
+            else:
+                some_attendance.append(module)
+        if no_attendance:
+            if len(no_attendance) == 1:
+                lacking = 'did not attend any sessions in %s' % (
+                    no_attendance[0][0])
+            elif len(no_attendance) == 2:
+                lacking = 'did not attend any sessions in %s and %s' % (
+                    no_attendance[0][0], no_attendance[1][0])
+            else:
+                lacking = 'did not attend any sessions in '
+                for module in no_attendance[:-1]:
+                    lacking += '%s, ' % (module[0])
+                lacking += 'and %s' % (no_attendance[-1][0])
+        if some_attendance:
+            if lacking:
+                lacking += ', and you '
+            else:
+                lacking = ''
+            if len(some_attendance) == 1:
+                lacking += 'only attended %s sessions in %s' % (
+                    some_attendance[0][1], some_attendance[0][0])
+            elif len(some_attendance) == 2:
+                lacking += 'only attended %s sessions in %s and %s sessions in %s' % (
+                    some_attendance[0][1], some_attendance[0][0], some_attendance[1][1], some_attendance[1][0])
+            else:
+                for module in some_attendance[:-1]:
+                    lacking += 'only attended %s sessions in %s, ' % (module[1], module[0])
+                lacking += 'and %s sessions in %s' % (some_attendance[-1][1], some_attendance[-1][0])
+    if student.tutor:
+        tutor = ', ' + student.tutor.name()
+    else:
+        tutor = ''
+    lines = ['Dear %s,' % (student.short_first_name())]
+    line1 = (
+        'According to our registers, you %s, and I ' +
+        'would just like to find out if everything is ok and this is ' +
+        'just an oversight on your part. To alleviate our worries and ' +
+        'stop this escalating to a higher level, please can you contact ' +
+        'me to explain your reasons for not attending as if there is ' +
+        'anything we can do to help we will do our best.'
+    ) % (lacking)
+    lines.append(line1)
+    line2 = (
+        'If I do not hear from you within one week, I will escalate the ' +
+        'issue to your personal tutor%s.'
+    ) % (tutor)
+    lines.append(line2)
+    lines.append('I hope to hear from you at your earliest convenience.')
+    lines.append('Many thanks and best wishes,')
+    lines.append(admin_name)
+    return lines

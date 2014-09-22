@@ -25,9 +25,24 @@
     <a href="{% url "upload_csv" %}" class="btn btn-default">Import Students by CSV file</a>
 </div>
 
-<h3>Pastoral Care</h3>
+<h3>Attendance</h3>
 
-<h4>Assign Tutors</h4>
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+                <li><a href="{% url "all_attendances" subject_area.slug year.0 %}">{{ year.1 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
+<h3>Assign Tutors</h3>
 
 <div class="btn-group">
     {% for subject_area, years in subject_areas.items %}

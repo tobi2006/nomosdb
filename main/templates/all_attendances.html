@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Attendance for {{ subject_area }}, Year {{ year }}</h1>
+
+<div class="well">
+    <small>
+        <p><span class="glyphicon glyphicon-ok"></span> Present</p>
+        <p><span class="glyphicon glyphicon-ok-circle"></span> Absent, but excused</p>
+        <p><span class="glyphicon glyphicon-minus"></span> Absent</p>
+    </small>
+</div>
+<button class="btn btn-default" id="view-toggle">Show all students</button>
+<br><br>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Module</th>
+            {% for week in weeks %}
+                <th>{{ week }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+            <tr{% if row.message %} class="problem"{% else %} class="no-problem"{% endif %}>
+                <td rowspan="{{ row.counter }}">
+                    {% if row.message %}
+                    <a href="mailto:{{ student.email }}?subject=Attendance&body={% for line in row.message %}{{ line }}%0D%0A%0D%0A{% endfor %}"><span class="glyphicon glyphicon-envelope"></span></a>
+                    {% endif %}
+                    {{ row.student.short_name }}
+                </td>
+                {% for week in weeks %}<td></td>{% endfor %}
+            {% for attendance in row.attendances %}
+                <tr{% if row.message %} class="problem"{% else %} class="no-problem"{% endif %}>
+                    {% for item in attendance %}
+                    <td>
+                        {% if item == 'p' %}
+                            <span class="glyphicon glyphicon-ok"></span>
+                        {% elif item == 'e' %}
+                            <span class="glyphicon glyphicon-ok-circle"></span>
+                        {% elif item == 'a' %}
+                            <span class="glyphicon glyphicon-minus"></span>
+                        {% else %}
+                            {{ item|safe }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+    $('.no-problem').hide();
+
+    $('#view-toggle').click(function(){
+        $('.no-problem').toggle();
+        $(this).text(function(i, text){
+            return text === "Show all students" ? "Only Show Problem Students" : "Show all students";
+        });
+    });
+});
+
+</script>
+
+{% endblock %}
