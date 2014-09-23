@@ -349,7 +349,7 @@ def add_or_edit_staff(request, username=None, testing=False):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'email': user.email,
-                'subject_areas': user.staff.subject_areas.all(),
+                'subject_areas': SubjectArea.objects.all(),
                 'role': staff.role
             })
         else:
@@ -425,18 +425,37 @@ def add_or_edit_student(request, student_id=None):
 
 @login_required
 @user_passes_test(is_staff)
-def student_view(request, student_id):
+def student_view(request, student_id, meeting_id=None):
     """Shows all information about a student"""
     student = Student.objects.get(student_id=student_id)
+    form = None
+    meetings = None
+    edit = False
     if student in request.user.staff.tutees.all():
         tutor = True
         allowed_to_see_notes = True
-    elif request.user.staff.programme_director:
+        if meeting_id:
+            tutee_session = TuteeSession.objects.get(id=meeting_id)
+            edit = meeting_id
+        else:
+            tutee_session = TuteeSession(
+                tutee=student, tutor=request.user.staff)
+        if request.method=="POST":
+            form = TuteeSessionForm(instance=tutee_session, data=request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect(student.get_absolute_url())
+        else:
+            form = TuteeSessionForm(instance=tutee_session)
+    elif (request.user.staff.programme_director or
+            request.user.staff.main_admin):
         tutor = False
         allowed_to_see_notes = True
     else:
         tutor = False
         allowed_to_see_notes = False
+    if allowed_to_see_notes:
+        meetings = TuteeSession.objects.filter(tutee=student)
     performances = {}
     for performance in student.performances.all():
         if performance.belongs_to_year in performances:
@@ -448,9 +467,13 @@ def student_view(request, student_id):
         'student_view.html',
         {
             'student': student,
+            'edit': edit,
+            'form': form,
             'tutor': tutor,
+            'meetings': meetings,
             'allowed_to_see_notes': allowed_to_see_notes,
             'performances': performances,
+            'staff_pk': request.user.staff.pk
         }
     )
 
@@ -740,7 +763,83 @@ def all_attendances(request, subject_area, year):
     )
             
 
+@login_required
+@user_passes_test(is_staff)
+def delete_tutee_meeting(request, session_id):
+    """Simply deletes a meeting record and returns to the student"""
+    session_id = int(session_id)
+    tutee_session = TuteeSession.objects.get(id=session_id)
+    if (
+            request.user.staff == tutee_session.tutor or
+            request.user.staff.main_admin
+    ):
+        student = tutee_session.tutee
+        tutee_session.delete()
+    return redirect(student.get_absolute_url())
 
+
+@login_required
+@user_passes_test(is_staff)
+def my_tutees(request):
+    staff = request.user.staff
+    tutees = Student.objects.filter(tutor=staff)
+    email_addresses = ''
+    no_email_addresses = []
+    rows = []
+    for tutee in tutees:
+        row = {}
+        if tutee.email:
+            email_addresses += tutee.email + ";"
+        else:
+            name = tutee.first_name + " " + tutee.last_name
+            no_email_addresses.append(name)
+        row['student'] = tutee
+        if not tutee.active:
+            row['inactive'] = True
+        current_year = int(Setting.objects.get(name="current_year").value)
+        performances = Performance.objects.filter(
+            student=tutee, module__year=current_year)
+        problems = []
+        for performance in performances:
+            attendance = performance.count_attendance()
+            attendance_lst = attendance.split('/')
+            present = int(attendance_lst[0])
+            sessions = int(attendance_lst[1])
+            if present != 0:
+                factor = sessions / present
+                if factor > 1.5:
+                    problems.append(
+                        "Missed more than a third of the sessions in %s" % (
+                            performance.module.title)
+                    )
+            else:
+                if sessions == 1:
+                    problems.append('Missed the first session in %s' % (
+                        performance.module.title)
+                    )
+                elif sessions > 1:
+                    problems.append('Missed all sessions in %s' % (
+                        performance.module.title)
+                    )
+            result_tpls = performance.all_assessment_results_as_tpls(
+                only_result=True)
+            for tpl in result_tpls:
+                if tpl[1]:
+                    if tpl[1] < 40:
+                        problems.append('Failed %s for %s (%s)' % (
+                            tpl[0], module, tpl[1])
+                        )
+        row['problems'] = problems
+        rows.append(row)
+    return render(
+        request,
+        'my_tutees.html',
+        {
+            'rows': rows,
+            'email_addresses': email_addresses,
+            'no_email_addresses': no_email_addresses,
+        }
+    )
 
 
 # Module views

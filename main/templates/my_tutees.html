@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block style %}
+.mail {
+    padding: 10px;
+}
+
+{% endblock %}
+
+{% block content %}
+
+<h1>My Tutees</h1>
+
+<a class="btn btn-default" id="show_mail_field">Email all tutees</a>
+<div id="mail_field">
+    <table>
+        <tr>
+            <td class="mail">
+                <a class="btn btn-default" href="mailto:{{ user.email }}?bcc={{ email_addresses }}">Email all tutees with your email client</a>
+            </td>
+            <td class="mail">
+                Or copy and paste the email addresses:<br><br>
+                <textarea class="form-control" id="copy_and_paste_field">{{ email_addresses }}</textarea>
+            </td>
+            <td class="mail">
+                {% if no_email_addresses %}
+                    <br><br>
+                    Be aware that the email addresses for the following students are not currently in the database:
+                    <br>
+                    <ul>
+                        {% for name in no_email_addresses %}
+                        <li>{{ name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<br><br>
+<table class="table">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Student</th>
+            <th>ID</th>
+            <th>Year</th>
+            <th>Course</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{% if row.problems %}<span class="glyphicon glyphicon-warning-sign warning" data-toggle="tooltip" data-placement="right" data-html="true" title="{% for problem in row.problems %}{{ problem }}<br>{% endfor %}"></span>{% endif %}</td>
+            <td><a href="{{ row.student.get_absolute_url }}">{{ row.student.name }}</a></td>
+            <td>{{ row.student.student_id }}</td>
+            <td>{{ row.student.year }}</th>
+            <td>{{ row.student.course }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+
+$(document).ready(function(){
+
+    $("#mail_field").hide();
+
+    $("#show_mail_field").click(function(){
+        $("#mail_field").toggle();
+    });
+
+    $("#copy_and_paste_field").hover(function(){
+        $(this).select();
+    });
+
+    $('.warning').tooltip();
+
+});
+
+</script>
+{% endblock %}

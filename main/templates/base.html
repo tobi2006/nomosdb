@@ -52,8 +52,10 @@
                             <li><a href="{% url "year_view" category.0 %}">{{ category.1 }}</a></li>
                         {% endfor %}
                     {% endif %}
+                    {% if menu_tutees %}
                     <li class="divider"></li>
-                    <li><a href="{% url "add_student" %}" id="menu-add-students">Add Student(s)</a></li>
+                    <li><a href="{% url "my_tutees" %}" id="menu-my-tutees">My Tutees</a></li>
+                    {% endif %}
                 </ul>
             </li>
             <li class="dropdown">

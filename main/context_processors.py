@@ -91,6 +91,10 @@ def menubar(request):
             )
         if relevant_students.filter(active=False).exists():
             other_categories.append(('inactive', 'Inactive Students'))
+        if staff.tutees.all().exists():
+            tutees = True
+        else:
+            tutees = False
 
     else:
         student_list = []
@@ -99,5 +103,6 @@ def menubar(request):
     return {
         'module_dict': module_dict,
         'menu_student_categories': student_list,
-        'menu_other_categories': other_categories
+        'menu_other_categories': other_categories,
+        'menu_tutees': tutees
     }

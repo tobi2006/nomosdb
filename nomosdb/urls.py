@@ -57,6 +57,11 @@ urlpatterns += patterns(
         name='delete_assessment'
     ),
     url(
+        r'^delete_meeting/(\w+)/$',
+        'delete_tutee_meeting',
+        name='delete_tutee_meeting'
+    ),
+    url(
         r'^delete_module/(\w+)/(\d{4})/$',
         'delete_module',
         name='delete_module'
@@ -79,7 +84,13 @@ urlpatterns += patterns(
     ),
     url(r'^edit_staff/(\w+)/$', 'add_or_edit_staff', name='edit_staff'),
     url(r'^edit_student/(\w+)/$', 'add_or_edit_student', name='edit_student'),
+    url(
+        r'^edit_tutee_meeting/(\w+)/(\w+)/$',
+        'student_view',
+        name='edit_tutee_meeting'
+    ),
     url(r'^main_settings/$', 'main_settings', name='main_settings'),
+    url(r'^my_tutees/$', 'my_tutees', name='my_tutees'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),
     url(r'^parse_csv/(\w+)/$', 'parse_csv', name='parse_csv'),
     url(

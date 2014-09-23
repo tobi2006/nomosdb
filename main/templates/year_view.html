@@ -91,7 +91,7 @@ td {
                     {{ student.course }}
                 </td>
                 <td>
-                    &nbsp;
+                    <a href="mailto:{{ student.tutor.user.email }}?subject={{ student.short_first_name }} {{ student.last_name }}">{{ student.tutor.name }}</a>
                 </td>
             </tr>
         {% endfor %}

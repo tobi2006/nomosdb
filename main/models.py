@@ -322,6 +322,7 @@ class Assessment(models.Model):
         blank=True,
         null=True
     )
+    group_assessment = models.BooleanField(default=False)
     #    marksheet_type = models.CharField(
     #        max_length=50,
     #        verbose_name="Marksheet Type",
@@ -645,7 +646,7 @@ class Performance(models.Model):
             return_list.append(exam)
         return return_list
 
-    def all_assessment_results_as_tpls(self):
+    def all_assessment_results_as_tpls(self, only_result=False):
         return_list = []
         there_is_an_exam = False
         all_results = {}
@@ -655,7 +656,11 @@ class Performance(models.Model):
             if assessment.title != 'Exam':
                 if assessment in all_results:
                     result = all_results[assessment]
-                    return_tpl = (assessment.title, result.result_as_string())
+                    if only_result:
+                        return_tpl = (assessment.title, result.result())
+                    else:
+                        return_tpl = (
+                            assessment.title, result.result_as_string())
                     return_list.append(return_tpl)
                 else:
                     return_list.append((assessment.title, None))
@@ -663,12 +668,16 @@ class Performance(models.Model):
                 there_is_an_exam = True
                 if assessment in all_results:
                     result = all_results[assessment]
-                    exam = result.result_as_string()
+                    if only_result:
+                        exam = result.result()
+                    else:
+                        exam = result.result_as_string()
                 else:
                     exam = None
         if there_is_an_exam:
             return_list.append(('Exam', exam))
-        return_list.append(('<strong>Result</strong>', self.average))
+        if not only_result:
+            return_list.append(('<strong>Result</strong>', self.average))
         return return_list
 
     def calculate_average(self):
@@ -802,17 +811,32 @@ class Performance(models.Model):
                     return True
         return False
 
-#
-# class TuteeSession(models.Model):
-#    tutee = models.ForeignKey(Student)
-#    tutor = models.ForeignKey(User)
-#    date_of_meet = models.DateField()
-#    notes = models.TextField()
-#
-#    class Meta:
-#        ordering = ['date_of_meet', 'tutor']
-#
-#    def get_absolute_url(self):
-#        tutee_url = reverse('student_view', args=[self.tutee.student_id])
-#        tutee_url += "#" + str(self.id)
-#        return tutee_url
+
+class TuteeSession(models.Model):
+    tutee = models.ForeignKey(Student)
+    tutor = models.ForeignKey(Staff)
+    date_of_meet = models.DateField(verbose_name="Date")
+    notes = models.TextField()
+    meeting_took_place = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['date_of_meet', 'tutor']
+
+    def get_absolute_url(self):
+        tutee_url = reverse(
+            'edit_tutee_meeting',
+            args=[self.tutee.student_id, self.id]
+        )
+        tutee_url += "#" + str(self.id)
+        return tutee_url
+
+    def get_edit_url(self):
+        this_url = reverse(
+            'edit_tutee_meeting',
+            args=[self.tutee.student_id, self.id]
+        )
+        this_url += "#" + 'edit'
+        return this_url
+
+    def get_delete_url(self):
+        return reverse('delete_tutee_meeting', args=[self.id])

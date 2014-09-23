@@ -255,9 +255,25 @@ class StaffForm(forms.Form):
     helper.field_class = "col-lg-6 col-md-8 col-sm-10"
 
 
-class TutorSessionForm(forms.Form):
+class TuteeSessionForm(forms.ModelForm):
     """The form to enter tutee sessions"""
-    pass
+    helper = FormHelper()
+    helper.layout = Layout(
+        Field(
+            'date_of_meet',
+            css_class="datepicker",
+        ),
+        'meeting_took_place',
+        'notes',
+        FormActions(
+            Submit('save', 'Save Session', css_class="btn btn-primary")
+        )
+    )
+
+    class Meta:
+        model = TuteeSession
+        fields = ['date_of_meet', 'meeting_took_place', 'notes']
+
 
 
 class CSVUploadForm(forms.Form):

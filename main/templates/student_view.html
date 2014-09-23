@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 
 {% block content %}
 
@@ -302,6 +303,88 @@
         </div>
     </div>
     {% endif %}
+    {% if allowed_to_see_notes %}
+    <div class="panel panel-default" id="tutee_meetings">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseMeetingNotes">
+                    Tutorials
+                </a>
+            </h4>
+        </div>
+        <div id="collapseMeetingNotes" class="panel-collapse collapse">
+            <div class="panel-body">
+            {% if meetings %}
+                {% for meeting in meetings %}
+                <div id="meeting_{{ meeting.id }}">
+                    <h4 id="start_with_{{ meeting.id }}" style="padding-top: 60px; margin-top: -60px;">{{ meeting.date_of_meet }} {% if meeting.tutor.pk != staff_pk %} (with {{ meeting.tutor.name }}){% endif %}</h4>
+                    {{ meeting.notes }}
+                    {% if meeting.tutor.pk == staff_pk %}
+                    <div class="btn-group pull-right">
+                        <a href="{{ meeting.get_edit_url }}" class="btn btn-default">Edit</a>
+                        <a href="#" class="btn btn-default delete" id="{{ meeting.id }}">Delete</a>
+                    </div>
+                    {% endif %}
+                    <hr>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No meetings recorded yet.</p>
+            {% endif %}
+            {% if tutor %}
+                <h4>{% if edit %}Edit Meeting{% else %}Add New Meeting{% endif %}</h4>
+                    <div id="meeting_notes">
+                        {% crispy form %}
+                    </div>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
+{% endblock %}
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/bootstrap-datepicker.js"></script>
+<script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+
+$(document).ready(function() {
+    $(".datepicker").datepicker({
+        format: "dd/mm/yyyy",
+        weekstart: 1
+    });
+
+    if (window.location.hash)
+    {
+        var anchor = window.location.hash.replace("#", "");
+        $("#collapseProgramme").collapse('hide');
+        // Maybe add conditionals here, so it would be possible to open other things
+        if (anchor == "edit")
+        {
+            $("#collapseMeetingNotes").collapse('show');
+            location.hash = "#id_notes";
+            $('#meeting_{{ edit }}').hide();
+        }
+        //$("#" + anchor).collapse('show');
+    };
+
+    $(document).on("click", ".delete", function(e) {
+        bootbox.confirm("Are you sure you want to delete this meeting record?", function(confirm) {
+            if (confirm)
+            {
+            var meeting_id = e.target.id;
+            var tmp = "{% url "delete_tutee_meeting" "meeting_id" %}";
+            var remove = tmp.replace('meeting_id', meeting_id);
+            window.location.replace(remove);
+            }
+        });
+    });
+});
+
+</script>
 {% endblock %}
