@@ -85,7 +85,8 @@ class AssessmentForm(forms.ModelForm):
             css_class="datepicker",
         ),
         Field('max_word_count', placeholder='Leave blank if not applicable'),
-        # 'marksheet_type',
+        'marksheet_type',
+        'co_marking',
         FormActions(
             Submit('save', 'Save Assessment', css_class="btn btn-primary")
         )
@@ -96,7 +97,14 @@ class AssessmentForm(forms.ModelForm):
 
     class Meta:
         model = Assessment
-        fields = ['title', 'value', 'submission_date', 'max_word_count']
+        fields = [
+            'title',
+            'value',
+            'submission_date',
+            'max_word_count',
+            'marksheet_type',
+            'co_marking'
+        ]
 
 
 class StudentForm(forms.ModelForm):

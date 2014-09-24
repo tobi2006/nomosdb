@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.mail import send_mail
 from django.core.urlresolvers import resolve
 from django.core.urlresolvers import reverse
 from django.db import IntegrityError
@@ -327,8 +328,7 @@ def add_or_edit_staff(request, username=None, testing=False):
                 subject = 'NomosDB Login Data'
                 sender = Setting.objects.get(name='admin_email').value
                 if not testing:
-                    # send_mail(subject, message, sender, [email, ])
-                    print(password)
+                    send_mail(subject, message, sender, [email, ])
                 else:
                     print('\n')
                     print('Subject: %s' % (subject,))

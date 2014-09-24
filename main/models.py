@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.text import slugify
+from feedback.categories import AVAILABLE_MARKSHEETS
 from main.unisettings import TEACHING_WEEKS
 import datetime
 
@@ -33,7 +34,7 @@ class Data(models.Model):
     A management function set by a Cron job will delete data instances
     older than 14 days to save space.
     """
-    id = models.CharField(max_length=16, primary_key=True)
+    id = models.CharField(max_length=20, primary_key=True)
     value = models.TextField()
     timestamp = models.DateTimeField(auto_now=True)
 
@@ -90,7 +91,7 @@ class Staff(models.Model):
     user = models.OneToOneField(User)
     subject_areas = models.ManyToManyField(SubjectArea, blank=True, null=True)
     role = models.CharField(
-        choices=ROLES, max_length=6, default='teacher')
+        choices=ROLES, max_length=10, default='teacher')
     pastoral_care = models.BooleanField(default=False)
     programme_director = models.BooleanField(default=False)
     main_admin = models.BooleanField(default=False)  # Sees all subjects
@@ -326,13 +327,18 @@ class Assessment(models.Model):
         null=True
     )
     group_assessment = models.BooleanField(default=False)
-    #    marksheet_type = models.CharField(
-    #        max_length=50,
-    #        verbose_name="Marksheet Type",
-    #        blank=True,
-    #        null=True,
-    #        choices=AVAILABLE_MARKSHEETS
-    #        )
+    marksheet_type = models.CharField(
+        max_length=50,
+        verbose_name="Marksheet Type",
+        blank=True,
+        null=True,
+        choices=AVAILABLE_MARKSHEETS
+    )
+    co_marking = models.BooleanField(
+        default=False,
+        verbose_name=(
+            "Co-Marking (all teachers on this module appear on the marksheet)")
+    )
     available = models.BooleanField(
         verbose_name="Students can see the mark/feedback",
         default=False
@@ -524,6 +530,7 @@ class AssessmentResult(models.Model):
     )
     assessment_group = models.IntegerField(blank=True, null=True)
     qld_resit = models.IntegerField(blank=True, null=True)
+    marksheet_done = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['assessment']
