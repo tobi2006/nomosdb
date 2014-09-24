@@ -103,7 +103,7 @@
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">My Account<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                     <li><a href="">My details</a></li>
-                    <li><a href="">Change password</a></li>
+                    <li><a href="{% url "password_change" %}">Change password</a></li>
                 </ul>
             </li>
             <li><a href="{% url "logout" %}" id="menu-logout"><span class="glyphicon glyphicon-off"></span></a></li>

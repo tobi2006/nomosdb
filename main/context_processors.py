@@ -100,6 +100,7 @@ def menubar(request):
         student_list = []
         module_dict = {}
         other_categories = []
+        tutees = False
     return {
         'module_dict': module_dict,
         'menu_student_categories': student_list,
