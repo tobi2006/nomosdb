@@ -226,6 +226,9 @@ class Module(models.Model):
         group = str(group)
         return reverse('attendance', args=[self.code, self.year, group])
 
+    def get_export_attendance_sheet_url(self):
+        return reverse('export_attendance_sheet', args=[self.code, self.year])
+
     def get_delete_self_url(self):
         return reverse('delete_module', args=[self.code, self.year])
 

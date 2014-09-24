@@ -101,6 +101,11 @@ urlpatterns += patterns(
         'student_view',
         name='edit_tutee_meeting'
     ),
+    url(
+        r'^export_attendance_sheet/(\w+)/(\d{4})/$',
+        'export_attendance_sheet',
+        name='export_attendance_sheet'
+    ),
     url(r'^main_settings/$', 'main_settings', name='main_settings'),
     url(r'^my_tutees/$', 'my_tutees', name='my_tutees'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),

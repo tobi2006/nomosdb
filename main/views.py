@@ -12,6 +12,12 @@ from main.models import *
 from main.unisettings import *
 from random import shuffle, choice
 from string import ascii_letters, digits
+from reportlab.platypus import (
+    Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus.flowables import PageBreak
 
 
 # Authentication
@@ -1420,3 +1426,72 @@ def parse_csv(request, data_id):
             'options': options
         }
     )
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_attendance_sheet(request, code, year):
+    """Returns attendance sheets for a module."""
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = (
+        'attachment; filename=attendance_sheet.pdf')
+    document = SimpleDocTemplate(response)
+    elements = []
+    module = Module.objects.get(code=code, year=year)
+    styles = getSampleStyleSheet()
+    heading = module.__str__()
+    performances = Performance.objects.filter(module=module)
+    no_of_seminar_groups = 0
+    for performance in performances:
+        if performance.seminar_group > no_of_seminar_groups:
+            no_of_seminar_groups = performance.seminar_group
+    counter = 0
+    while counter < no_of_seminar_groups:
+        counter += 1
+        subheading = "Seminar Group " + str(counter)
+        elements.append(Paragraph(heading, styles['Heading1']))
+        elements.append(Paragraph(subheading, styles['Heading2']))
+        elements.append(Spacer(1, 20))
+        data = []
+        header = ['Name']
+        column = 0
+        last_week = module.last_session + 1
+        if module.no_teaching_in:
+            no_teaching = module.no_teaching_in.split(",")
+        else:
+            no_teaching = []
+        weeklist = []
+        for week in range(module.first_session, last_week):
+            strweek = str(week)
+            if strweek not in no_teaching:
+                header.append(strweek)
+                weeklist.append(strweek)
+        data.append(header)
+        performances = Performance.objects.filter(
+            module=module, seminar_group=counter)
+        for performance in performances:
+            attendance = performance.attendance_as_dict()
+            row = [performance.student]
+            for week in weeklist:
+                if week in attendance:
+                    if attendance[week] == 'p':
+                        row.append(u'\u2713')
+                    elif attendance[week] == 'e':
+                        row.append('e')
+                    elif attendance[week] == 'a':
+                        row.append('-')
+                else:
+                    row.append(' ')
+            data.append(row)
+        table = Table(data)
+        table.setStyle(
+            TableStyle([
+                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                ('BOX', (0, 0), (-1, -1), 0.25, colors.black)])
+            )
+        elements.append(table)
+        elements.append(PageBreak())
+    document.build(elements)
+    return response

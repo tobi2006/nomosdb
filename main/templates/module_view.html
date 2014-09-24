@@ -39,6 +39,8 @@
                     <li><a href="{{ item.1 }}">Attendance for Seminar Group {{ item.0 }}</a></li>
                 {% endif %}
             {% endfor %}
+            <li class="divider"></li>
+            <li><a href="{{ module.get_export_attendance_sheet_url }}">Export Attendance Sheet</a></li>
             <li><a href="{{ module.get_seminar_group_overview_url }}">Seminar Group Overview</a></li>
         </ul>
     </div>
