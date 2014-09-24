@@ -1,3 +1,9 @@
+General
+
++ Implement IS specialties
++ Add Jquery table sorter
++ marking stuff!
+
 Courses / Subject Areas
 
 + Write a decent course overview
@@ -11,10 +17,5 @@ Modules
 
 Students
 
-+ Add search (AJAX)
-+ Add JS to Year overview
-
-
 Staff
 
-+ Overview of all staff members, sorted by subject areas

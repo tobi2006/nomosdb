@@ -34,6 +34,8 @@ def is_admin(user):
     if hasattr(user, 'staff'):
         if user.staff.role == 'admin':
             return True
+        elif user.staff.programme_director:
+            return True
     return False
 
 
