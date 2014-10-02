@@ -662,6 +662,7 @@ def year_view(request, year):
             edit = True
         else:
             edit = False
+    number_of_students = len(students)
     return render(
         request,
         'year_view.html',
@@ -671,7 +672,8 @@ def year_view(request, year):
             'show_year': show_year,
             'academic_years': academic_years,
             'courses': courses,
-            'edit': edit
+            'edit': edit,
+            'number_of_students': number_of_students
         }
     )
 

@@ -13,37 +13,40 @@ td {
 
 {% block content %}
 
-<h1>Student Overview - {{ headline }}</h1>
+<div class="well">
+    <h1>Student Overview - {{ headline }}</h1>
+    <span class="glyphicon glyphicon-info-sign pull-right" id="info-sign" data-toggle="tooltip" data-placement="bottom" data-html="true" title="{{ number_of_students }} Students"></span>
 
-{% if students %}
+    {% if students %}
 
-{% if edit %}
+    {% if edit %}
 
-<div class="well" id="bulkfunctions">
-    <strong>Apply actions to selected students</strong>
-    <br><br>
-    <table>
-        <tr>
-            <td>
-                <select id="action_selector">
-                    <option value="blank" selected>Select Action</option>
-                    <option value="course">Course</option>
-                    <option value="qld">QLD status</option>
-                    {% comment %}
-                    <option value="nalp">Paralegal pathway</option>
-                    {% endcomment %}
-                    <option value="since">Begin of studies</option>
-                    <option value="year">Year of study</option>
-                    <option value="inactive">Active / Inactive</option>
-                    <option value="delete">Delete students</option>
-                </select>
-            </td>
-            <td id="second_option"></td>
-        </tr>
-    </table>
+    <div id="bulkfunctions">
+        <strong>Apply actions to selected students</strong>
+        <br><br>
+        <table>
+            <tr>
+                <td>
+                    <select id="action_selector">
+                        <option value="blank" selected>Select Action</option>
+                        <option value="course">Course</option>
+                        <option value="qld">QLD status</option>
+                        {% comment %}
+                        <option value="nalp">Paralegal pathway</option>
+                        {% endcomment %}
+                        <option value="since">Begin of studies</option>
+                        <option value="year">Year of study</option>
+                        <option value="inactive">Active / Inactive</option>
+                        <option value="delete">Delete students</option>
+                    </select>
+                </td>
+                <td id="second_option"></td>
+            </tr>
+        </table>
     </div>
 
-{% endif %}
+    {% endif %}
+</div>
 
 <table id ="sortable_table" class="table table-striped table-sortable">
     <thead>
@@ -110,11 +113,15 @@ td {
 </form>
 {% endblock %}
 
-{% if edit %}
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
+{% endblock %}
+
 {% block scripts %}
 
 <script type="text/javascript">
 
+{% if edit %}
     $(document).ready(function(){
 
         $('#select_all').click(function(event) {
@@ -190,8 +197,9 @@ td {
             $("#second_option").html(toenter);
         });
     });
+{% endif %}
+    $("#info-sign").tooltip();
 
 </script>
 
 {% endblock %}
-{% endif %}
