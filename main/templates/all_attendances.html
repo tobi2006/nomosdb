@@ -27,7 +27,7 @@
             <tr{% if row.message %} class="problem"{% else %} class="no-problem"{% endif %}>
                 <td rowspan="{{ row.counter }}">
                     {% if row.message %}
-                    <a href="mailto:{{ student.email }}?subject=Attendance&body={% for line in row.message %}{{ line }}%0D%0A%0D%0A{% endfor %}"><span class="glyphicon glyphicon-envelope"></span></a>
+                    <a href="mailto:{{ row.student.email }}?subject=Attendance&body={% for line in row.message %}{{ line }}%0D%0A%0D%0A{% endfor %}"><span class="glyphicon glyphicon-envelope"></span></a>
                     {% endif %}
                     {{ row.student.short_name }}
                 </td>

@@ -1185,7 +1185,7 @@ def assessment(request, code, year, slug=None):
         edit = False
     if request.method == 'POST':
         if edit:
-            form = AssessmentForm(instance=module, data=request.POST)
+            form = AssessmentForm(instance=assessment, data=request.POST)
         else:
             form = AssessmentForm(data=request.POST)
         if form.is_valid():

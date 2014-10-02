@@ -131,6 +131,7 @@ class StudentForm(forms.ModelForm):
                 'Contact Information',
                 'permanent_email',
                 'phone_number',
+                'cell_number',
                 'address',
                 'home_address'
                 ),
