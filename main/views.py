@@ -1125,6 +1125,55 @@ def assign_seminar_groups(request, code, year):
 
 @login_required
 @user_passes_test(is_staff)
+def assign_seminar_groups_old_browser(request, code, year):
+    """Older Form to assign seminar groups
+    
+    the drag and drop variant does not work on IE
+    """
+    module = Module.objects.get(code=code, year=year)
+    students = module.students.all()
+    performances = []
+    for student in students:
+        performance = Performance.objects.get(student=student, module=module)
+        performances.append(performance)
+    random_options = {}
+    for i in range(1, 10):
+        # Up to 10 Seminar groups. Create a dictionary that lists the options
+        # and the maximum number of students per group
+        all = len(students)
+        number = all / i
+        left = all % i
+        if left > 0:
+            number = number + 1
+        random_options[i] = round(number)
+
+    if request.method == 'POST':
+        for student in students:
+            if student.student_id in request.POST:
+                tmp = request.POST[student.student_id]
+                try:
+                    seminar_group = int(tmp)
+                    if seminar_group in range(0, 99):
+                        performance = Performance.objects.get(
+                            student=student, module=module)
+                        performance.seminar_group = seminar_group
+                        performance.save()
+                except ValueError:
+                        pass
+        return redirect(module.get_absolute_url())
+    return render(
+        request,
+        'old_seminar_groups.html',
+        {
+            'module': module,
+            'performances': performances,
+            'random_options': random_options
+        },
+    )
+
+
+@login_required
+@user_passes_test(is_staff)
 def attendance(request, code, year, group):
     """The registers for the seminar groups or the whole module"""
     module = Module.objects.get(code=code, year=year)

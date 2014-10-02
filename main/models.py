@@ -236,6 +236,10 @@ class Module(models.Model):
     def get_seminar_groups_url(self):
         return reverse('assign_seminar_groups', args=[self.code, self.year])
 
+    def get_old_seminar_groups_url(self):
+        return reverse(
+            'assign_seminar_groups_old_browser', args=[self.code, self.year])
+
     def get_seminar_group_overview_url(self):
         return reverse('seminar_group_overview', args=[self.code, self.year])
 

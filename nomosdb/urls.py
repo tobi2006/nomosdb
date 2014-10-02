@@ -57,6 +57,11 @@ urlpatterns += patterns(
         name='assign_seminar_groups'
     ),
     url(
+        r'^assign_seminar_groups_old_browser/(\w+)/(\d{4})/$',
+        'assign_seminar_groups_old_browser',
+        name='assign_seminar_groups_old_browser'
+    ),
+    url(
         r'^assign_tutors/([-\w]+)/(\w+)/$',
         'assign_tutors',
         name='assign_tutors'
