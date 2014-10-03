@@ -74,11 +74,19 @@
 </form>
 {% endblock %}
 
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
+{% endblock %}
+
 {% block scripts %}
 
 <script type="text/javascript">
 
 $(document).ready(function() {
+
+    $('#sortable_table').tablesorter();
+
     {% for course, students in courses.items %}
         $('#{{ course|remove_spacebars }}').click(function() {
             if ($(this).hasClass('active')){

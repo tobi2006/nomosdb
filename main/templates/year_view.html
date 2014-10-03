@@ -48,7 +48,7 @@ td {
     {% endif %}
 </div>
 
-<table id ="sortable_table" class="table table-striped table-sortable">
+<table id ="sortable_table" class="table table-striped">
     <thead>
         <tr>
             <th>
@@ -56,20 +56,20 @@ td {
             </th>
             {% if show_year %}
                 <th>
-                    Year
+                    <span class="glyphicon glyphicon-sort"></span> Year
                 </th>
             {% endif %}
             <th>
-                Student
+                <span class="glyphicon glyphicon-sort"></span> Student
             </th>
             <th>
-                ID
+                <span class="glyphicon glyphicon-sort"></span> ID
             </th>
             <th>
-                Course
+                <span class="glyphicon glyphicon-sort"></span> Course
             </th>
             <th>
-                Tutor
+                <span class="glyphicon glyphicon-sort"></span> Tutor
             </th>
         </tr>
     </thead>
@@ -115,14 +115,19 @@ td {
 
 {% block loadscripts %}
 <script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
 {% endblock %}
 
 {% block scripts %}
 
 <script type="text/javascript">
 
-{% if edit %}
+
     $(document).ready(function(){
+
+        $('#sortable_table').tablesorter();
+
+{% if edit %}
 
         $('#select_all').click(function(event) {
             if(this.checked) {
@@ -196,8 +201,8 @@ td {
             };
             $("#second_option").html(toenter);
         });
-    });
 {% endif %}
+    });
     $("#info-sign").tooltip();
 
 </script>

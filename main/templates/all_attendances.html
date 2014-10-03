@@ -55,11 +55,18 @@
 
 {% endblock %}
 
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
+{% endblock %}
+
 {% block scripts %}
 
 <script type="text/javascript">
 
 $(document).ready(function(){
+
+    $('#sortable_table').tablesorter();
+
     $('.no-problem').hide();
 
     $('#view-toggle').click(function(){
