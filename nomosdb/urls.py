@@ -120,6 +120,7 @@ urlpatterns += patterns(
         'remove_student_from_module',
         name='remove_student_from_module'
     ),
+    url(r'^reset_password/$', 'reset_password', name='reset_password'),
     url(
         r'^seminar_group_overview/(\w+)/(\d{4})/$',
         'seminar_group_overview',

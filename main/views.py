@@ -8,7 +8,9 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from main.forms import *
 from main.functions import week_number
-from main.messages import new_staff_email, attendance_email
+from main.messages import (
+    new_staff_email, attendance_email, password_reset_email
+)
 from main.models import *
 from main.unisettings import *
 from random import shuffle, choice
@@ -75,6 +77,7 @@ def reset_password(request):
             else:
                 name = user.student.short_first_name()
             message = password_reset_email(name, username, new_password)
+            return redirect('/')
         except user.DoesNotExist:
             return redirect(reverse(wrong_email))
 
@@ -1171,6 +1174,120 @@ def assign_seminar_groups_old_browser(request, code, year):
             'performances': performances,
             'random_options': random_options
         },
+    )
+
+
+@login_required
+@user_passes_test(is_staff)
+def assign_assessment_groups(request, code, year, slug):
+    """Allows to assign the students to assessment groups graphically"""
+    module = Module.objects.get(code=code, year=year)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    students = module.students.all()
+    if request.method == 'POST':
+        save_these = True
+        randomize = False
+        randomize_all = False
+        if 'action' in request.POST:
+            if request.POST['action'] == 'Go':
+                randomize = True
+                if 'ignore' in request.POST:
+                    save_these = False
+                    randomize_all = True
+        if save_these:
+            for student in students:
+                if student.student_id in request.POST:
+                    tmp = request.POST[student.student_id]
+                    group = int(tmp)
+                    performance = Performance.objects.get(
+                        student=student, module=module)
+                    try:
+                        assessment_result = AssessmentResult.objects.get(
+                            assessment=assessment, part_of=performance)
+                    except AssessmentResult.DoesNotExist:
+                        assessment_result = AssessmentResult.objects.create(
+                            assessment=assessment)
+                        performance.assessment_results.add(assessment_result)
+                    if group == 0:
+                        assessment_result.assessment_group = None
+                    else:
+                        assessment_result.assessment_group = group
+                    assessment_result.save()
+        if randomize:
+            number_of_groups = int(request.POST['number_of_groups'])
+            already_existing_groups = 0
+            assessment_results = AssessmentResult.objects.filter(
+                assessment=assessment)
+            for result in assessment_results:
+                if result.assessment_group:
+                    if result.assessment_group > already_existing_groups:
+                        already_existing_groups = result.assessment_group
+            if already_existing_groups > number_of_groups:
+                number_of_groups = already_existing_groups
+            number_of_students = len(students)
+            s_p_g = number_of_students / number_of_groups
+            max_students_per_group = int(s_p_g)
+            if s_p_g > max_students_per_group:
+                max_students_per_group += 1
+            group_members = {}
+            for i in range(1, number_of_groups+1):
+                group_members[i] = 0
+            results_to_randomize = []
+
+            # Go on behind this mark
+
+            for student in students:
+                performance = Performance.objects.get(
+                    student=student, module=module)
+                if randomize_all:
+                    performances_to_randomize.append(performance)
+                else:
+                    if performance.seminar_group is None:
+                        performances_to_randomize.append(performance)
+                    else:
+                        group_members[performance.seminar_group] += 1
+            shuffle(performances_to_randomize)
+            for performance in performances_to_randomize:
+                for number in group_members:
+                    if group_members[number] < max_students_per_group:
+                        performance.seminar_group = number
+                        performance.save()
+                        group_members[number] += 1
+                        break
+            return redirect(module.get_seminar_groups_url())
+        return redirect(module.get_absolute_url())
+    dictionary = {}
+    for student in students:
+        performance = Performance.objects.get(student=student, module=module)
+        if performance.seminar_group is None:
+            group = "0"
+        else:
+            group = str(performance.seminar_group)
+        if group in dictionary:
+            dictionary[group].append(performance)
+        else:
+            dictionary[group] = [performance]
+    no_of_students = len(students)
+    mg = no_of_students / 2
+    max_groups = int(mg)
+    if mg > max_groups:
+        max_groups += 1
+    groups = []
+    for i in range(1, max_groups+1):
+        ms = no_of_students / i
+        max_students = int(ms)
+        if ms > max_students:
+            max_students += 1
+        groups.append((i, max_students))
+    return render(
+        request,
+        'seminar_groups.html',
+        {
+            'module': module,
+            'dictionary': dictionary,
+            'max_groups': max_groups,
+            'groups': groups
+        }
     )
 
 
