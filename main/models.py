@@ -338,6 +338,13 @@ class Assessment(models.Model):
         null=True,
         choices=AVAILABLE_MARKSHEETS
     )
+    marksheet_type_resit = models.CharField(
+        max_length=50,
+        verbose_name="Marksheet Type for Resits",
+        blank=True,
+        null=True,
+        choices=AVAILABLE_MARKSHEETS
+    )
     co_marking = models.BooleanField(
         default=False,
         verbose_name=(
@@ -610,6 +617,27 @@ class AssessmentResult(models.Model):
                     if self.qld_resit > 40:
                         return True
         return False
+
+    def get_one_mark(self, attempt):
+        if attempt == 'first':
+            return self.mark
+        elif attempt == 'resit':
+            return self.resit_mark
+        elif attempt == 'second_resit':
+            return self.second_resit_mark
+        elif attempt == 'qld_resit':
+            return self.qld_resit
+
+    def set_one_mark(self, attempt, mark):
+        if attempt == 'first':
+            self.mark = mark
+        elif attempt == 'resit':
+            self.resit_mark = mark
+        elif attempt == 'second_resit':
+            self.second_resit_mark = mark
+        elif attempt == 'qld_resit':
+            self.qld_resit = mark
+        self.save()
 
 
 class Performance(models.Model):

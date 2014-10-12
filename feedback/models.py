@@ -9,7 +9,8 @@ class IndividualFeedback(models.Model):
     icon in the module view.
     """
     MARKS = (
-        (39, '0 - 39 %'),
+        (29, '0 - 39 %'),
+        (39, '30 - 39 %'),
         (49, '40 - 49 %'),
         (59, '50 - 59 %'),
         (69, '60 - 69 %'),
@@ -22,20 +23,15 @@ class IndividualFeedback(models.Model):
         ('second_resit', 'Second Resit'),
         ('qld_resit', 'QLD Resit')
     )
-    assessment_result = models.ForeignKey(AssessmentResult)
-    attempt = models.CharField(max_lenght=15, choices=ATTEMPTS)
+    assessment_result = models.ForeignKey(
+        AssessmentResult, related_name="feedback")
+    attempt = models.CharField(max_length=15, choices=ATTEMPTS)
     completed = models.BooleanField(blank=True, default=False)
     marker = models.ForeignKey(
         Staff,
         blank=True,
         null=True,
         related_name="feedback"
-    )
-    second_first_marker = models.ForeignKey(
-        Staff,
-        blank=True,
-        null=True,
-        related_name="feedback_as_second_first_marker"
     )
     second_marker = models.ForeignKey(
         Staff,
@@ -70,4 +66,3 @@ class IndividualFeedback(models.Model):
 
     class Meta:
         unique_together = ('assessment_result', 'attempt')
-
