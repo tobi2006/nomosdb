@@ -1,7 +1,6 @@
 General
 
 + Implement IS specialties
-+ Add Jquery table sorter
 + marking stuff!
 
 Courses / Subject Areas

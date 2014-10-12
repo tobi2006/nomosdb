@@ -66,7 +66,7 @@ Best wishes,
 %s
 """ % (
         name,
-        uniname,
+        uni_name,
         username,
         password,
         admin_email,

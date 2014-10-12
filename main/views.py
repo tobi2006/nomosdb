@@ -8,7 +8,9 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from main.forms import *
 from main.functions import week_number
-from main.messages import new_staff_email, attendance_email
+from main.messages import (
+    new_staff_email, attendance_email, password_reset_email
+)
 from main.models import *
 from main.unisettings import *
 from random import shuffle, choice
@@ -75,7 +77,15 @@ def reset_password(request):
             else:
                 name = user.student.short_first_name()
             message = password_reset_email(name, username, new_password)
-        except user.DoesNotExist:
+            sender = Setting.objects.get(name='admin_email').value
+            send_mail(
+                'Your new password on NomosDB',
+                message,
+                sender,
+                [email]
+            )
+            return redirect('/')
+        except User.DoesNotExist:
             return redirect(reverse(wrong_email))
 
 
