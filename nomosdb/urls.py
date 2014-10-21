@@ -143,3 +143,17 @@ urlpatterns += patterns(
     ),
     url(r'^wrong_email/$', 'wrong_email', name='wrong_email'),
 )
+
+urlpatterns += patterns(
+    'feedback.views',
+    url(
+        r'^individual_feedback/(\w+)/(\d{4})/([-\w]+)/(\w+)/$',
+        'individual_feedback',
+        name='individual_feedback_first_attempt'
+    ),
+    url(
+        r'^individual_feedback/(\w+)/(\d{4})/([-\w]+)/(\w+)/(\w+)/$',
+        'individual_feedback',
+        name='individual_feedback'
+    ),
+)

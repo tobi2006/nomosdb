@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.text import slugify
 from feedback.categories import AVAILABLE_MARKSHEETS
-from main.unisettings import TEACHING_WEEKS
+from main.unisettings import TEACHING_WEEKS, PASSMARK
 import datetime
 
 ACADEMIC_YEARS = (
@@ -377,6 +377,23 @@ class Assessment(models.Model):
             args=[self.module.code, self.module.year, self.slug]
         )
 
+    def get_blank_feedback_url(self):
+        if self.group_assessment:
+            return_url = '/na'
+        else:
+            url = reverse(
+                'individual_feedback',
+                args=[
+                    self.module.code,
+                    self.module.year,
+                    self.slug,
+                    'xxxxx',
+                    'xxxxx'
+                ]
+            )
+            return_url = url.replace('xxxxx/xxxxx/', '')
+        return return_url
+
 
 class Student(models.Model):
     """The class representing a student"""
@@ -513,13 +530,13 @@ class Student(models.Model):
 
 class AssessmentResult(models.Model):
     """How a particular student does in an assessment"""
-    NO_CONCESSIONS = 'N'
-    PENDING = 'P'
-    GRANTED = 'G'
+    no_concessions = 'n'
+    pending = 'p'
+    granted = 'g'
     CONCESSIONS = (
-        (NO_CONCESSIONS, 'No concession'),
-        (PENDING, 'Concession pending'),
-        (GRANTED, 'Concession granted')
+        (no_concessions, 'No Concession'),
+        (pending, 'Concession Pending'),
+        (granted, 'Concession Granted')
     )
     assessment = models.ForeignKey(Assessment)
     mark = models.IntegerField(blank=True, null=True)
@@ -529,7 +546,7 @@ class AssessmentResult(models.Model):
         max_length=1,
         blank=True,
         null=True,
-        default=NO_CONCESSIONS
+        default=no_concessions
     )
     second_resit_mark = models.IntegerField(blank=True, null=True)
     second_concessions = models.CharField(
@@ -537,7 +554,7 @@ class AssessmentResult(models.Model):
         max_length=1,
         blank=True,
         null=True,
-        default=NO_CONCESSIONS
+        default=no_concessions
     )
     assessment_group = models.IntegerField(blank=True, null=True)
     qld_resit = models.IntegerField(blank=True, null=True)
@@ -552,25 +569,25 @@ class AssessmentResult(models.Model):
         else:
             returnstring = str(self.mark)
             if self.resit_mark:
-                if self.concessions == self.GRANTED:
-                    if self.assessment.title == 'Exam':
+                if self.concessions == self.granted:
+                    if self.assessment.title == 'exam':
                         resit_type = 'Sit'
                     else:
                         resit_type = 'Submission'
                 else:
-                    if self.assessment.title == 'Exam':
+                    if self.assessment.title == 'exam':
                         resit_type = 'Resit'
                     else:
                         resit_type = 'Resubmission'
                 returnstring += " (%s: %s" % (resit_type, self.resit_mark)
                 if self.second_resit_mark:
-                    if self.second_concessions == self.GRANTED:
-                        if self.assessment.title == 'Exam':
+                    if self.second_concessions == self.granted:
+                        if self.assessment.title == 'exam':
                             resit_type = 'Sit'
                         else:
                             resit_type = 'Submission'
                     else:
-                        if self.assessment.title == 'Exam':
+                        if self.assessment.title == 'exam':
                             resit_type = 'Resit'
                         else:
                             resit_type = 'Resubmission'
@@ -578,19 +595,80 @@ class AssessmentResult(models.Model):
                         resit_type, self.second_resit_mark)
                 elif self.qld_resit:
                     returnstring += (
-                        ", QLD Resit: %s" % (self.qld_resit)
+                        ", qld resit: %s" % (self.qld_resit)
                     )
                 returnstring += ")"
         return returnstring
 
+    def eligible_for_resit(self):
+        eligible = False
+        if self.mark:
+            if self.mark < PASSMARK:
+                eligible = True
+        if self.concessions == self.granted:
+            eligible = True
+        return eligible
+
+    def eligible_for_qld_resit(self):
+        eligible = False
+        if self.assessment.module.foundational:
+            if self.mark and self.resit_mark:
+                if self.mark < PASSMARK and self.resit_mark < PASSMARK:
+                    eligible = True
+            if self.concessions == self.granted:
+                eligible = True
+        return eligible
+
+    def result_with_feedback(self):
+        """Return dict of tpls: 0 - mark, 1 - edit url, 2 - marksheet url"""
+        returnlist = {}
+        
+        if self.assessment.marksheet_type in AVAILABLE_MARKSHEETS:
+            edit = (
+                self.assessment.get_blank_feedback_url() +
+                self.part_of.student.student_id +
+                '/first/'
+            )
+        else:
+            edit = False
+        marksheet = False
+        try:
+            feedback = self.feedback.objects.get(attempt='first')
+            if feedback.compled:
+                marksheet = 'na'
+        except:
+            pass
+        first = (str(self.mark), edit, marksheet)
+        returnlist['first'] = first
+        if self.eligible_for_resit:
+            if self.assessment.marksheet_type_resit in AVAILABLE_MARKSHEETS:
+                edit = (
+                    self.assessment.get_blank_feedback_url() +
+                    self.part_of.student.student_id +
+                    '/resit/'
+                )
+            else:
+                edit = False
+            marksheet = False
+            try:
+                feedback = self.feedback.objects.get(attempt='resit')
+                if feedback.completed:
+                    marksheet = 'na'
+            except:
+                pass
+            resit = (str(self.resit_mark), edit, marksheet)
+
+
+
+
     def module_needs_to_be_capped(self):
         cap = False
         if self.resit_mark:
-            if self.concessions in [self.NO_CONCESSIONS, self.PENDING]:
-                cap = True
+            if self.concessions in [self.no_concessions, self.pending]:
+                cap = true
         if self.second_resit_mark:
-            if self.second_concessions in [self.NO_CONCESSIONS, self.PENDING]:
-                cap = True
+            if self.second_concessions in [self.no_concessions, self.pending]:
+                cap = true
         return cap
 
     def result(self):

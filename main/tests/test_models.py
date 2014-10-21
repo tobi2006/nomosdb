@@ -706,3 +706,38 @@ class AssessmentResultTest(TeacherUnitTest):
         self.assertEqual(assessment_result_2.no_qld_problems(), False)
         self.assertEqual(assessment_result_3.no_qld_problems(), False)
         self.assertEqual(assessment_result_4.no_qld_problems(), True)
+
+    def test_result_with_feedback_function(self):
+        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        module.teachers.add(self.user.staff)
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Essay",
+            value=100
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=50,
+        )
+        performance.assessment_results.add(assessment_result_1)
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+        )
+        performance.assessment_results.add(assessment_result_2)
+        assessment_result_3 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+            resit_mark=41
+        )
+        performance.assessment_results.add(assessment_result_3)
+        result_1 = assessment_result_1.result_with_feedback()
+        #self.assertEqual(len(result_1), 1)

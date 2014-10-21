@@ -1,5 +1,5 @@
 from django.db import models
-from main.models import *
+from main.models import AssessmentResult, Staff
 
 class IndividualFeedback(models.Model):
     """The model for a marksheet for an individual performance.

@@ -62,3 +62,5 @@ FIRST_WEEK_STARTS = {
     2013: datetime.date(2013, 9, 2),
     2014: datetime.date(2014, 9, 1)
 }
+
+PASSMARK = 40

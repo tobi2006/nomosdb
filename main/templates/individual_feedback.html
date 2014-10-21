@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1>{{ module }}</h1>
+<h2>{{ assessment }}</h2>
+<br>
+{% crispy form %}
+{% endblock %}

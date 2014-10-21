@@ -7,6 +7,9 @@ from feedback.forms import *
 # Create your views here.
 
 
+def na(request):
+    return render(request, 'na.html', {})
+
 def individual_feedback(
         request, code, year, assessment_slug, student_id, attempt='first'):
     """The form for all marksheets concerning just one student"""
@@ -34,4 +37,9 @@ def individual_feedback(
     form = IndividualFeedbackForm(
         initial = {'mark': mark},
         marksheet_type=marksheet_type
+    )
+    return render(
+        request,
+        'individual_feedback.html',
+        {'form': form, 'module': module, 'assessment': assessment}
     )

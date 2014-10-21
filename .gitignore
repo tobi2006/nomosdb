@@ -4,6 +4,6 @@ __pycache__/
 *.pyo
 server-data.json
 migrations/
-db.sqlite3
+*.sqlite3
 deploy.sh
 exclude.txt
