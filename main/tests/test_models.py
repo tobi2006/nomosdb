@@ -624,6 +624,90 @@ class PerformanceTest(TeacherUnitTest):
         self.assertEqual(
             result, '30 (Resubmission: 35, Second Resubmission: 38)')
 
+    def test_all_results_with_feedback_function(self):
+        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        module.teachers.add(self.user.staff)
+        assessment_1 = Assessment.objects.create(
+            module=module,
+            title="Essay",
+            value=20,
+            marksheet_type='ESSAY',
+            marksheet_type_resit='ESSAY'
+        )
+        assessment_2 = Assessment.objects.create(
+            module=module,
+            title="Presentation",
+            value=30,
+            marksheet_type='PRESENTATION',
+            marksheet_type_resit='ESSAY'
+        )
+        assessment_3 = Assessment.objects.create(
+            module=module,
+            title="Exam",
+            value=50,
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment_1,
+            mark=50,
+        )
+        performance.assessment_results.add(assessment_result_1)
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment_2,
+            mark=38,
+        )
+        performance.assessment_results.add(assessment_result_2)
+        assessment_result_3 = AssessmentResult.objects.create(
+            assessment=assessment_3,
+            mark=38,
+            resit_mark=41
+        )
+        performance.assessment_results.add(assessment_result_3)
+        all_results = performance.all_assessment_results_with_feedback()
+        expected_1 = {
+            'first': (
+                50,
+                '/individual_feedback/ML3/2014/essay/bb23/first/',
+                False
+            )
+        }
+        expected_2 = {
+            'first': (
+                38,
+                '/individual_feedback/ML3/2014/presentation/bb23/first/',
+                False
+            ),
+            'resit': (
+                None,
+                '/individual_feedback/ML3/2014/presentation/bb23/resit/',
+                False
+            )
+        }
+        expected_3 = {
+            'first': (
+                38,
+                False,
+                False
+            ),
+            'resit': (
+                41,
+                False,
+                False
+            )
+        }
+        self.assertEqual(
+            performance.all_assessment_results_with_feedback(),
+            [expected_1, expected_2, expected_3]
+        )
+
+
 
 class AssessmentResultTest(TeacherUnitTest):
     """Testing the Assessment Result class"""
@@ -713,7 +797,9 @@ class AssessmentResultTest(TeacherUnitTest):
         assessment = Assessment.objects.create(
             module=module,
             title="Essay",
-            value=100
+            value=100,
+            marksheet_type='ESSAY',
+            marksheet_type_resit='ESSAY'
         )
         student = Student.objects.create(
             first_name="Bugs",
@@ -740,4 +826,41 @@ class AssessmentResultTest(TeacherUnitTest):
         )
         performance.assessment_results.add(assessment_result_3)
         result_1 = assessment_result_1.result_with_feedback()
-        #self.assertEqual(len(result_1), 1)
+        expected_1 = {
+            'first': (
+                50,
+                '/individual_feedback/ML3/2014/essay/bb23/first/',
+                False
+            )
+        }
+        self.assertEqual(result_1, expected_1)
+        self.assertFalse(assessment_result_1.eligible_for_resit())
+        result_2 = assessment_result_2.result_with_feedback()
+        self.assertTrue(assessment_result_2.eligible_for_resit())
+        expected_2 = {
+            'first': (
+                38,
+                '/individual_feedback/ML3/2014/essay/bb23/first/',
+                False
+            ),
+            'resit': (
+                None,
+                '/individual_feedback/ML3/2014/essay/bb23/resit/',
+                False
+            )
+        }
+        self.assertEqual(result_2, expected_2)
+        result_3 = assessment_result_3.result_with_feedback()
+        expected_3 = {
+            'first': (
+                38,
+                '/individual_feedback/ML3/2014/essay/bb23/first/',
+                False
+            ),
+            'resit': (
+                41,
+                '/individual_feedback/ML3/2014/essay/bb23/resit/',
+                False
+            )
+        }
+        self.assertEqual(result_3, expected_3)

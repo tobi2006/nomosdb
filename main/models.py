@@ -530,13 +530,13 @@ class Student(models.Model):
 
 class AssessmentResult(models.Model):
     """How a particular student does in an assessment"""
-    no_concessions = 'n'
-    pending = 'p'
-    granted = 'g'
+    NO_CONCESSIONS = 'N'
+    PENDING = 'N'
+    GRANTED = 'G'
     CONCESSIONS = (
-        (no_concessions, 'No Concession'),
-        (pending, 'Concession Pending'),
-        (granted, 'Concession Granted')
+        (NO_CONCESSIONS, 'No Concession'),
+        (PENDING, 'Concession Pending'),
+        (GRANTED, 'Concession Granted')
     )
     assessment = models.ForeignKey(Assessment)
     mark = models.IntegerField(blank=True, null=True)
@@ -546,7 +546,7 @@ class AssessmentResult(models.Model):
         max_length=1,
         blank=True,
         null=True,
-        default=no_concessions
+        default=NO_CONCESSIONS
     )
     second_resit_mark = models.IntegerField(blank=True, null=True)
     second_concessions = models.CharField(
@@ -554,7 +554,7 @@ class AssessmentResult(models.Model):
         max_length=1,
         blank=True,
         null=True,
-        default=no_concessions
+        default=NO_CONCESSIONS
     )
     assessment_group = models.IntegerField(blank=True, null=True)
     qld_resit = models.IntegerField(blank=True, null=True)
@@ -569,7 +569,7 @@ class AssessmentResult(models.Model):
         else:
             returnstring = str(self.mark)
             if self.resit_mark:
-                if self.concessions == self.granted:
+                if self.concessions == self.GRANTED:
                     if self.assessment.title == 'exam':
                         resit_type = 'Sit'
                     else:
@@ -581,7 +581,7 @@ class AssessmentResult(models.Model):
                         resit_type = 'Resubmission'
                 returnstring += " (%s: %s" % (resit_type, self.resit_mark)
                 if self.second_resit_mark:
-                    if self.second_concessions == self.granted:
+                    if self.second_concessions == self.GRANTED:
                         if self.assessment.title == 'exam':
                             resit_type = 'Sit'
                         else:
@@ -605,7 +605,7 @@ class AssessmentResult(models.Model):
         if self.mark:
             if self.mark < PASSMARK:
                 eligible = True
-        if self.concessions == self.granted:
+        if self.concessions == self.GRANTED:
             eligible = True
         return eligible
 
@@ -615,18 +615,19 @@ class AssessmentResult(models.Model):
             if self.mark and self.resit_mark:
                 if self.mark < PASSMARK and self.resit_mark < PASSMARK:
                     eligible = True
-            if self.concessions == self.granted:
+            if self.concessions == self.GRANTED:
                 eligible = True
         return eligible
 
     def result_with_feedback(self):
         """Return dict of tpls: 0 - mark, 1 - edit url, 2 - marksheet url"""
-        returnlist = {}
-        
-        if self.assessment.marksheet_type in AVAILABLE_MARKSHEETS:
+        returndict = {}
+        student_id = self.part_of.first().student.student_id
+        ms = self.assessment.marksheet_type
+        if any(ms in x for x in AVAILABLE_MARKSHEETS):
             edit = (
                 self.assessment.get_blank_feedback_url() +
-                self.part_of.student.student_id +
+                student_id +
                 '/first/'
             )
         else:
@@ -638,13 +639,14 @@ class AssessmentResult(models.Model):
                 marksheet = 'na'
         except:
             pass
-        first = (str(self.mark), edit, marksheet)
-        returnlist['first'] = first
-        if self.eligible_for_resit:
-            if self.assessment.marksheet_type_resit in AVAILABLE_MARKSHEETS:
+        first = (self.mark, edit, marksheet)
+        returndict['first'] = first
+        if self.eligible_for_resit():
+            ms = self.assessment.marksheet_type_resit
+            if any(ms in x for x in AVAILABLE_MARKSHEETS):
                 edit = (
                     self.assessment.get_blank_feedback_url() +
-                    self.part_of.student.student_id +
+                    student_id +
                     '/resit/'
                 )
             else:
@@ -656,10 +658,9 @@ class AssessmentResult(models.Model):
                     marksheet = 'na'
             except:
                 pass
-            resit = (str(self.resit_mark), edit, marksheet)
-
-
-
+            resit = (self.resit_mark, edit, marksheet)
+            returndict['resit'] = resit
+        return returndict
 
     def module_needs_to_be_capped(self):
         cap = False
@@ -760,6 +761,30 @@ class Performance(models.Model):
                 if assessment in all_results:
                     result = all_results[assessment]
                     exam = result.result_as_string()
+                else:
+                    exam = None
+        if there_is_an_exam:
+            return_list.append(exam)
+        return return_list
+
+    def all_assessment_results_with_feedback(self):
+        return_list = []
+        there_is_an_exam = False
+        all_results = {}
+        for result in self.assessment_results.all():
+            all_results[result.assessment] = result
+        for assessment in self.module.all_assessments():
+            if assessment.title != 'Exam':
+                if assessment in all_results:
+                    result = all_results[assessment]
+                    return_list.append(result.result_with_feedback())
+                else:
+                    return_list.append(None)
+            else:
+                there_is_an_exam = True
+                if assessment in all_results:
+                    result = all_results[assessment]
+                    exam = result.result_with_feedback()
                 else:
                     exam = None
         if there_is_an_exam:

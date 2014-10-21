@@ -41,9 +41,8 @@ class ModuleViewTests(TeacherUnitTest):
             '<a href="' +
             assessment1.get_blank_feedback_url() +
             student.student_id +
-            '/"><span class="glyphicon glyphicon-pencil"></a>'
+            '/first/"><span class="glyphicon glyphicon-pencil"></span></a>'
         )
-        
         self.assertContains(
             response,
             linktext,

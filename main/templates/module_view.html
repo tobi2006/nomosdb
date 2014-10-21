@@ -111,9 +111,26 @@
                 <td>
                     {{ performance.count_attendance }}
                 </td>
-                {% for assessment_result in performance.all_assessment_results_as_strings %}
+                {% for assessment_result in performance.all_assessment_results_with_feedback %}
                     <td>
-                        {{ assessment_result|default_if_none:"" }}
+                        {% if assessment_result.first.1 %}
+                            <a href="{{ assessment_result.first.1 }}"><span class="glyphicon glyphicon-pencil"></span>
+                        {% endif %}
+                        {{ assessment_result.first.0|default_if_none:"" }}
+                        {% if assessment_result.first.2 %}
+                            <a href="{{ assessment_result.first.2 }}"><span class="glyphicon glyphicon-file"></span>
+                        {% endif %}
+                        {% if assessment_result.resit %}
+                            (Resit
+                            {% if assessment_result.resit.1 %}
+                                <a href="{{ assessment_result.resit.1 }}"><span class="glyphicon glyphicon-pencil"></span>
+                            {% endif %}
+                            {{ assessment_result.resit.0|default_if_none:"" }}
+                            {% if assessment_result.resit.2 %}
+                                <a href="{{ assessment_result.resit.2 }}"><span class="glyphicon glyphicon-file"></span>
+                            {% endif %}
+                            )
+                        {% endif %}
                     </td>
                 {% endfor %}
                 <td>
