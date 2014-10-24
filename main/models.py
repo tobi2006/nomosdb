@@ -631,12 +631,12 @@ class AssessmentResult(models.Model):
                 '/first/'
             )
         else:
-            edit = False
-        marksheet = False
+            edit = None
+        marksheet = None
         try:
             feedback = self.feedback.objects.get(attempt='first')
             if feedback.compled:
-                marksheet = 'na'
+                marksheet = 'na'  # Adjust this to url
         except:
             pass
         first = (self.mark, edit, marksheet)
@@ -650,8 +650,8 @@ class AssessmentResult(models.Model):
                     '/resit/'
                 )
             else:
-                edit = False
-            marksheet = False
+                edit = None
+            marksheet = None
             try:
                 feedback = self.feedback.objects.get(attempt='resit')
                 if feedback.completed:
@@ -774,19 +774,38 @@ class Performance(models.Model):
         for result in self.assessment_results.all():
             all_results[result.assessment] = result
         for assessment in self.module.all_assessments():
+            ms = assessment.marksheet_type
             if assessment.title != 'Exam':
                 if assessment in all_results:
                     result = all_results[assessment]
                     return_list.append(result.result_with_feedback())
                 else:
-                    return_list.append(None)
+                    if any(ms in x for x in AVAILABLE_MARKSHEETS):
+                        url = (
+                            assessment.get_blank_feedback_url() +
+                            self.student.student_id +
+                            '/first/'
+                        )
+                    else:
+                        url = None
+                    result = {'first': (None, url, None)}
+                    return_list.append(result)
             else:
                 there_is_an_exam = True
                 if assessment in all_results:
                     result = all_results[assessment]
                     exam = result.result_with_feedback()
                 else:
-                    exam = None
+                    if any(ms in x for x in AVAILABLE_MARKSHEETS):
+                        url = (
+                            assessment.get_blank_feedback_url() +
+                            self.student.student_id +
+                            '/first/'
+                        )
+                    else:
+                        url = None
+                    result = {'first': (None, url, None)}
+                    exam = result
         if there_is_an_exam:
             return_list.append(exam)
         return return_list

@@ -97,6 +97,7 @@ def attendance_email(student, modules, admin_name):
     else:
         no_attendance = []
         some_attendance = []
+        lacking = False
         for module in modules:
             if module[1].startswith('0'):
                 no_attendance.append(module)

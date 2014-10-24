@@ -20,11 +20,6 @@
         </div>
     </h1>
 
-{% comment %}
-{{ module.code }}, {{ student_set.count }} Students
-{% endcomment %}
-
-
 <br>
 
 <div class="btn-group" id="module_control_buttons">
@@ -111,23 +106,23 @@
                 <td>
                     {{ performance.count_attendance }}
                 </td>
-                {% for assessment_result in performance.all_assessment_results_with_feedback %}
+                {% for result in performance.all_assessment_results_with_feedback %}
                     <td>
-                        {% if assessment_result.first.1 %}
-                            <a href="{{ assessment_result.first.1 }}"><span class="glyphicon glyphicon-pencil"></span>
+                        {% if result.first.1 %}
+                            <a href="{{ result.first.1 }}"><span class="glyphicon glyphicon-pencil"></span>
                         {% endif %}
-                        {{ assessment_result.first.0|default_if_none:"" }}
-                        {% if assessment_result.first.2 %}
-                            <a href="{{ assessment_result.first.2 }}"><span class="glyphicon glyphicon-file"></span>
+                        {{ result.first.0|default_if_none:"" }}
+                        {% if result.first.2 %}
+                            <a href="{{ result.first.2 }}"><span class="glyphicon glyphicon-file"></span>
                         {% endif %}
-                        {% if assessment_result.resit %}
+                        {% if result.resit %}
                             (Resit
-                            {% if assessment_result.resit.1 %}
-                                <a href="{{ assessment_result.resit.1 }}"><span class="glyphicon glyphicon-pencil"></span>
+                            {% if result.resit.1 %}
+                                <a href="{{ result.resit.1 }}"><span class="glyphicon glyphicon-pencil"></span>
                             {% endif %}
-                            {{ assessment_result.resit.0|default_if_none:"" }}
-                            {% if assessment_result.resit.2 %}
-                                <a href="{{ assessment_result.resit.2 }}"><span class="glyphicon glyphicon-file"></span>
+                            {{ result.resit.0|default_if_none:"" }}
+                            {% if result.resit.2 %}
+                                <a href="{{ result.resit.2 }}"><span class="glyphicon glyphicon-file"></span>
                             {% endif %}
                             )
                         {% endif %}

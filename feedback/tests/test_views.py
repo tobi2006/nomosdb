@@ -15,13 +15,13 @@ class ModuleViewTests(TeacherUnitTest):
             module=module,
             title='Essay',
             value=20,
-            marksheet_type='essay'
+            marksheet_type='ESSAY'
         )
         assessment2 = Assessment.objects.create(
             module=module,
             title='Presentation',
             value=30,
-            marksheet_type='presentation'
+            marksheet_type='PRESENTATION'
         )
         assessment_3 = Assessment.objects.create(
             module=module,
@@ -43,8 +43,19 @@ class ModuleViewTests(TeacherUnitTest):
             student.student_id +
             '/first/"><span class="glyphicon glyphicon-pencil"></span></a>'
         )
+        should_not_be_in = (
+            '<a href="' +
+            assessment_4.get_blank_feedback_url() +
+            student.student_id +
+            '/first/"><span class="glyphicon glyphicon-pencil"></span></a>'
+        )
         self.assertContains(
             response,
             linktext,
+            html=True
+        )
+        self.assertNotContains(
+            response,
+            should_not_be_in,
             html=True
         )

@@ -708,7 +708,6 @@ class PerformanceTest(TeacherUnitTest):
         )
 
 
-
 class AssessmentResultTest(TeacherUnitTest):
     """Testing the Assessment Result class"""
 
