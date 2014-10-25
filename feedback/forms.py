@@ -9,14 +9,15 @@ from feedback.categories import CATEGORIES
 class IndividualFeedbackForm(forms.ModelForm):
 
     mark = forms.IntegerField()
-    helper = FormHelper()
 
     def __init__(self, *args, **kwargs):
-        self.marksheet_type = kwargs.pop('marksheet_type')
+        marksheet_type = kwargs.pop('marksheet_type')
         super(IndividualFeedbackForm, self).__init__(*args, **kwargs)
 
-        if marksheet_type == 'essay':
-            helper.layout = Layout(
+        self.helper = FormHelper()
+        if marksheet_type == 'ESSAY':
+            print('essay')
+            self.helper.layout = Layout(
                 'marker',
                 'marking_date',
                 'submission_date',
@@ -35,17 +36,31 @@ class IndividualFeedbackForm(forms.ModelForm):
 
     class Meta:
         model = IndividualFeedback
-        fields = [
-            'marker',
-            'marking_date',
-            'submission_date',
-            'category_mark_1',
-            'category_mark_2',
-            'category_mark_3',
-            'category_mark_4',
-            'category_mark_5',
-            'category_mark_6',
-            'category_mark_7',
-            'category_mark_8',
-            'comments'
-        ]
+        try:
+            if marksheet_type == 'ESSAY':
+                print('Jaha')
+                fields = [
+                    'marker',
+                    'marking_date',
+                    'submission_date',
+                    'comments',
+                    'category_mark_1',
+                    'category_mark_2',
+                    'category_mark_3',
+                    'category_mark_4',
+                ]
+        except NameError:
+            fields = [
+                'marker',
+                'marking_date',
+                'submission_date',
+                'comments',
+                'category_mark_1',
+                'category_mark_2',
+                'category_mark_3',
+                'category_mark_4',
+                'category_mark_5',
+                'category_mark_6',
+                'category_mark_7',
+                'category_mark_8',
+            ]

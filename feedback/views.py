@@ -15,10 +15,16 @@ def individual_feedback(
     """The form for all marksheets concerning just one student"""
     module = Module.objects.get(code=code, year=year)
     assessment = Assessment.objects.get(module=module, slug=assessment_slug)
-    student = Student.objects.get(sudent_id=student_id)
+    student = Student.objects.get(student_id=student_id)
     performance = Performance.objects.get(module=module, student=student)
-    assessment_result = AssessmentResult.objects.get(
-        assessment=assessment, part_of=performance)
+    try:
+        assessment_result = AssessmentResult.objects.get(
+            assessment=assessment, part_of=performance)
+    except AssessmentResult.DoesNotExist:
+        assessment_result = AssessmentResult.objects.create(
+            assessment=assessment)
+        performance.assessment_results.add(assessment_result)
+        performance.save()
     try:
         feedback = IndividualFeedback.objects.get(
             assessment_result=assessment_result, attempt=attempt)
@@ -29,7 +35,7 @@ def individual_feedback(
             marker=request.user.staff,
             marking_date= datetime.date.today(),
         )
-    mark = asssessment_result.get_one_mark(attempt)
+    mark = assessment_result.get_one_mark(attempt)
     if attempt == 'first':
         marksheet_type = assessment.marksheet_type
     else:
