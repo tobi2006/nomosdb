@@ -46,6 +46,29 @@
                 <th class="column column_{{ week }}">{{ week }}</th>
             {% endfor %}
         </tr>
+        <tr>
+            <th>Mark all</th>
+            {% for week in module.all_teaching_weeks %}
+                <th class="column column_{{ week }}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="small-table">A</th>
+                                <th class="small-table">E</th>
+                                <th class="small-table">P</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th><input type="radio" name="all_{{ week }}" id="{{ week }}_a" class="mark_all"></th>
+                                <th><input type="radio" name="all_{{ week }}" id="{{ week }}_e" class="mark_all"></th>
+                                <th><input type="radio" name="all_{{ week }}" id="{{ week }}_p" class="mark_all"></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </th>
+            {% endfor %}
+        </tr>
     </thead>
     <tbody>
         {% for performance in performances %}
@@ -66,13 +89,13 @@
                             <tbody>
                                 <tr>
                                     <th>
-                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="a"{% if performance|get_attendance:week == 'a' %} checked{% endif %}>
+                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" class="{{ week }}_a" value="a"{% if performance|get_attendance:week == 'a' %} checked{% endif %}>
                                     </th>
                                     <th>
-                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="e"{% if performance|get_attendance:week == 'e' %} checked{% endif %}>
+                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" class="{{ week }}_e"  value="e"{% if performance|get_attendance:week == 'e' %} checked{% endif %}>
                                     </th>
                                     <th>
-                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" value="p"{% if performance|get_attendance:week == 'p' %} checked{% endif %}>
+                                        <input type="radio" name="{{ performance.student.student_id }}_{{ week }}" class="{{ week }}_p"  value="p"{% if performance|get_attendance:week == 'p' %} checked{% endif %}>
                                     </th>
                                 </tr>
                             </tbody>
@@ -171,6 +194,11 @@ $(document).ready(function() {
             $self.bind('mouseup',up);
             $self.one('mouseout', unbind);
         }
+    });
+
+    $('.mark_all').click(function() {
+        var self_id = $(this).attr('id');
+        $('.' + self_id).prop('checked', true);
     });
 
 });

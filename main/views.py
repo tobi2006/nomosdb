@@ -78,7 +78,16 @@ def reset_password(request):
                 name = user.student.short_first_name()
             message = password_reset_email(name, username, new_password)
             return redirect('/')
-        except user.DoesNotExist:
+        except User.DoesNotExist:
+            sender = Setting.objects.get(name='admin_email').value
+            send_mail(
+                'Your new password on NomosDB',
+                message,
+                sender,
+                [email]
+            )
+            return redirect('/')
+        except User.DoesNotExist:
             return redirect(reverse(wrong_email))
 
 
