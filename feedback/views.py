@@ -40,9 +40,9 @@ def individual_feedback(
         marksheet_type = assessment.marksheet_type
     else:
         marksheet_type = assessment.resit_marksheet_type
+    IndividualFeedbackForm = get_individual_feedback_form(marksheet_type)
     form = IndividualFeedbackForm(
         initial = {'mark': mark},
-        marksheet_type=marksheet_type
     )
     return render(
         request,
