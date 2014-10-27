@@ -377,17 +377,17 @@ class Assessment(models.Model):
             args=[self.module.code, self.module.year, self.slug]
         )
 
-    def get_assessment_group_url(self, attempt='first'):
-        if attempt == 'first':
-            return reverse(
-                'assessment_groups',
-                args=[self.module.code, self.module.year, self.slug, 'first']
-            )
-        else:
-            return reverse(
-                'assessment_groups',
-                args=[self.module.code, self.module.year, self.slug, 'resit']
-            )
+    def get_assessment_groups_url(self, attempt='first'):
+        return reverse(
+            'assessment_groups',
+            args=[self.module.code, self.module.year, self.slug, attempt]
+        )
+
+    def get_assessment_group_overview_url(self, attempt='first'):
+        return reverse(
+            'assessment_group_overview',
+            args=[self.module.code, self.module.year, self.slug, attempt] 
+        )
 
 
 class Student(models.Model):

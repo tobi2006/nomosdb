@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block style %}
+
+.sl{
+    list-style-type: none;
+}
+
+{% endblock %}
+
+{% block content %}
+<h1>{{ module }} - Assessment Groups for {{ assessment }}</h1>
+
+{% if assessment_groups %}
+    {% for assessment_group, students in assessment_groups.items %}
+
+    <h2>Group {{ assessment_group }}</h2>
+
+    <ul id="group_{{ assessment_group }}">
+        {% for student in students %}
+        <li class="sl">{{ student }}</li>
+        {% endfor %}
+    </ul>
+
+    {% endfor %}
+{% else %}
+<p>You did not assign any seminar groups yet. You can do that on <a href="{{ module.get_assessment_groups_url }}">this page.</a>
+{% endif %}
+
+{% endblock %}

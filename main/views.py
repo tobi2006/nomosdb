@@ -77,8 +77,6 @@ def reset_password(request):
             else:
                 name = user.student.short_first_name()
             message = password_reset_email(name, username, new_password)
-            return redirect('/')
-        except User.DoesNotExist:
             sender = Setting.objects.get(name='admin_email').value
             send_mail(
                 'Your new password on NomosDB',
@@ -89,6 +87,8 @@ def reset_password(request):
             return redirect('/')
         except User.DoesNotExist:
             return redirect(reverse(wrong_email))
+    else:
+        return redirect('/')
 
 
 def wrong_email(request):
@@ -1469,6 +1469,46 @@ def seminar_group_overview(request, code, year):
         request,
         'seminar_group_overview.html',
         {'seminar_groups': seminar_groups, 'module': module}
+    )
+
+
+@login_required
+@user_passes_test(is_staff)
+def assessment_group_overview(request, code, year, slug, attempt):
+    """Gives a nice overview of assessment groups"""
+    module = Module.objects.get(code=code, year=year)
+    performances = Performance.objects.filter(module=module)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    assessment_groups = {}
+    for performance in performances:
+        try:
+            result = AssessmentResult.objects.get(
+                assessment=assessment, part_of=performance)
+        except AssessmentResult.DoesNotExist:
+            result = performance.assessment_results.create(
+                assessment=assessment)
+        if attempt == 'first':
+            group = result.assessment_group
+        else:
+            group = result.resit_assessment_group
+        if group in assessment_groups:
+            assessment_groups[group].append(
+                performance.student.short_name()
+            )
+        else:
+            assessment_groups[group] = [
+                performance.student.short_name()
+            ]
+    for group in assessment_groups:
+        assessment_groups[group].sort()
+    return render(
+        request,
+        'assessment_group_overview.html',
+        {
+            'assessment_groups': assessment_groups,
+            'module': module,
+            'assessment': assessment
+        }
     )
 
 

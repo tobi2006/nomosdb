@@ -75,6 +75,7 @@ Best wishes,
     return message
 
 def attendance_email(student, modules, admin_name):
+    lacking = False
     if len(modules) == 1:
         if modules[0][1].startswith('0'):
             lacking = 'did not attend any sessions in %s' % (modules[0][0])
