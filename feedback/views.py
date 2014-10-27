@@ -44,8 +44,15 @@ def individual_feedback(
     form = IndividualFeedbackForm(
         initial = {'mark': mark},
     )
+    category = CATEGORIES[marksheet_type]
+    number_of_categories = category['number_of_categories']
+
     return render(
         request,
         'individual_feedback.html',
-        {'form': form, 'module': module, 'assessment': assessment}
+        {
+            'form': form,
+            'module': module,
+            'assessment': assessment,
+        }
     )
