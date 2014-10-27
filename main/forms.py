@@ -87,6 +87,7 @@ class AssessmentForm(forms.ModelForm):
         Field('max_word_count', placeholder='Leave blank if not applicable'),
         'marksheet_type',
         'co_marking',
+        'group_assessment',
         FormActions(
             Submit('save', 'Save Assessment', css_class="btn btn-primary")
         )
@@ -103,7 +104,8 @@ class AssessmentForm(forms.ModelForm):
             'submission_date',
             'max_word_count',
             'marksheet_type',
-            'co_marking'
+            'co_marking',
+            'group_assessment'
         ]
 
 

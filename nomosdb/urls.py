@@ -52,6 +52,16 @@ urlpatterns += patterns(
     ),
     url(r'^assessment/(\w+)/(\d{4})/$', 'assessment', name='assessment'),
     url(
+        r'^assessment_groups/(\w+)/(\d{4})/([-\w]+)/(\w+)/$',
+        'assign_assessment_groups',
+        name='assessment_groups'
+    ),
+    url(
+        r'^assessment_group_overview/(\w+)/(\d{4})/([-\w]+)/(\w+)/$',
+        'assessment_group_overview',
+        name='assessment_group_overview'
+    ),
+    url(
         r'^assign_seminar_groups/(\w+)/(\d{4})/$',
         'assign_seminar_groups',
         name='assign_seminar_groups'

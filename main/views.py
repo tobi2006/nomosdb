@@ -87,6 +87,8 @@ def reset_password(request):
             return redirect('/')
         except User.DoesNotExist:
             return redirect(reverse(wrong_email))
+    else:
+        return redirect('/')
 
 
 def wrong_email(request):
@@ -1186,6 +1188,159 @@ def assign_seminar_groups_old_browser(request, code, year):
 
 @login_required
 @user_passes_test(is_staff)
+def assign_assessment_groups(request, code, year, slug, attempt):
+    """Allows to assign the students to seminar groups graphically"""
+    module = Module.objects.get(code=code, year=year)
+    students = module.students.all()
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    if request.method == 'POST':
+        save_these = True
+        randomize = False
+        randomize_all = False
+        if 'action' in request.POST:
+            if request.POST['action'] == 'Go':
+                randomize = True
+                if 'ignore' in request.POST:
+                    save_these = False
+                    randomize_all = True
+        if save_these:
+            for student in students:
+                if student.student_id in request.POST:
+                    tmp = request.POST[student.student_id]
+                    group = int(tmp)
+                    performance = Performance.objects.get(
+                        student=student, module=module)
+                    try:
+                        result = AssessmentResult.objects.get(
+                            part_of=performance, assessment=assessment)
+                    except AssessmentResult.DoesNotExist:
+                        result = performance.assessment_results.create(
+                            assessment=assessment)
+                    if attempt == 'first':
+                        if group == 0:
+                            result.set_assessment_group(None)
+                        else:
+                            result.set_assessment_group(group)
+                    else:
+                        if group == 0:
+                            result.set_assessment_group(None, 'resit')
+                        else:
+                            result.set_assessment_group(group, 'resit')
+        if randomize:
+            number_of_groups = int(request.POST['number_of_groups'])
+            already_existing_groups = 0
+            all_performances = Performance.objects.filter(module=module)
+            for performance in all_performances:
+                try:
+                    result = AssessmentResult.objects.get(
+                        part_of=performance, assessment=assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = performance.assessment_results.create(
+                        assessment=assessment)
+                if attempt == 'first':
+                    this_group = result.assessment_group
+                else:
+                    this_group = result.resit_assessment_group
+                if this_group:
+                    if this_group > already_existing_groups:
+                        already_existing_groups = this_group
+            if already_existing_groups > number_of_groups:
+                number_of_groups = already_existing_groups
+            number_of_students = len(students)
+            s_p_g = number_of_students / number_of_groups
+            max_students_per_group = int(s_p_g)
+            if s_p_g > max_students_per_group:
+                max_students_per_group += 1
+            group_members = {}
+            for i in range(1, number_of_groups+1):
+                group_members[i] = 0
+            performances_to_randomize = []
+            for student in students:
+                performance = Performance.objects.get(
+                    student=student, module=module)
+                if randomize_all:
+                    performances_to_randomize.append(performance)
+                else:
+                    try:
+                        result = AssessmentResult.objects.get(
+                            part_of=performance, assessment=assessment)
+                    except AssessmentResult.DoesNotExist:
+                        result = performance.assessment_results.create(
+                            assessment=assessment)
+                    if result.assessment_group is None:
+                        performances_to_randomize.append(performance)
+                    else:
+                        group_members[result.assessment_group] += 1
+            shuffle(performances_to_randomize)
+            for performance in performances_to_randomize:
+                try:
+                    result = AssessmentResult.objects.get(
+                        part_of=performance, assessment=assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = performance.assessment_results.create(
+                        assessment=assessment)
+                for number in group_members:
+                    if group_members[number] < max_students_per_group:
+                        if attempt == 'first':
+                            result.set_assessment_group(number)
+                        group_members[number] += 1
+                        break
+            if attempt == 'first':
+                return redirect(assessment.get_assessment_groups_url())
+            else:
+                return redirect(assessment.get_assessment_groups_url('resit'))
+        return redirect(module.get_absolute_url())
+
+    dictionary = {}
+    for student in students:
+        performance = Performance.objects.get(student=student, module=module)
+        try:
+            result = AssessmentResult.objects.get(
+                part_of=performance, assessment=assessment)
+        except AssessmentResult.DoesNotExist:
+            result = performance.assessment_results.create(
+                assessment=assessment)
+        if attempt == 'first':
+            if result.assessment_group is None:
+                group = "0"
+            else:
+                group = str(result.assessment_group)
+        else:
+            if result.resit_assessment_group is None:
+                group = "0"
+            else:
+                group = str(result.resit_assessment_group)
+        if group in dictionary:
+            dictionary[group].append(performance)
+        else:
+            dictionary[group] = [performance]
+    no_of_students = len(students)
+    mg = no_of_students / 2
+    max_groups = int(mg)
+    if mg > max_groups:
+        max_groups += 1
+    groups = []
+    for i in range(1, max_groups+1):
+        ms = no_of_students / i
+        max_students = int(ms)
+        if ms > max_students:
+            max_students += 1
+        groups.append((i, max_students))
+    return render(
+        request,
+        'assessment_groups.html',
+        {
+            'module': module,
+            'dictionary': dictionary,
+            'max_groups': max_groups,
+            'groups': groups,
+            'assessment': assessment.title
+        }
+    )
+
+
+@login_required
+@user_passes_test(is_staff)
 def attendance(request, code, year, group):
     """The registers for the seminar groups or the whole module"""
     module = Module.objects.get(code=code, year=year)
@@ -1314,6 +1469,46 @@ def seminar_group_overview(request, code, year):
         request,
         'seminar_group_overview.html',
         {'seminar_groups': seminar_groups, 'module': module}
+    )
+
+
+@login_required
+@user_passes_test(is_staff)
+def assessment_group_overview(request, code, year, slug, attempt):
+    """Gives a nice overview of assessment groups"""
+    module = Module.objects.get(code=code, year=year)
+    performances = Performance.objects.filter(module=module)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    assessment_groups = {}
+    for performance in performances:
+        try:
+            result = AssessmentResult.objects.get(
+                assessment=assessment, part_of=performance)
+        except AssessmentResult.DoesNotExist:
+            result = performance.assessment_results.create(
+                assessment=assessment)
+        if attempt == 'first':
+            group = result.assessment_group
+        else:
+            group = result.resit_assessment_group
+        if group in assessment_groups:
+            assessment_groups[group].append(
+                performance.student.short_name()
+            )
+        else:
+            assessment_groups[group] = [
+                performance.student.short_name()
+            ]
+    for group in assessment_groups:
+        assessment_groups[group].sort()
+    return render(
+        request,
+        'assessment_group_overview.html',
+        {
+            'assessment_groups': assessment_groups,
+            'module': module,
+            'assessment': assessment
+        }
     )
 
 
