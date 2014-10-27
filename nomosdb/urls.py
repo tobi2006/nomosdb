@@ -66,6 +66,11 @@ urlpatterns += patterns(
         'assign_tutors',
         name='assign_tutors'
     ),
+    url(
+        r'^assessment_groups/(\w+)/(\d{4})/([-\w]+)/(\w+)/$',
+        'assign_assessment_groups',
+        name='assessment_groups'
+    ),
     url(r'^attendance/(\w+)/(\d{4})/(\w+)/$', 'attendance', name='attendance'),
     url(r'^course_overview/$', 'course_overview', name='course_overview'),
     url(

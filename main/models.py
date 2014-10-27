@@ -284,6 +284,13 @@ class Module(models.Model):
             returnlist.append(exam)
         return returnlist
 
+    def all_group_assessments(self):
+        returnlist = []
+        for assessment in self.assessments.all():
+            if assessment.group_assessment:
+                returnlist.append(assessment)
+        return returnlist
+
     def all_teaching_weeks(self):
         no_teaching = []
         if self.no_teaching_in:
@@ -369,6 +376,18 @@ class Assessment(models.Model):
             'delete_assessment',
             args=[self.module.code, self.module.year, self.slug]
         )
+
+    def get_assessment_group_url(self, attempt='first'):
+        if attempt == 'first':
+            return reverse(
+                'assessment_groups',
+                args=[self.module.code, self.module.year, self.slug, 'first']
+            )
+        else:
+            return reverse(
+                'assessment_groups',
+                args=[self.module.code, self.module.year, self.slug, 'resit']
+            )
 
 
 class Student(models.Model):
@@ -533,11 +552,25 @@ class AssessmentResult(models.Model):
         default=NO_CONCESSIONS
     )
     assessment_group = models.IntegerField(blank=True, null=True)
+    resit_assessment_group = models.IntegerField(blank=True, null=True)
     qld_resit = models.IntegerField(blank=True, null=True)
     marksheet_done = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['assessment']
+
+    def set_assessment_group(self, group, attempt='first'):
+        if attempt == 'first':
+            self.assessment_group = group
+        elif attempt == 'resit':
+            self.resit_assessment_group = group
+        self.save()
+
+    def get_assessment_group(self, attempt='first'):
+        if attempt == 'first':
+            return self.assessment_group
+        elif attempt == 'resit':
+            return self.resit_assessment_group
 
     def result_as_string(self):
         if self.mark is None:
