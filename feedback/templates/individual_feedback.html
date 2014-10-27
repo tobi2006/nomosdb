@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ STATIC_URL }}js/chosen/chosen.css" type="text/css" media="screen">
+{% endblock %}
+
+{% block style %}
+.tooltip-inner {
+    max-width: 100%;
+    /* If max-width does not work, try using width instead */
+    width: 100%; 
+}
+
+.help-block {
+    visibility: hidden
+}
+
+{% endblock %}
+
+{% block content %}
+<h1>{{ module }}</h1>
+<h2>{{ assessment }} Feedback for {{ student.name }}</h2>
+<br>
+{% crispy form %}
+{% endblock %}
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/chosen/chosen.jquery.min.js"> </script>
+<script src="{{ STATIC_URL }}js/bootstrap-datepicker.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        $('.glyphicon-question-sign').tooltip();
+        $(".chosen-select").chosen();
+        $(".datepicker").datepicker({
+            format: "dd/mm/yyyy",
+            weekstart: 1
+        });
+    });
+
+</script>
+{% endblock %}

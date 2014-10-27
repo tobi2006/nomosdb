@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from datetime import datetime
 from main.models import *
 from feedback.models import *
@@ -29,28 +29,40 @@ def individual_feedback(
         feedback = IndividualFeedback.objects.get(
             assessment_result=assessment_result, attempt=attempt)
     except IndividualFeedback.DoesNotExist:
-        feedback = IndividualFeedback(
+        feedback = IndividualFeedback.objects.create(
             assessment_result=assessment_result,
             attempt=attempt,
-            marker=request.user.staff,
             marking_date= datetime.date.today(),
         )
+        if assessment.co_marking:
+            for staff in module.teachers.all():
+                feedback.markers.add(staff)
+        else:
+            feedback.markers.add(request.user.staff)
     mark = assessment_result.get_one_mark(attempt)
     if attempt == 'first':
         marksheet_type = assessment.marksheet_type
     else:
         marksheet_type = assessment.resit_marksheet_type
     IndividualFeedbackForm = get_individual_feedback_form(marksheet_type)
-    form = IndividualFeedbackForm(
-        initial = {'mark': mark},
-    )
-    category = CATEGORIES[marksheet_type]
-    number_of_categories = category['number_of_categories']
+    if request.method == 'POST':
+        form = IndividualFeedbackForm(instance=feedback, data=request.POST)
+        if form.is_valid():
+            form.save()
+            mark = form.cleaned_data['mark']
+            assessment_result.set_one_mark(attempt, int(mark))
+            return redirect(module.get_absolute_url())
+    else:
+        form = IndividualFeedbackForm(
+            instance=feedback,
+            initial={'mark': mark},
+        )
 
     return render(
         request,
         'individual_feedback.html',
         {
+            'student': student,
             'form': form,
             'module': module,
             'assessment': assessment,

@@ -114,20 +114,20 @@
                 {% for result in performance.all_assessment_results_with_feedback %}
                     <td>
                         {% if result.first.1 %}
-                            <a href="{{ result.first.1 }}"><span class="glyphicon glyphicon-pencil"></span>
+                            <a href="{{ result.first.1 }}"><span class="glyphicon glyphicon-pencil"></span></a>
                         {% endif %}
                         {{ result.first.0|default_if_none:"" }}
                         {% if result.first.2 %}
-                            <a href="{{ result.first.2 }}"><span class="glyphicon glyphicon-file"></span>
+                            <a href="{{ result.first.2 }}"><span class="glyphicon glyphicon-file"></span></a>
                         {% endif %}
                         {% if result.resit %}
                             (Resit
                             {% if result.resit.1 %}
-                                <a href="{{ result.resit.1 }}"><span class="glyphicon glyphicon-pencil"></span>
+                                <a href="{{ result.resit.1 }}"><span class="glyphicon glyphicon-pencil"></span></a>
                             {% endif %}
                             {{ result.resit.0|default_if_none:"" }}
                             {% if result.resit.2 %}
-                                <a href="{{ result.resit.2 }}"><span class="glyphicon glyphicon-file"></span>
+                                <a href="{{ result.resit.2 }}"><span class="glyphicon glyphicon-file"></span></a>
                             {% endif %}
                             )
                         {% endif %}

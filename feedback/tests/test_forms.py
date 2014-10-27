@@ -7,7 +7,7 @@ class IndividualFeedbackFormTests(TeacherUnitTest):
     def test_form_is_generated_correctly_for_essay(self):
         IndividualFeedbackForm = get_individual_feedback_form('ESSAY')
         form = IndividualFeedbackForm()
-        self.assertIn('id="id_marker"', form.as_p())
+        self.assertIn('id="id_markers"', form.as_p())
         self.assertIn('id="id_marking_date"', form.as_p())
         self.assertIn('id="id_submission_date"', form.as_p())
         self.assertIn('id="id_category_mark_1"', form.as_p())

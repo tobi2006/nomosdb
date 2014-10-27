@@ -27,7 +27,7 @@ class IndividualFeedback(models.Model):
         AssessmentResult, related_name="feedback")
     attempt = models.CharField(max_length=15, choices=ATTEMPTS)
     completed = models.BooleanField(blank=True, default=False)
-    marker = models.ForeignKey(
+    markers = models.ManyToManyField(
         Staff,
         blank=True,
         null=True,

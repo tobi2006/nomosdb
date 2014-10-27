@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MaxValueValidator, MinValueValidator
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Field, Fieldset, HTML, Div
 from crispy_forms.bootstrap import TabHolder, Tab, FormActions, PrependedText
@@ -24,12 +25,14 @@ def get_individual_feedback_form(marksheet_type):
     if marksheet_type == 'ESSAY':
 
         class IndividualFeedbackForm(forms.ModelForm):
-            mark = forms.IntegerField()
+            mark = forms.IntegerField(
+                validators=[MaxValueValidator(100), MinValueValidator(0)]
+            )
             helper = FormHelper()
             helper.layout = Layout(
-                'marker',
-                'marking_date',
-                'submission_date',
+                Field('markers', css_class='chosen-select'),
+                Field('marking_date', css_class='datepicker'),
+                Field('submission_date', css_class='datepicker'),
                 PrependedText(
                     'category_mark_1',
                     get_individual_helptext_html(marksheet_type, 1)
@@ -47,7 +50,11 @@ def get_individual_feedback_form(marksheet_type):
                     get_individual_helptext_html(marksheet_type, 4)
                 ),
                 'comments',
-                'mark'
+                'mark',
+                FormActions(
+                    Submit(
+                        'save', 'Save', css_class="btn btn-primary")
+                )
             )
             helper.form_class = "form-horizontal"
             helper.label_class = "col-lg-4 col-md-2 col-sm-2"
@@ -64,14 +71,10 @@ def get_individual_feedback_form(marksheet_type):
                 self.fields['category_mark_4'].label = (
                     CATEGORIES['ESSAY']['i-4'])
 
-            def save(self, commit=True):
-                # save mark
-                super(IndividualFeedbackForm, self).save(commit=commit)
-
             class Meta:
                 model = IndividualFeedback
                 fields = [
-                    'marker',
+                    'markers',
                     'marking_date',
                     'submission_date',
                     'comments',

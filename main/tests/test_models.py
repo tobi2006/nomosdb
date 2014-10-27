@@ -675,31 +675,31 @@ class PerformanceTest(TeacherUnitTest):
             'first': (
                 50,
                 '/individual_feedback/ML3/2014/essay/bb23/first/',
-                False
+                None
             )
         }
         expected_2 = {
             'first': (
                 38,
                 '/individual_feedback/ML3/2014/presentation/bb23/first/',
-                False
+                None
             ),
             'resit': (
                 None,
                 '/individual_feedback/ML3/2014/presentation/bb23/resit/',
-                False
+                None
             )
         }
         expected_3 = {
             'first': (
                 38,
-                False,
-                False
+                None,
+                None
             ),
             'resit': (
                 41,
-                False,
-                False
+                None,
+                None
             )
         }
         self.assertEqual(
@@ -829,7 +829,7 @@ class AssessmentResultTest(TeacherUnitTest):
             'first': (
                 50,
                 '/individual_feedback/ML3/2014/essay/bb23/first/',
-                False
+                None
             )
         }
         self.assertEqual(result_1, expected_1)
@@ -840,12 +840,12 @@ class AssessmentResultTest(TeacherUnitTest):
             'first': (
                 38,
                 '/individual_feedback/ML3/2014/essay/bb23/first/',
-                False
+                None
             ),
             'resit': (
                 None,
                 '/individual_feedback/ML3/2014/essay/bb23/resit/',
-                False
+                None
             )
         }
         self.assertEqual(result_2, expected_2)
@@ -854,12 +854,12 @@ class AssessmentResultTest(TeacherUnitTest):
             'first': (
                 38,
                 '/individual_feedback/ML3/2014/essay/bb23/first/',
-                False
+                None
             ),
             'resit': (
                 41,
                 '/individual_feedback/ML3/2014/essay/bb23/resit/',
-                False
+                None
             )
         }
         self.assertEqual(result_3, expected_3)
