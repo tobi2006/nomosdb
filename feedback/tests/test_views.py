@@ -179,6 +179,7 @@ class IndividualFeedbackTest(TeacherUnitTest):
         self.assertEqual(feedback.category_mark_3, 49)
         self.assertEqual(feedback.category_mark_4, 59)
         self.assertEqual(feedback.comments, 'Well done!')
+        self.assertEqual(feedback.completed, True)
         performance = Performance.objects.get(student=student, module=module)
         self.assertEqual(
             performance.get_assessment_result(assessment.slug, 'first'),
