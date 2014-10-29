@@ -41,34 +41,35 @@
             weekstart: 1
         });
 
-        var deadline = new Date("{{ assessment.submission_date }}");
-        $('#id_submission_date').change(function() {
-            var datestring = $(this).val();
-            var datearray = datestring.split('/');
-            var year = datearray[2];
-            var month = parseInt(datearray[1]) - 1;
-            var day = datearray[0]
-            var submission_date = new Date(year, month, day);
-            if (submission_date > deadline) {
-                var difference = submission_date - deadline;
-                var seconds = difference / 1000;
-                var minutes = seconds / 60;
-                var hours =  minutes / 60;
-                var days = hours / 24;
-                if (days > 4) {
-                    var penalty_suggestion = 'The submission was 5 or more days after the deadline. If this student has no extenuating circumstances, this should result in a mark of 0';
+        {% if assessment.submission_date %}
+            var deadline = new Date("{{ assessment.submission_date }}");
+            $('#id_submission_date').change(function() {
+                var datestring = $(this).val();
+                var datearray = datestring.split('/');
+                var year = datearray[2];
+                var month = parseInt(datearray[1]) - 1;
+                var day = datearray[0]
+                var submission_date = new Date(year, month, day);
+                if (submission_date > deadline) {
+                    var difference = submission_date - deadline;
+                    var seconds = difference / 1000;
+                    var minutes = seconds / 60;
+                    var hours =  minutes / 60;
+                    var days = hours / 24;
+                    if (days > 4) {
+                        var penalty_suggestion = 'The submission was 5 or more days after the deadline. If this student has no extenuating circumstances, this should result in a mark of 0';
+                    }
+                    else {
+                        var penalty = days * 5;
+                        var penalty_suggestion = 'The submission was ' + days + ' days after the deadline. If this student has no extenuating circumstances, the mark should be reduced by ' + penalty + ' points.';
+                    };
                 }
                 else {
-                    var penalty = days * 5;
-                    var penalty_suggestion = 'The submission was ' + days + ' days after the deadline. If this student has no extenuating circumstances, the mark should be reduced by ' + penalty + ' points.';
+                    penalty_suggestion = '';
                 };
-            }
-            else {
-                penalty_suggestion = '';
-            };
-            $('#penalty_suggestion').text(penalty_suggestion);
-            //$('#penalty_suggestion').text('Hallo');
-        });
+                $('#penalty_suggestion').text(penalty_suggestion);
+            });
+        {% endif %}
             
 
 

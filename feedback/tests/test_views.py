@@ -185,3 +185,54 @@ class IndividualFeedbackTest(TeacherUnitTest):
             performance.get_assessment_result(assessment.slug, 'first'),
             76
         )
+
+    def test_submitting_form_saves_feedback_and_mark_for_presentation(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student = stuff[1]
+        assessment = Assessment.objects.create(
+            module=module,
+            title='Presentation',
+            value=100,
+            marksheet_type='PRESENTATION'
+        )
+        url = (
+            assessment.get_blank_feedback_url() +
+            student.student_id +
+            '/first/'
+        )
+        request = self.factory.post(
+            url,
+            data={
+                'marking_date': '1/2/1900',
+                'submission_date': '1/1/1900',
+                'category_mark_1': 29,
+                'category_mark_2': 39,
+                'category_mark_3': 49,
+                'comments': 'Well done!',
+                'mark': 76,
+            }
+        )
+        request.user = self.user
+        response = individual_feedback(
+            request,
+            module.code,
+            module.year,
+            assessment.slug,
+            student.student_id,
+            'first'
+        )
+        self.assertEqual(IndividualFeedback.objects.count(), 1)
+        feedback = IndividualFeedback.objects.first()
+        self.assertEqual(feedback.marking_date, datetime.date(1900, 2, 1))
+        self.assertEqual(feedback.submission_date, datetime.date(1900, 1, 1))
+        self.assertEqual(feedback.category_mark_1, 29)
+        self.assertEqual(feedback.category_mark_2, 39)
+        self.assertEqual(feedback.category_mark_3, 49)
+        self.assertEqual(feedback.comments, 'Well done!')
+        self.assertEqual(feedback.completed, True)
+        performance = Performance.objects.get(student=student, module=module)
+        self.assertEqual(
+            performance.get_assessment_result(assessment.slug, 'first'),
+            76
+        )
