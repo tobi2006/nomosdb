@@ -21,3 +21,11 @@ class IndividualFeedbackFormTests(TeacherUnitTest):
         self.assertIn('id="id_comments"', form.as_p())
         self.assertIn('id="id_mark"', form.as_p())
 
+    def test_form_validates_mark(self):
+        IndividualFeedbackForm = get_individual_feedback_form('ESSAY')
+        form1 = IndividualFeedbackForm(data={'mark': 'Not a number'})
+        self.assertFalse(form1.is_valid())
+        form2 = IndividualFeedbackForm(data={'mark': 268})
+        self.assertFalse(form2.is_valid())
+        form3 = IndividualFeedbackForm(data={'mark': 60})
+        self.assertTrue(form3.is_valid())

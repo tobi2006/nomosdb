@@ -50,6 +50,11 @@ def get_individual_feedback_form(marksheet_type):
                     get_individual_helptext_html(marksheet_type, 4)
                 ),
                 'comments',
+                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
+                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
+                        '<p id="penalty_suggestion" class="text-warning">' +
+                        '</p></div>'
+                ),
                 'mark',
                 FormActions(
                     Submit(
