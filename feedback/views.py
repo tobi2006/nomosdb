@@ -1,16 +1,17 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseForbidden
 from datetime import datetime
+from django.http import HttpResponse, HttpResponseForbidden
+from django.shortcuts import render, redirect
+from feedback.forms import *
+from feedback.models import *
 from main.models import *
 from main.views import is_staff
-from feedback.models import *
-from feedback.forms import *
+from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 from reportlab.platypus import (
     Paragraph, Spacer, Image, Table, TableStyle, SimpleDocTemplate
 )
-from reportlab.lib.units import inch
-from reportlab.lib import colors
+from reportlab.platypus.flowables import PageBreak
 
 # Forms for entering feedback
 
@@ -177,7 +178,7 @@ def individual_marksheet(assessment, student, attempt):
         mark = str(assessment_result.qld_resit)
     elements.append(logo())
     elements.append(Spacer(1, 5))
-    title = heading('Law Undergraduate Assessment Sheet: Essay')
+    title = heading('Law Undergraduate Assessment Sheet')
     elements.append(title)
     elements.append(Spacer(1, 5))
     last_name = [
@@ -209,20 +210,23 @@ def individual_marksheet(assessment, student, attempt):
     assessment_title = [
         paragraph('Assessment Title'),
         Spacer(1, 3),
-        paragraph(assessment.title)
+        bold_paragraph(assessment.title)
     ]
     if assessment.max_word_count:
         tmp = (
-            str(assessment.max_word_count(assessment)) +
+            str(assessment.max_word_count) +
             ' Words max.'
         )
     else:
-        tmp = ''
-    word_count = [
-        paragraph('Word Count'),
-        Spacer(1, 3),
-        bold_paragraph(tmp)
-    ]
+        tmp = None
+    if tmp:
+        word_count = [
+            paragraph('Word Count'),
+            Spacer(1, 3),
+            bold_paragraph(tmp)
+        ]
+    else:
+        word_count = ''
     criteria = paragraph('Criteria')
     categorylist = [criteria]
     if attempt == 'first':
@@ -233,12 +237,20 @@ def individual_marksheet(assessment, student, attempt):
     for x in range(1, number+1):
         tmp = 'i-' + str(x)
         categorylist.append(paragraph(marksheet_type[tmp]))
-    data = [
-        [last_name, '', first_name, ''],
-        [module_title, '', module_code, submission_date, ''],
-        [assessment_title, '', word_count, '', ''],
-        categorylist
-    ]
+    if number < 4:
+        data = [
+            [last_name, '', first_name],
+            [module_title, '', module_code, submission_date],
+            [assessment_title, '', word_count, ''],
+            categorylist
+        ]
+    elif number == 4:
+        data = [
+            [last_name, '', first_name, ''],
+            [module_title, '', module_code, submission_date, ''],
+            [assessment_title, '', word_count, '', ''],
+            categorylist
+        ]
     row = ['80 +']
     for category in range(1, number+1):
         if feedback.category_mark(category) == 80:
@@ -289,6 +301,12 @@ def individual_marksheet(assessment, student, attempt):
             row.append(' ')
     data.append(row)
     t = Table(data)
+    if word_count:
+        wordcount_row_1 = ('SPAN', (0, 2), (1, 2))
+        wordcount_row_2 = ('SPAN', (2, 2), (-1, 2))
+    else:
+        wordcount_row_1 = ('SPAN', (0, 2), (-1, 2))
+        wordcount_row_2 = ('SPAN', (0, 2), (-1, 2))
     t.setStyle(
         TableStyle(
             [
@@ -297,10 +315,10 @@ def individual_marksheet(assessment, student, attempt):
                 ('SPAN', (2, 0), (-1, 0)),
                 ('SPAN', (0, 1), (1, 1)),
                 ('SPAN', (3, 1), (-1, 1)),
-                ('SPAN', (0, 2), (1, 2)),
-                ('SPAN', (2, 2), (-1, 2)),
+                wordcount_row_1,
+                wordcount_row_2,
                 ('BACKGROUND', (0, 3), (-1, 3), colors.lightgrey),
-                ('BACKGROUND', (0, 4), (0, 9), colors.lightgrey),
+                ('BACKGROUND', (0, 4), (0, -1), colors.lightgrey),
                 ('ALIGN', (1, 4), (-1, -1), 'CENTER'),
                 ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
             ]
@@ -367,14 +385,14 @@ def export_individual_feedback(
     else:
         assessment_type = assessment.marksheet_type_resit
     if student_id == 'all':
-        if is_teacher(request.user) or is_admin(request.user):
+        if is_staff(request.user):
             response = HttpResponse(content_type='application/pdf')
             filename_string = (
                 'attachment; filename=' +
                 assessment.filename() +
                 '_-_all_marksheets.pdf'
             )
-            all_students = module.student_set.all()
+            all_students = module.students.all()
             documentlist = []
             students = [] # Only the students where feedback has been entered
             for student in all_students:
@@ -383,9 +401,13 @@ def export_individual_feedback(
                 try:
                     result = AssessmentResult.objects.get(
                         part_of=performance, assessment=assessment)
-                    if IndividualFeedback.objects.get(
-                            assessment_result=result, attempt=attempt):
-                        students.append(student)
+                    try:
+                        feedback = IndividualFeedback.objects.get(
+                                assessment_result=result, attempt=attempt)
+                        if feedback.completed:
+                            students.append(student)
+                    except IndividualFeedback.DoesNotExist:
+                        pass
                 except AssessmentResult.DoesNotExist:
                     pass
             for student in students:

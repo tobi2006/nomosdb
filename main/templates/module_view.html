@@ -45,10 +45,15 @@
     <div class="btn-group dropdown">
         <a class = "btn btn-default dropdown-toggle" data-toggle="dropdown">Assessment <span class="caret"></span></a>
         <ul class="dropdown-menu" role="menu">
+            {% for entry in module.assessment_sub_menu %}
+                {{ entry|safe }}
+            {% endfor %}
+            {% comment %}
             {% for assessment in module.all_group_assessments %}
                 <li><a href="{{ assessment.get_assessment_group_url }}">Set assessment groups for {{ assessment.title }}</a></li>
                 <li><a href="{{ assessment.get_assessment_group_overview_url }}">Assessment group overview for {{ assessment.title }}</a></li>
             {% endfor %}
+            {% endcomment %}
 
             <li><a href="{{ module.get_assessment_url }}">Set assessments for the module</a></li>
         </ul>
