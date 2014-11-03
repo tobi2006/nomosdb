@@ -50,6 +50,11 @@ urlpatterns += patterns(
         'all_attendances',
         name='all_attendances'
     ),
+    url(
+        r'all_tutee_meetings/([-\w]+)/(\w+)/$',
+        'all_tutee_meetings',
+        name='all_tutee_meetings'
+    ),
     url(r'^assessment/(\w+)/(\d{4})/$', 'assessment', name='assessment'),
     url(
         r'^assessment_groups/(\w+)/(\d{4})/([-\w]+)/(\w+)/$',

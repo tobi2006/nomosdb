@@ -3,6 +3,7 @@ from main.models import *
 from main.views import *
 from bs4 import BeautifulSoup
 from .base import *
+import datetime
 
 
 class StatusCheckTest(TestCase):
@@ -1395,3 +1396,135 @@ class AssignTutorsTest(AdminUnitTest):
         self.assertEqual(student3_out.tutor, staff1)
         student4_out = Student.objects.get(student_id='rr23')
         self.assertEqual(student4_out.tutor, None)
+
+
+class AllTuteeMeetingTest(TeacherUnitTest):
+    """Tests about the function showing all tutee meetings"""
+
+    def test_page_can_only_be_seen_by_pd(self):
+        subject_area = create_subject_area()
+        url = (
+            '/all_tutee_meetings/' +
+            subject_area.slug +
+            '/1/'
+        )
+        request = self.factory.get(url)
+        request.user = self.user
+        response = all_tutee_meetings(request, 'cartoon-studies', '1')
+        self.assertNotEqual(response.status_code, 200)
+        self.user.staff.programme_director = True
+        self.user.staff.save()
+        request = self.factory.get(url)
+        request.user = self.user
+        response = all_tutee_meetings(request, 'cartoon-studies', '1')
+        self.assertEqual(response.status_code, 200)
+
+    def test_page_uses_right_template(self):
+        subject_area = create_subject_area()
+        url = (
+            '/all_tutee_meetings/' +
+            subject_area.slug +
+            '/1/'
+        )
+        request = self.factory.get(url)
+        request.user = self.user
+        response = all_tutee_meetings(request, 'cartoon-studies', '1')
+        self.assertTemplateUsed(response, 'all_tutees.html')
+
+    def test_students_in_the_right_year_show_up(self):
+        subject_area = create_subject_area()
+        course = Course.objects.create(title='Cartoon Studies')
+        course.subject_areas.add(subject_area)
+        student1 = Student.objects.create(
+            student_id='bb1',
+            first_name='Bugs',
+            last_name='Bunny',
+            year=1,
+            course=course
+        )
+        student2 = Student.objects.create(
+            student_id='dd1',
+            first_name='Duck',
+            last_name='Daffy',
+            year=2,
+            course=course
+        )
+        url = (
+            '/all_tutee_meetings/' +
+            subject_area.slug +
+            '/1/'
+        )
+        self.user.staff.programme_director = True
+        self.user.staff.save()
+        request = self.factory.get(url)
+        request.user = self.user
+        response = all_tutee_meetings(request, 'cartoon-studies', '1')
+        self.assertContains(response, student1.get_absolute_url())
+        self.assertNotContains(response, student2.get_absolute_url())
+
+    def test_tutor_appears_on_page(self):
+        subject_area = create_subject_area()
+        course = Course.objects.create(title='Cartoon Studies')
+        course.subject_areas.add(subject_area)
+        teacher = create_teacher()
+        student1 = Student.objects.create(
+            student_id='bb1',
+            first_name='Bugs',
+            last_name='Bunny',
+            year=1,
+            course=course,
+            tutor = teacher
+        )
+        url = (
+            '/all_tutee_meetings/' +
+            subject_area.slug +
+            '/1/'
+        )
+        self.user.staff.programme_director = True
+        self.user.staff.save()
+        request = self.factory.get(url)
+        request.user = self.user
+        response = all_tutee_meetings(request, 'cartoon-studies', '1')
+        self.assertContains(response, student1.get_absolute_url())
+        self.assertContains(response, teacher.name())
+
+    def test_tutor_meetings_appear(self):
+        subject_area = create_subject_area()
+        course = Course.objects.create(title='Cartoon Studies')
+        course.subject_areas.add(subject_area)
+        teacher = create_teacher()
+        student1 = Student.objects.create(
+            student_id='bb1',
+            first_name='Bugs',
+            last_name='Bunny',
+            year=1,
+            course=course,
+            tutor = teacher
+        )
+        student2 = Student.objects.create(
+            student_id='dd1',
+            first_name='Duck',
+            last_name='Daffy',
+            year=1,
+            course=course,
+            tutor = teacher
+        )
+        date = datetime.date(1900,1,1)
+        meeting1 = TuteeSession.objects.create(
+            tutor=teacher,
+            tutee=student1,
+            date_of_meet=date,
+            notes="Some Text"
+        )
+        url = (
+            '/all_tutee_meetings/' +
+            subject_area.slug +
+            '/1/'
+        )
+        self.user.staff.programme_director = True
+        self.user.staff.save()
+        request = self.factory.get(url)
+        request.user = self.user
+        response = all_tutee_meetings(request, 'cartoon-studies', '1')
+        self.assertContains(response, '1 Jan 1900')
+        self.assertContains(response, meeting1.get_absolute_url())

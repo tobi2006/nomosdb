@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+
+<h1>Tutee Meetings for {{ subject_area }}, Year {{ year }}</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Tutor</th>
+            {% for column in max_columns|get_range %}
+                <th></th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td><a href="{{ row.student.get_absolute_url }}">{{ row.student.name }}</a></td>
+            <td>{{ row.student.tutor.name }}</td>
+            {% for session in row.sessions %}
+                <td><a href="{{ session.get_absolute_url }}">{{ session.date_of_meet }}</a></td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

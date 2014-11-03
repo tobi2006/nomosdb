@@ -41,6 +41,15 @@ def is_admin(user):
     return False
 
 
+def is_pd(user):
+    if hasattr(user, 'staff'):
+        if user.staff.programme_director:
+            return True
+        elif user.staff.main_admin:
+            return True
+    return False
+
+
 def is_main_admin(user):
     if hasattr(user, 'staff'):
         if user.staff.main_admin is True:
@@ -863,6 +872,44 @@ def my_tutees(request):
         }
     )
 
+
+@login_required
+@user_passes_test(is_pd)
+def all_tutee_meetings(request, subject_area, year):
+    subject_area = SubjectArea.objects.get(slug=subject_area)
+    all_students = Student.objects.filter(active=True, year=year)
+    students = []
+    for student in all_students:
+        if subject_area in student.course.subject_areas.all():
+            students.append(student)
+    rows = []
+    max_columns = 0
+    for student in students:
+        meetings = TuteeSession.objects.filter(tutee=student).count()
+        if meetings > max_columns:
+            max_columns = meetings
+    for student in students:
+        row = {}
+        row['student'] = student
+        sessions = TuteeSession.objects.filter(tutee=student)
+        row['sessions'] = []
+        for counter in range(0, max_columns):
+            try:
+                row['sessions'].append(sessions[counter])
+            except IndexError:
+                row['sessions'].append(None)
+        rows.append(row)
+    return render(
+        request,
+        'all_tutees.html',
+        {
+            'max_columns': max_columns,
+            'year': year,
+            'subject_area': subject_area,
+            'rows': rows
+        }
+    )
+    
 
 # Module views
 

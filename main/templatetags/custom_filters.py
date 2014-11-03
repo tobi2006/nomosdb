@@ -21,8 +21,6 @@ def get_range(value):
       <li>1. Do something</li>
       <li>2. Do something</li>
     </ul>
-
-    Instead of 3 one may use the variable set in the views
     """
     return range(value)
 

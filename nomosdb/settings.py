@@ -93,3 +93,7 @@ TEMPLATE_CONTEXT_PROCESSORS = DEFAULT_SETTINGS.TEMPLATE_CONTEXT_PROCESSORS + (
 )
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+)
