@@ -66,3 +66,21 @@ class IndividualFeedback(models.Model):
 
     class Meta:
         unique_together = ('assessment_result', 'attempt')
+
+    def category_mark(self, number):
+        if number == 1:
+            return self.category_mark_1
+        if number == 2:
+            return self.category_mark_2
+        if number == 3:
+            return self.category_mark_3
+        if number == 4:
+            return self.category_mark_4
+        if number == 5:
+            return self.category_mark_5
+        if number == 6:
+            return self.category_mark_6
+        if number == 7:
+            return self.category_mark_7
+        if number == 8:
+            return self.category_mark_8

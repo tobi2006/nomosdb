@@ -118,12 +118,7 @@ class Staff(models.Model):
 
 
 class Module(models.Model):
-    """Modules are the subjects - eg "Law of Contracts".
-
-    The current implementation is limited to 6 assessments per module,
-    not counting the exam (where you cannot define a title, wordcount
-    or a marksheet.
-    """
+    """Modules are the subjects - eg "Law of Contracts"."""
 
     ELIGIBLE = (
         ('1', 'Year 1 only'),
@@ -284,13 +279,6 @@ class Module(models.Model):
             returnlist.append(exam)
         return returnlist
 
-    def all_group_assessments(self):
-        returnlist = []
-        for assessment in self.assessments.all():
-            if assessment.group_assessment:
-                returnlist.append(assessment)
-        return returnlist
-
     def all_teaching_weeks(self):
         no_teaching = []
         if self.no_teaching_in:
@@ -309,6 +297,45 @@ class Module(models.Model):
             if week not in no_teaching:
                 returnlist.append(week)
         returnlist.sort()
+        return returnlist
+
+    def assessment_sub_menu(self):
+        returnlist = []
+        for assessment in self.assessments.all():
+            link = assessment.get_blank_marksheet_url()
+            link += 'all/first/'
+            html = (
+                '<li><a href="' +
+                link +
+                '">All Marksheets for ' +
+                assessment.title +
+                '</a></li>'
+            )
+            returnlist.append(html)
+            if assessment.group_assessment:
+                html = (
+                    '<li><a href="' +
+                    assessment.get_assessment_groups_url() +
+                    '">Set assessment groups for ' +
+                    assessment.title +
+                    '</a></li>' +
+                    '<li><a href="' +
+                    assessment.get_assessment_group_overview_url() +
+                    '">Assessment group overview for ' +
+                    assessment.title +
+                    '</a></li>' +
+                    '<li class="divider"></li>'
+                )
+                returnlist.append(html)
+
+
+        return returnlist
+
+    def all_group_assessments(self):
+        returnlist = []
+        for assessment in self.assessments.all():
+            if assessment.group_assessment:
+                returnlist.append(assessment)
         return returnlist
 
 
@@ -372,6 +399,13 @@ class Assessment(models.Model):
     def __str__(self):
         return self.title
 
+    def filename(self):
+        filename = self.module.__str__().replace(' ', '_')
+        filename = filename.replace('/', '-')
+        filename += '_-_'
+        filename += self.title.replace(' ', '_')
+        return filename
+
     def get_absolute_url(self):
         return reverse(
             'edit_assessment',
@@ -390,6 +424,23 @@ class Assessment(models.Model):
         else:
             url = reverse(
                 'individual_feedback',
+                args=[
+                    self.module.code,
+                    self.module.year,
+                    self.slug,
+                    'xxxxx',
+                    'xxxxx'
+                ]
+            )
+            return_url = url.replace('xxxxx/xxxxx/', '')
+        return return_url
+
+    def get_blank_marksheet_url(self):
+        if self.group_assessment:
+            return_url = '/na'
+        else:
+            url = reverse(
+                'export_individual_feedback',
                 args=[
                     self.module.code,
                     self.module.year,
@@ -667,9 +718,13 @@ class AssessmentResult(models.Model):
             edit = None
         marksheet = None
         try:
-            feedback = self.feedback.objects.get(attempt='first')
-            if feedback.compled:
-                marksheet = 'na'  # Adjust this to url
+            feedback = self.feedback.get(attempt='first')
+            if feedback.completed:
+                marksheet = (
+                    self.assessment.get_blank_marksheet_url() +
+                    student_id +
+                    '/first/'
+                )
         except:
             pass
         first = (self.mark, edit, marksheet)
