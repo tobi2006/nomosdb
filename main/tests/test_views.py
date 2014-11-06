@@ -229,7 +229,6 @@ class StudentViewTest(TeacherUnitTest):
         self.assertContains(response, "Bunny")
         self.assertContains(response, "Bugs")
 
-
 class AddEditStudentTest(TeacherUnitTest):
     """Tests for the student form function"""
 
@@ -1528,3 +1527,52 @@ class AllTuteeMeetingTest(TeacherUnitTest):
         response = all_tutee_meetings(request, 'cartoon-studies', '1')
         self.assertContains(response, '1 Jan 1900')
         self.assertContains(response, meeting1.get_absolute_url())
+
+class MyTuteesTests(TeacherUnitTest):
+    """Making sure that the my tutee view shows everything necessary"""
+
+    def test_all_tutees_are_shown(self):
+        stuff = set_up_stuff()
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        student5 = stuff[5]
+        student1.tutor = self.user.staff
+        student1.save()
+        student2.tutor = self.user.staff
+        student2.save()
+        student3.tutor = self.user.staff
+        student3.save()
+        request = self.factory.get('/my_tutees/')
+        request.user = self.user
+        response = my_tutees(request)
+        self.assertContains(response, student1.name())
+        self.assertContains(response, student2.name())
+        self.assertContains(response, student3.name())
+        self.assertNotContains(response, student4.name())
+        self.assertNotContains(response, student5.name())
+
+    def test_all_tutee_meetings_are_shown(self):
+        student = create_student()
+        student.tutor = self.user.staff
+        student.save()
+        date1 = datetime.date(1900,1,1)
+        date2 = datetime.date(1900,1,2)
+        meeting1 = TuteeSession.objects.create(
+            tutor=self.user.staff,
+            tutee=student,
+            date_of_meet=date1,
+            notes='Text'
+        )
+        meeting2 = TuteeSession.objects.create(
+            tutor=self.user.staff,
+            tutee=student,
+            date_of_meet=date2,
+            notes='Text'
+        )
+        request = self.factory.get('/my_tutees/')
+        request.user = self.user
+        response = my_tutees(request)
+        self.assertContains(response, '1 Jan 1900')
+        self.assertContains(response, '2 Jan 1900')

@@ -47,6 +47,7 @@
             <th>ID</th>
             <th>Year</th>
             <th>Course</th>
+            <th>Meetings</th>
         </tr>
     </thead>
     <tbody>
@@ -57,6 +58,7 @@
             <td>{{ row.student.student_id }}</td>
             <td>{{ row.student.year }}</th>
             <td>{{ row.student.course }}</td>
+            <td>{% for meeting in row.meetings %}<a href="{{ meeting.get_absolute_url }}">{{ meeting.date_of_meet }}{% if meeting.meeting_took_place %}<span class="glyphicon glyphicon-ok">{% else %}<span class="glyphicon glyphicon-remove">{% endif %}</span></a> {% endfor %}</td>
         </tr>
         {% endfor %}
     </tbody>

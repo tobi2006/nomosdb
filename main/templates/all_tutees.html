@@ -21,7 +21,9 @@
             <td><a href="{{ row.student.get_absolute_url }}">{{ row.student.name }}</a></td>
             <td>{{ row.student.tutor.name }}</td>
             {% for session in row.sessions %}
-                <td><a href="{{ session.get_absolute_url }}">{{ session.date_of_meet }}</a></td>
+            {% if session %}
+            <td><a href="{{ session.get_absolute_url }}">{{ session.date_of_meet }}{% if session.meeting_took_place %}<span class="glyphicon glyphicon-ok">{% else %}<span class="glyphicon glyphicon-remove">{% endif %}</span></a></td>
+            {% endif %}
             {% endfor %}
         </tr>
         {% endfor %}

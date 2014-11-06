@@ -861,6 +861,7 @@ def my_tutees(request):
                             tpl[0], module, tpl[1])
                         )
         row['problems'] = problems
+        row['meetings'] = TuteeSession.objects.filter(tutee=tutee)
         rows.append(row)
     return render(
         request,
