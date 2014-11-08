@@ -27,6 +27,8 @@
 
 <h3>Attendance</h3>
 
+<h4>All Students</h4>
+
 <div class="btn-group">
     {% for subject_area, years in subject_areas.items %}
     <div class="btn-group">
@@ -41,6 +43,24 @@
     </div>
     {% endfor %}
 </div>
+
+<h4>Tier 4 Students Only</h4>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas_real_years.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+                <li><a href="{% url "export_tier_4_attendance" subject_area.slug year %}">{{ year }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
 
 <h3>Assign Tutors</h3>
 

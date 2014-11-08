@@ -41,3 +41,19 @@ def week_number(chosen_date=False):
     except Setting.DoesNotExist:
         week_number = None
     return week_number
+
+
+def week_starting_date(number, year='current'):
+    try:
+        if year == 'current':
+            current_year = int(Setting.objects.get(name="current_year").value)
+        else:
+            year = int(year)
+        first_day = FIRST_WEEK_STARTS[year]
+        week_number = int(number) - 1
+        difference = week_number * 7
+        week_starting_date = first_day + datetime.timedelta(days=difference)
+    except Setting.DoesNotExist:
+        week_starting_date = None
+    return week_starting_date
+

@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from main.forms import *
-from main.functions import week_number
+from main.functions import week_number, week_starting_date
 from main.messages import (
     new_staff_email, attendance_email, password_reset_email
 )
@@ -134,6 +134,7 @@ def admin(request):
         main_admin = False
         staff_subject_areas = request.user.staff.subject_areas.all()
     subject_areas = {}
+    subject_areas_real_years = {}
     for subject_area in staff_subject_areas:
         if subject_area.courses.exists():
             for course in subject_area.courses.all():
@@ -152,10 +153,21 @@ def admin(request):
                                 subject_areas[subject_area].append(year_tpl)
                         else:
                             subject_areas[subject_area] = [year_tpl]
+        real_years = []
+        for module in Module.objects.all():
+            if subject_area in module.subject_areas.all():
+                if module.year not in real_years:
+                    real_years.append(module.year)
+        real_years.sort()
+        subject_areas_real_years[subject_area] = real_years
     return render(
         request,
         'admin.html',
-        {'main_admin': main_admin, 'subject_areas': subject_areas}
+        {
+            'main_admin': main_admin,
+            'subject_areas': subject_areas,
+            'subject_areas_real_years': subject_areas_real_years
+        }
     )
 
 
@@ -1795,9 +1807,102 @@ def export_attendance_sheet(request, code, year):
                 ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
                 ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
                 ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-                ('BOX', (0, 0), (-1, -1), 0.25, colors.black)])
+                ('BOX', (0, 0), (-1, -1), 0.25, colors.black)]
             )
+        )
         elements.append(table)
         elements.append(PageBreak())
+    document.build(elements)
+    return response
+
+
+@login_required
+@user_passes_test(is_admin)
+def export_tier_4_attendance(request, slug, year):
+    """Gives a pdf listing the attendance of all Tier 4 students"""
+    subject_area = SubjectArea.objects.get(slug=slug)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = (
+        'attachment; filename=tier_4_attendance_' +
+        slug +
+        '_' +
+        year +
+        '.pdf'
+    )
+    document = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+    next_year = str(int(year) + 1)
+    ac_year = year + '/' + next_year[-2:]
+    heading = 'Tier 4 Attendance ' + subject_area.name + ' ' + ac_year
+    elements.append(Paragraph(heading, styles['Heading1']))
+    all_students = Student.objects.filter(active=True, tier_4=True)
+    students = []
+    for student in all_students:
+        if subject_area in student.course.subject_areas.all():
+            students.append(student)
+    for student in students:
+        print(student.name())
+        modules = {}
+        performances = Performance.objects.filter(
+            student=student,
+            module__year=int(year)
+        )
+        all_weeks = []
+        all_modules = []
+        weeks = {}
+        for performance in performances:
+            if performance.module.title not in all_modules:
+                all_modules.append(performance.module.title)
+            attendance_dict = performance.attendance_as_dict()
+            for key, value in attendance_dict.items():
+                if key not in all_weeks:
+                    all_weeks.append(key)
+                if key in weeks:
+                    weeks[key][performance.module.title] = value
+                else:
+                    weeks[key] = {performance.module.title: value}
+        all_weeks.sort()
+        all_modules.sort()
+        elements.append(Paragraph(student.name(), styles['Heading2']))
+        data = []
+        top_line = ['', 'Week starting']
+        for x in range(1, len(all_weeks)):
+            top_line.append('')
+        data.append(top_line)
+        header = ['Module']
+        for week in all_weeks:
+            starting_date = week_starting_date(week, year)
+            print_date = (
+                str(starting_date.day) +
+                '/' +
+                str(starting_date.month) +
+                '/' +
+                str(starting_date.year)
+            )
+            header.append(print_date)
+        data.append(header)
+        for module_title in all_modules:
+            row = [module_title]
+            for week in all_weeks:
+                if module_title in weeks[week]:
+                    if weeks[week][module_title] in ['p', 'e']:
+                        row.append(u'\u2713')
+                    else:
+                        row.append('-')
+                else:
+                    row.append(' ')
+            data.append(row)
+        table = Table(data)
+        table.setStyle(
+            TableStyle([
+                ('SPAN', (1, 0), (-1, 0)),
+                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                ('BACKGROUND', (0, 0), (-1, 1), colors.lightgrey),
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                ('BOX', (0, 0), (-1, -1), 0.25, colors.black)]
+            )
+        )
+        elements.append(table)
     document.build(elements)
     return response
