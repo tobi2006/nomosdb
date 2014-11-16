@@ -688,6 +688,56 @@ class AssessmentTest(TeacherUnitTest):
         self.assertEqual(Assessment.objects.count(), 0)
         self.assertEqual(AssessmentResult.objects.count(), 0)
 
+    def test_toggle_assessment_availability_works(self):
+        module = create_module()
+        assessment = Assessment.objects.create(
+            module=module,
+            title='Hunting Exercise',
+            value=100
+        )
+        self.assertFalse(assessment.available)
+        request = self.factory.get(assessment.get_toggle_availability_url())
+        request.user = self.user
+        response = toggle_assessment_availability(
+            request, module.code, module.year, assessment.slug, 'first')
+        assessment_out = Assessment.objects.first()
+        self.assertTrue(assessment_out.available)
+        request = self.factory.get(assessment.get_toggle_availability_url())
+        request.user = self.user
+        response = toggle_assessment_availability(
+            request, module.code, module.year, assessment.slug, 'first')
+        assessment_out = Assessment.objects.first()
+        self.assertFalse(assessment_out.available)
+        request = self.factory.get(
+            assessment.get_toggle_availability_url('resit'))
+        request.user = self.user
+        response = toggle_assessment_availability(
+            request, module.code, module.year, assessment.slug, 'resit')
+        assessment_out = Assessment.objects.first()
+        self.assertTrue(assessment_out.resit_available)
+        request = self.factory.get(
+            assessment.get_toggle_availability_url('resit'))
+        request.user = self.user
+        response = toggle_assessment_availability(
+            request, module.code, module.year, assessment.slug, 'resit')
+        assessment_out = Assessment.objects.first()
+        self.assertFalse(assessment_out.resit_available)
+        request = self.factory.get(
+            assessment.get_toggle_availability_url('second_resit'))
+        request.user = self.user
+        response = toggle_assessment_availability(
+            request, module.code, module.year, assessment.slug, 'second_resit')
+        assessment_out = Assessment.objects.first()
+        self.assertTrue(assessment_out.second_resit_available)
+        request = self.factory.get(
+            assessment.get_toggle_availability_url('second_resit'))
+        request.user = self.user
+        response = toggle_assessment_availability(
+            request, module.code, module.year, assessment.slug, 'second_resit')
+        assessment_out = Assessment.objects.first()
+        self.assertFalse(assessment_out.second_resit_available)
+
+
 
 class AttendanceTest(TeacherUnitTest):
     """Tests around the attendance function"""

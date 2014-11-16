@@ -388,6 +388,14 @@ class Assessment(models.Model):
         verbose_name="Students can see the mark/feedback",
         default=False
     )
+    resit_available = models.BooleanField(
+        verbose_name="Students can see the mark/feedback for the resit",
+        default=False
+    )
+    second_resit_available = models.BooleanField(
+        verbose_name="Students can see the mark/feedback for the second resit",
+        default=False
+    )
 
     class Meta:
         ordering = ['title']
@@ -463,6 +471,14 @@ class Assessment(models.Model):
             'assessment_group_overview',
             args=[self.module.code, self.module.year, self.slug, attempt]
         )
+
+    def get_toggle_availability_url(self, attempt='first'):
+        return reverse(
+            'toggle_assessment_availability',
+            args=[self.module.code, self.module.year, self.slug, attempt]
+        )
+
+
 
 
 class Student(models.Model):

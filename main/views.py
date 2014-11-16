@@ -1507,6 +1507,29 @@ def delete_assessment(request, code, year, slug):
     return redirect(module.get_assessment_url())
 
 
+def toggle_assessment_availability(request, code, year, slug, attempt):
+    """Makes feedback available to students"""
+    module = Module.objects.get(code=code, year=year)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    if attempt == 'first':
+        if assessment.available:
+            assessment.available = False
+        else:
+            assessment.available = True
+    elif attempt == 'resit':
+        if assessment.resit_available:
+            assessment.resit_available = False
+        else:
+            assessment.resit_available = True
+    else:
+        if assessment.second_resit_available:
+            assessment.second_resit_available = False
+        else:
+            assessment.second_resit_available = True
+    assessment.save()
+    return redirect(module.get_absolute_url())
+
+
 @login_required
 @user_passes_test(is_staff)
 def seminar_group_overview(request, code, year):

@@ -150,6 +150,11 @@ urlpatterns += patterns(
     url(r'^student/(\w+)/$', 'student_view', name='student_view'),
     url(r'^students/(\w+)/$', 'year_view', name='year_view'),
     url(r'^subject_areas/$', 'subject_areas', name='subject_areas'),
+    url(
+        r'^toggle_assessment_availability/(\w+)/(\d{4})/([-\w]+)/(\w+)/$',
+        'toggle_assessment_availability',
+        name='toggle_assessment_availability'
+    ),
     url(r'^upload_csv_file/$', 'upload_csv', name='upload_csv'),
     url(
         r'^view_staff_by_name/$',
