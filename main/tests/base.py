@@ -159,6 +159,23 @@ class TeacherUnitTest(TestCase):
         self.user = user
 
 
+class StudentUnitTest(TestCase):
+    """Sets up the testing environment for a student"""
+
+    def setUp(self):
+        set_initial_values()
+        self.factory = RequestFactory()
+        user = User.objects.create_user(
+            username='bb42', password='ilovecarrots')
+        bugs = Student.objects.create(
+            student_id='bb42',
+            last_name='Bunny',
+            first_name='Bugs',
+            user=user
+        )
+        self.user = user
+
+
 class AdminUnitTest(TestCase):
     """Sets up the testing environment for an admin"""
 

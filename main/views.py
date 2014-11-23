@@ -117,8 +117,11 @@ def wrong_email(request):
 def home(request):
     """Simply the home page, redirects to settings if none made"""
     if Setting.objects.exists():
-        # use if to show different pages for students and teachers!
-        return render(request, 'home.html', {})
+        if is_student(request.user):
+            return redirect(reverse('student_home'))
+            pass
+        elif is_staff(request.user):
+            return render(request, 'home.html', {})
     else:
         return redirect(reverse('main_settings'))
 
@@ -1929,3 +1932,10 @@ def export_tier_4_attendance(request, slug, year):
         elements.append(table)
     document.build(elements)
     return response
+
+# Student Facing
+
+@login_required
+@user_passes_test(is_student)
+def student_home(request):
+    return render(request, 'student_home.html', {})

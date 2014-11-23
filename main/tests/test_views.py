@@ -53,6 +53,24 @@ class HomePageTest(TeacherUnitTest):
         response = home(request)
         self.assertContains(response, 'Acme University')
 
+class HomePageForStudentTest(StudentUnitTest):
+    """Student homepage is shown"""
+
+    def test_student_home_shows_student_template(self):
+        request = self.factory.get('/')
+        request.user = self.user
+        response = home(request)
+        self.assertTemplateUsed(response, 'student_home.html')
+
+class AdminDashboardStudentTest(StudentUnitTest):
+    """Admin Dashboard doesn't show for students"""
+
+    def test_admin_dashboard_redirects_students(self):
+        request = self.factory.get('/admin_dashboard/')
+        request.user = self.user
+        response = admin(request)
+        self.assertRedirects(
+            response, '/accounts/login/?next=/admin_dashboard/')
 
 class AdminDashboardTest(AdminUnitTest):
     """Checks the Admin Dashboard"""
