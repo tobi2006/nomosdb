@@ -81,6 +81,7 @@ def individual_feedback(
             'form': form,
             'module': module,
             'assessment': assessment,
+            'marksheet_type': marksheet_type,
         }
     )
 
