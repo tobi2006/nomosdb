@@ -228,103 +228,152 @@ def individual_marksheet(assessment, student, attempt):
         ]
     else:
         word_count = ''
-    criteria = paragraph('Criteria')
-    categorylist = [criteria]
     if attempt == 'first':
         marksheet_type = CATEGORIES[assessment.marksheet_type]
     else:
         marksheet_type = CATEGORIES[assessment.marksheet_type_resit]
-    number = marksheet_type['number_of_categories']
-    for x in range(1, number+1):
-        tmp = 'i-' + str(x)
-        categorylist.append(paragraph(marksheet_type[tmp]))
-    if number < 4:
+    print(marksheet_type)
+    if assessment.marksheet_type == 'MEDIATION_ROLE_PLAY':  # Other marksheets
+        print('Hallo')
         data = [
-            [last_name, '', first_name],
-            [module_title, '', module_code, submission_date],
-            [assessment_title, '', word_count, ''],
-            categorylist
+            [last_name, first_name],
+            [module_title, module_code],
+            [assessment_title, submission_date],
         ]
-    elif number == 4:
-        data = [
-            [last_name, '', first_name, ''],
-            [module_title, '', module_code, submission_date, ''],
-            [assessment_title, '', word_count, '', ''],
-            categorylist
-        ]
-    row = ['80 +']
-    for category in range(1, number+1):
-        if feedback.category_mark(category) == 80:
-            row.append('X')
-        else:
-            row.append(' ')
-    data.append(row)
-    row = ['70 - 79']
-    for category in range(1, number+1):
-        if feedback.category_mark(category) == 79:
-            row.append('X')
-        else:
-            row.append(' ')
-    data.append(row)
-    row = ['60 - 69']
-    for category in range(1, number+1):
-        if feedback.category_mark(category) == 69:
-            row.append('X')
-        else:
-            row.append(' ')
-    data.append(row)
-    row = ['50 - 59']
-    for category in range(1, number+1):
-        if feedback.category_mark(category) == 59:
-            row.append('X')
-        else:
-            row.append(' ')
-    data.append(row)
-    row = ['40 - 49']
-    for category in range(1, number+1):
-        if feedback.category_mark(category) == 49:
-            row.append('X')
-        else:
-            row.append(' ')
-    data.append(row)
-    row = ['30 - 39']
-    for category in range(1, number+1):
-        if feedback.category_mark(category) == 39:
-            row.append('X')
-        else:
-            row.append(' ')
-    data.append(row)
-    row = ['Under 30']
-    for category in range(1, number+1):
-        if feedback.category_mark(category) == 29:
-            row.append('X')
-        else:
-            row.append(' ')
-    data.append(row)
-    t = Table(data)
-    if word_count:
-        wordcount_row_1 = ('SPAN', (0, 2), (1, 2))
-        wordcount_row_2 = ('SPAN', (2, 2), (-1, 2))
-    else:
-        wordcount_row_1 = ('SPAN', (0, 2), (-1, 2))
-        wordcount_row_2 = ('SPAN', (0, 2), (-1, 2))
-    t.setStyle(
-        TableStyle(
-            [
-                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                ('SPAN', (0, 0), (1, 0)),
-                ('SPAN', (2, 0), (-1, 0)),
-                ('SPAN', (0, 1), (1, 1)),
-                ('SPAN', (3, 1), (-1, 1)),
-                wordcount_row_1,
-                wordcount_row_2,
-                ('BACKGROUND', (0, 3), (-1, 3), colors.lightgrey),
-                ('BACKGROUND', (0, 4), (0, -1), colors.lightgrey),
-                ('ALIGN', (1, 4), (-1, -1), 'CENTER'),
-                ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
-            ]
+        t1 = Table(data)
+        t1.setStyle(
+            TableStyle(
+                [
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+#                    ('BACKGROUND', (0, 3), (-1, 3), colors.lightgrey),
+#                    ('BACKGROUND', (0, 4), (0, -1), colors.lightgrey),
+#                    ('ALIGN', (1, 4), (-1, -1), 'CENTER'),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
+                ]
+            )
         )
-    )
+        elements.append(t1)
+        elements.append(Spacer(1, 1))
+        data = [
+            [
+                paragraph('Mode of Assessment'),
+                paragraph('Assessment Criteria'),
+                paragraph('Mark Allocation'),
+                paragraph('Mark')
+            ]
+        ]
+        for x in range(1, 4):
+            category = 'i-' + str(x)
+            row = [marksheet_type[category]]
+            helptext = category + '-helptext'
+            row.append(paragraph(marksheet_type[helptext]))
+            row.append('100')
+            row.append(str(feedback.category_mark(x, free=True)))
+            data.append(row)
+        t = Table(data)
+        t.setStyle(
+            TableStyle(
+                [
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
+                ]
+            )
+        )
+
+    else:  # The standard marksheets following the standard template
+        criteria = paragraph('Criteria')
+        categorylist = [criteria]
+        number = marksheet_type['number_of_categories']
+        for x in range(1, number+1):
+            tmp = 'i-' + str(x)
+            categorylist.append(paragraph(marksheet_type[tmp]))
+        if number < 4:
+            data = [
+                [last_name, '', first_name],
+                [module_title, '', module_code, submission_date],
+                [assessment_title, '', word_count, ''],
+                categorylist
+            ]
+        elif number == 4:
+            data = [
+                [last_name, '', first_name, ''],
+                [module_title, '', module_code, submission_date, ''],
+                [assessment_title, '', word_count, '', ''],
+                categorylist
+            ]
+        row = ['80 +']
+        for category in range(1, number+1):
+            if feedback.category_mark(category) == 80:
+                row.append('X')
+            else:
+                row.append(' ')
+        data.append(row)
+        row = ['70 - 79']
+        for category in range(1, number+1):
+            if feedback.category_mark(category) == 79:
+                row.append('X')
+            else:
+                row.append(' ')
+        data.append(row)
+        row = ['60 - 69']
+        for category in range(1, number+1):
+            if feedback.category_mark(category) == 69:
+                row.append('X')
+            else:
+                row.append(' ')
+        data.append(row)
+        row = ['50 - 59']
+        for category in range(1, number+1):
+            if feedback.category_mark(category) == 59:
+                row.append('X')
+            else:
+                row.append(' ')
+        data.append(row)
+        row = ['40 - 49']
+        for category in range(1, number+1):
+            if feedback.category_mark(category) == 49:
+                row.append('X')
+            else:
+                row.append(' ')
+        data.append(row)
+        row = ['30 - 39']
+        for category in range(1, number+1):
+            if feedback.category_mark(category) == 39:
+                row.append('X')
+            else:
+                row.append(' ')
+        data.append(row)
+        row = ['Under 30']
+        for category in range(1, number+1):
+            if feedback.category_mark(category) == 29:
+                row.append('X')
+            else:
+                row.append(' ')
+        data.append(row)
+        t = Table(data)
+        if word_count:
+            wordcount_row_1 = ('SPAN', (0, 2), (1, 2))
+            wordcount_row_2 = ('SPAN', (2, 2), (-1, 2))
+        else:
+            wordcount_row_1 = ('SPAN', (0, 2), (-1, 2))
+            wordcount_row_2 = ('SPAN', (0, 2), (-1, 2))
+        t.setStyle(
+            TableStyle(
+                [
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('SPAN', (0, 0), (1, 0)),
+                    ('SPAN', (2, 0), (-1, 0)),
+                    ('SPAN', (0, 1), (1, 1)),
+                    ('SPAN', (3, 1), (-1, 1)),
+                    wordcount_row_1,
+                    wordcount_row_2,
+                    ('BACKGROUND', (0, 3), (-1, 3), colors.lightgrey),
+                    ('BACKGROUND', (0, 4), (0, -1), colors.lightgrey),
+                    ('ALIGN', (1, 4), (-1, -1), 'CENTER'),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
+                ]
+            )
+        )
     elements.append(t)
     comments = [
         bold_paragraph('General Comments'),
