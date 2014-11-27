@@ -70,9 +70,68 @@
                 $('#penalty_suggestion').text(penalty_suggestion);
             });
         {% endif %}
-            
 
+        {% if marksheet_type == 'MEDIATION_ROLE_PLAY' %}
 
+        function calculateAndValidate() {
+            var sum_of_marks = 0;
+            var number_of_marks = 0;
+            var any_error = false;
+            for (i=1; i<4; i++) {
+                var error = false;
+                entry_id = '#id_category_mark_' + i.toString() + '_free';
+                entry = $(entry_id).val();
+                console.log(entry_id);
+                console.log(entry);
+                if (entry==null || entry=="") {
+                }
+                else {
+                    var mark = parseInt(entry);
+                    if (mark > 100) {
+                        var errortext = "The highest mark possible is 100";
+                        error = true;
+                    }
+                    else {
+                        sum_of_marks = sum_of_marks + mark;
+                        number_of_marks++;
+                    };
+                    var error_id = '#error_' + i.toString();
+                    if (error) {
+                        $(error_id).text(errortext);
+                        any_error = true;
+                    }
+                    else {
+                        $(error_id).text('');
+                    };
+                };
+            };
+            if (any_error) {
+                $('#submit-id-save').prop('disabled', true);
+            }
+            else {
+                $('#submit-id-save').prop('disabled', false);
+            }
+            if (number_of_marks > 0) {
+                var tmp = sum_of_marks/number_of_marks;
+                var overall_mark = Math.round(tmp);
+            }
+            else {
+                var overall_mark = '';
+            };
+            $('#id_mark').val(overall_mark.toString());
+        };
+
+        $('#id_category_mark_1_free').change(function(){
+            calculateAndValidate();
+        });
+        $('#id_category_mark_2_free').change(function(){
+            calculateAndValidate();
+        });
+        $('#id_category_mark_3_free').change(function(){
+            calculateAndValidate();
+        });
+
+        {% endif %}
 
     });
 
