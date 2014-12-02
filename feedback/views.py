@@ -232,9 +232,7 @@ def individual_marksheet(assessment, student, attempt):
         marksheet_type = CATEGORIES[assessment.marksheet_type]
     else:
         marksheet_type = CATEGORIES[assessment.marksheet_type_resit]
-    print(marksheet_type)
     if assessment.marksheet_type == 'MEDIATION_ROLE_PLAY':  # Other marksheets
-        print('Hallo')
         data = [
             [last_name, first_name],
             [module_title, module_code],

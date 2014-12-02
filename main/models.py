@@ -327,8 +327,6 @@ class Module(models.Model):
                     '<li class="divider"></li>'
                 )
                 returnlist.append(html)
-
-
         return returnlist
 
     def all_group_assessments(self):

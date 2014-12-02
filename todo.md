@@ -16,5 +16,9 @@ Modules
 
 Students
 
++ Logout button / password changing
++ Only available assessments shownImplement!
++ Invite students function 
+
 Staff
 

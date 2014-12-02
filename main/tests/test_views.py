@@ -72,12 +72,14 @@ class HomePageForStudentTest(StudentUnitTest):
         assessment1 = Assessment.objects.create(
             module=module1,
             value=50,
-            title='Essay'
+            title='Essay',
+            available=True
         )
         assessment2 = Assessment.objects.create(
             module=module1,
             value=50,
-            title='Exam'
+            title='Exam',
+            available=True
         )
         assessment_result_1 = AssessmentResult.objects.create(
             assessment=assessment1,
@@ -85,14 +87,14 @@ class HomePageForStudentTest(StudentUnitTest):
             resit_mark=40,
         )
         feedback_1_1 = IndividualFeedback.objects.create(
-            assessment_result = assessment_result_1,
-            attempt = 'first',
-            completed = True
+            assessment_result=assessment_result_1,
+            attempt='first',
+            completed=True
         )
         feedback_1_2 = IndividualFeedback.objects.create(
-            assessment_result = assessment_result_1,
-            attempt = 'resit',
-            completed = True
+            assessment_result=assessment_result_1,
+            attempt='resit',
+            completed=True
         )
         performance1.assessment_results.add(assessment_result_1)
         link1 = (
@@ -114,9 +116,9 @@ class HomePageForStudentTest(StudentUnitTest):
             resit_mark=40,
         )
         feedback_2_1 = IndividualFeedback.objects.create(
-            assessment_result = assessment_result_2,
-            attempt = 'first',
-            completed = True
+            assessment_result=assessment_result_2,
+            attempt='first',
+            completed=True
         )
         performance1.assessment_results.add(assessment_result_2)
         link2_1 = (
@@ -141,7 +143,9 @@ class HomePageForStudentTest(StudentUnitTest):
         assessment3 = Assessment.objects.create(
             module=module2,
             value=50,
-            title='Essay'
+            title='Essay',
+            available=True,
+            resit_available=True
         )
         assessment_result_3 = AssessmentResult.objects.create(
             assessment=assessment3,
@@ -149,14 +153,14 @@ class HomePageForStudentTest(StudentUnitTest):
             resit_mark=40,
         )
         feedback_3_1 = IndividualFeedback.objects.create(
-            assessment_result = assessment_result_3,
-            attempt = 'first',
-            completed = True
+            assessment_result=assessment_result_3,
+            attempt='first',
+            completed=True
         )
         feedback_3_2 = IndividualFeedback.objects.create(
-            assessment_result = assessment_result_3,
-            attempt = 'resit',
-            completed = True
+            assessment_result=assessment_result_3,
+            attempt='resit',
+            completed=True
         )
         performance2.assessment_results.add(assessment_result_3)
         link3 = (
@@ -174,7 +178,8 @@ class HomePageForStudentTest(StudentUnitTest):
         assessment4 = Assessment.objects.create(
             module=module2,
             value=50,
-            title='Exam'
+            title='Exam',
+            available=True
         )
         assessment_result_4 = AssessmentResult.objects.create(
             assessment=assessment4,
@@ -182,9 +187,9 @@ class HomePageForStudentTest(StudentUnitTest):
             resit_mark=40,
         )
         feedback_4_1 = IndividualFeedback.objects.create(
-            assessment_result = assessment_result_4,
-            attempt = 'first',
-            completed = True
+            assessment_result=assessment_result_4,
+            attempt='first',
+            completed=True
         )
         performance2.assessment_results.add(assessment_result_4)
         link4_1 = (
@@ -209,7 +214,7 @@ class HomePageForStudentTest(StudentUnitTest):
         self.assertContains(response, link4_1)
 
 
-#class AdminDashboardStudentTest(StudentUnitTest):
+# class AdminDashboardStudentTest(StudentUnitTest):
 #    """Admin Dashboard doesn't show for students"""
 #
 #    def test_admin_dashboard_redirects_students(self):
@@ -240,18 +245,18 @@ class AdminDashboardTest(AdminUnitTest):
         subject_area_1 = SubjectArea.objects.create(name='Cartoon Studies')
         subject_area_2 = SubjectArea.objects.create(name='Evil Plotting')
         course_1 = Course.objects.create(
-            title = 'BA in Cartoon Studies',
-            short_title = 'Cartoon Studies',
+            title='BA in Cartoon Studies',
+            short_title='Cartoon Studies',
         )
         course_1.subject_areas.add(subject_area_1)
         course_2 = Course.objects.create(
-            title = 'BA in Evil Plotting',
-            short_title = 'Evil Plotting',
+            title='BA in Evil Plotting',
+            short_title='Evil Plotting',
         )
         course_2.subject_areas.add(subject_area_2)
         course_3 = Course.objects.create(
-            title = 'BA in Cartoon Studies with Evil Plotting',
-            short_title = 'Cartoon Studies / Evil Plotting',
+            title='BA in Cartoon Studies with Evil Plotting',
+            short_title='Cartoon Studies / Evil Plotting',
         )
         course_3.subject_areas.add(subject_area_1)
         course_3.subject_areas.add(subject_area_2)
@@ -307,24 +312,24 @@ class AdminDashboardTest(AdminUnitTest):
             '/3/">'
         )
         self.assertContains(response, url)
-        
+
     def test_admin_page_shows_own_subjects_and_years_for_normal_admin(self):
         subject_area_1 = SubjectArea.objects.create(name='Cartoon Studies')
         self.user.staff.subject_areas.add(subject_area_1)
         subject_area_2 = SubjectArea.objects.create(name='Evil Plotting')
         course_1 = Course.objects.create(
-            title = 'BA in Cartoon Studies',
-            short_title = 'Cartoon Studies',
+            title='BA in Cartoon Studies',
+            short_title='Cartoon Studies',
         )
         course_1.subject_areas.add(subject_area_1)
         course_2 = Course.objects.create(
-            title = 'BA in Evil Plotting',
-            short_title = 'Evil Plotting',
+            title='BA in Evil Plotting',
+            short_title='Evil Plotting',
         )
         course_2.subject_areas.add(subject_area_2)
         course_3 = Course.objects.create(
-            title = 'BA in Cartoon Studies with Evil Plotting',
-            short_title = 'Cartoon Studies / Evil Plotting',
+            title='BA in Cartoon Studies with Evil Plotting',
+            short_title='Cartoon Studies / Evil Plotting',
         )
         course_3.subject_areas.add(subject_area_1)
         course_3.subject_areas.add(subject_area_2)
@@ -380,7 +385,7 @@ class AdminDashboardTest(AdminUnitTest):
             '/3/">'
         )
         self.assertNotContains(response, url)
-        
+
 
 class StudentViewTest(TeacherUnitTest):
     """Tests for the student view function"""
@@ -905,7 +910,6 @@ class AssessmentTest(TeacherUnitTest):
         self.assertFalse(assessment_out.second_resit_available)
 
 
-
 class AttendanceTest(TeacherUnitTest):
     """Tests around the attendance function"""
 
@@ -1413,7 +1417,7 @@ class YearViewTest(AdminUnitTest):
 
 class CSVParsingTests(AdminUnitTest):
     """Tests for the CSV Parsing"""
-    
+
     def test_csv_data_gets_parsed_properly(self):
         parsed_csvlist = (
             'bb42;Bunny;Bugs;1900;1;bb42@acme.edu;+112345678/////' +
@@ -1689,7 +1693,7 @@ class AllTuteeMeetingTest(TeacherUnitTest):
             last_name='Bunny',
             year=1,
             course=course,
-            tutor = teacher
+            tutor=teacher
         )
         url = (
             '/all_tutee_meetings/' +
@@ -1715,7 +1719,7 @@ class AllTuteeMeetingTest(TeacherUnitTest):
             last_name='Bunny',
             year=1,
             course=course,
-            tutor = teacher
+            tutor=teacher
         )
         student2 = Student.objects.create(
             student_id='dd1',
@@ -1723,9 +1727,9 @@ class AllTuteeMeetingTest(TeacherUnitTest):
             last_name='Daffy',
             year=1,
             course=course,
-            tutor = teacher
+            tutor=teacher
         )
-        date = datetime.date(1900,1,1)
+        date = datetime.date(1900, 1, 1)
         meeting1 = TuteeSession.objects.create(
             tutor=teacher,
             tutee=student1,
@@ -1744,6 +1748,7 @@ class AllTuteeMeetingTest(TeacherUnitTest):
         response = all_tutee_meetings(request, 'cartoon-studies', '1')
         self.assertContains(response, '1 Jan 1900')
         self.assertContains(response, meeting1.get_absolute_url())
+
 
 class MyTuteesTests(TeacherUnitTest):
     """Making sure that the my tutee view shows everything necessary"""
@@ -1774,8 +1779,8 @@ class MyTuteesTests(TeacherUnitTest):
         student = create_student()
         student.tutor = self.user.staff
         student.save()
-        date1 = datetime.date(1900,1,1)
-        date2 = datetime.date(1900,1,2)
+        date1 = datetime.date(1900, 1, 1)
+        date2 = datetime.date(1900, 1, 2)
         meeting1 = TuteeSession.objects.create(
             tutor=self.user.staff,
             tutee=student,
