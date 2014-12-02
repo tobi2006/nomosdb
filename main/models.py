@@ -479,8 +479,6 @@ class Assessment(models.Model):
         )
 
 
-
-
 class Student(models.Model):
     """The class representing a student"""
 
@@ -645,7 +643,6 @@ class AssessmentResult(models.Model):
     assessment_group = models.IntegerField(blank=True, null=True)
     resit_assessment_group = models.IntegerField(blank=True, null=True)
     qld_resit = models.IntegerField(blank=True, null=True)
-    marksheet_done = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['assessment']
@@ -821,6 +818,41 @@ class AssessmentResult(models.Model):
         elif attempt == 'qld_resit':
             self.qld_resit = mark
         self.save()
+
+    def get_marksheet_urls(self):
+        """Returns a dictionary with all URLs"""
+        all_urls = {}
+        student_id = self.part_of.first().student.student_id
+        base_url = self.assessment.get_blank_marksheet_url() + student_id
+        try:
+            feedback = self.feedback.get(attempt='first')
+            if feedback.completed:
+                marksheet_url = base_url + '/first/'
+                all_urls['first'] = marksheet_url
+        except:
+            pass
+        try:
+            feedback = self.feedback.get(attempt='resit')
+            if feedback.completed:
+                marksheet_url = base_url + '/resit/'
+                all_urls['resit'] = marksheet_url
+        except:
+            pass
+        try:
+            feedback = self.feedback.get(attempt='second_resit')
+            if feedback.completed:
+                marksheet_url = base_url + '/second_resit/'
+                all_urls['second_resit'] = marksheet_url
+        except:
+            pass
+        try:
+            feedback = self.feedback.get(attempt='qld_resit')
+            if feedback.completed:
+                marksheet_url = base_url + '/qld_resit/'
+                all_urls['qld_resit'] = marksheet_url
+        except:
+            pass
+        return all_urls
 
 
 class Performance(models.Model):

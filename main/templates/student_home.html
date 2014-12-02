@@ -1,3 +1,5 @@
+{% load custom_filters %}
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -27,7 +29,66 @@
 <body>
 
 <div class="container">
-    Hello, dear student!
+    <h2>Hello {{ student.short_first_name }}!</h2>
+
+    <p>Please see the list of marksheets stored for you below.</p>
+
+    {% for year, performances in years.items %}
+
+    <h3>{{ year|academic_year }}</h3>
+
+        {% for performance in performances %}
+
+            <h4>{{ performance.title }}</h4>
+
+            <ul>
+            {% for result in performance.results %}
+                <li>{{ result.title }}</li>
+
+                <ul>
+                    {% if result.first %}<li><a href="{{ result.first }}">Marksheet</a></li>{% endif %}
+                    {% if result.resit %}<li><a href="{{ result.resit }}">Marksheet for the Resit</a></li>{% endif %}
+                    {% if result.second_resit %}<li><a href="{{ result.second_resit }}">Marksheet for the Second Resit</a></li>{% endif %}
+                    {% if result.qld_resit %}<li><a href="{{ result.qld_resit }}">Marksheet for the QLD Resit</a></li>{% endif %}
+                </ul>
+            {% endfor %}
+            </ul>
+
+        {% endfor %}
+
+
+    
+
+
+    {% comment %}
+    <h3>{{ year|academic_year }}</h3>
+        {% for title, results in years|get_item:year_to_show %}
+
+            <h3>{{ year_to_show|academic_year }}</h3>
+
+            {% for performance in performances %}
+
+                <h4>{{ performance.title }}</h4>
+
+                <ul>
+
+                {% for result in performance.results %}
+
+                    <li>{{ result.title %}</li>
+
+                    <ul>
+                        {% if result.first %}<li><a href="{{ performance.first }}">Marksheet</a></li>{% endif %}
+                        {% if result.resit %}<li><a href="{{ performance.resit }}">Marksheet for the Resit</a></li>{% endif %}
+                        {% if result.second_resit %}<li><a href="{{ performance.second_resit }}">Marksheet for the Second Resit</a></li>{% endif %}
+                        {% if result.qld_resit %}<li><a href="{{ performance.qld_resit }}">Marksheet for the QLD Resit</a></li>{% endif %}
+                    </ul>
+
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+    {% endcomment %}
+
+    {% endfor %}
 </div>
 
 </body>

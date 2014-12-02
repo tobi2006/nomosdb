@@ -115,11 +115,47 @@ def wrong_email(request):
 
 @login_required
 def home(request):
-    """Simply the home page, redirects to settings if none made"""
+    """Home page view for everyone
+
+    This function displays different home pages, depending on whether
+    the user is a student or a staff member. If no settings are made yet
+    (usually that's the case at the very first login), the user is
+    redirected to the settings page.
+    """
+
     if Setting.objects.exists():
+
         if is_student(request.user):
-            return redirect(reverse('student_home'))
-            pass
+            # The view for the student, returns a page with marksheets only
+            student = Student.objects.get(user=request.user)
+            performances = Performance.objects.filter(student=student)
+            years = {}
+            for performance in performances:
+                results = AssessmentResult.objects.filter(part_of=performance)
+                this_performance = {
+                    'title': performance.module.title,
+                    'results': []
+                }
+                add = False
+                for result in results:
+                    this_result = {'title': result.assessment.title}
+                    url_dict = result.get_marksheet_urls()
+                    for key, value in url_dict.items():
+                        this_result[key] = value
+                    this_performance['results'].append(this_result)
+                    if 'first' in this_result:
+                        add = True
+                year = performance.module.year
+                if add:
+                    if year in years:
+                        years[year].append(this_performance)
+                    else:
+                        years[year] = [this_performance]
+            return render(
+                request,
+                'student_home.html',
+                {'student': student, 'years': years}
+            )
         elif is_staff(request.user):
             return render(request, 'home.html', {})
     else:
@@ -484,7 +520,7 @@ def student_view(request, student_id, meeting_id=None):
         else:
             tutee_session = TuteeSession(
                 tutee=student, tutor=request.user.staff)
-        if request.method=="POST":
+        if request.method == "POST":
             form = TuteeSessionForm(instance=tutee_session, data=request.POST)
             if form.is_valid():
                 form.save()
@@ -792,7 +828,8 @@ def all_attendances(request, subject_area, year):
             row['student'] = student
             row['attendances'] = attendances
             if problems:
-                row['message'] = attendance_email(student, problems, admin_name)
+                row['message'] = attendance_email(
+                    student, problems, admin_name)
             else:
                 row['message'] = ''
             row['counter'] = (len(performances) + 1)
@@ -807,7 +844,7 @@ def all_attendances(request, subject_area, year):
             'weeks': weeks
         }
     )
-            
+
 
 @login_required
 @user_passes_test(is_staff)
@@ -925,7 +962,7 @@ def all_tutee_meetings(request, subject_area, year):
             'rows': rows
         }
     )
-    
+
 
 # Module views
 
@@ -1204,7 +1241,7 @@ def assign_seminar_groups(request, code, year):
 @user_passes_test(is_staff)
 def assign_seminar_groups_old_browser(request, code, year):
     """Older Form to assign seminar groups
-    
+
     the drag and drop variant does not work on IE
     """
     module = Module.objects.get(code=code, year=year)
@@ -1932,10 +1969,3 @@ def export_tier_4_attendance(request, slug, year):
         elements.append(table)
     document.build(elements)
     return response
-
-# Student Facing
-
-@login_required
-@user_passes_test(is_student)
-def student_home(request):
-    return render(request, 'student_home.html', {})

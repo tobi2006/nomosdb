@@ -59,3 +59,10 @@ def joinby(value, arg):
 @register.filter
 def upper_case_first_letter(inputstring):
     return inputstring.title()
+
+@register.filter
+def academic_year(year):
+    """Turns 1900 into 1900/01"""
+    int_year = int(year)
+    ac_year = str(int_year) + "/" + str(int_year+1)[-2:]
+    return ac_year

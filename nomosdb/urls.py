@@ -148,7 +148,6 @@ urlpatterns += patterns(
     ),
     url(r'^search_student/$', 'search_student', name='search_student'),
     url(r'^student/(\w+)/$', 'student_view', name='student_view'),
-    url(r'^student_home/$', 'student_home', name='student_home'),
     url(r'^students/(\w+)/$', 'year_view', name='year_view'),
     url(r'^subject_areas/$', 'subject_areas', name='subject_areas'),
     url(

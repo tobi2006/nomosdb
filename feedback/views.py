@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from feedback.forms import *
 from feedback.models import *
 from main.models import *
-from main.views import is_staff
+from main.views import is_staff, is_student
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
@@ -481,7 +481,7 @@ def export_individual_feedback(
         if is_staff(request.user):
             allowed = True
         elif is_student(request.user):
-            if student.belongs_to == request.user:
+            if student.user == request.user:
                 own_marksheet = True
                 allowed = True
         if allowed:

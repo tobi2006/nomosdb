@@ -4,6 +4,7 @@ from main.views import *
 from bs4 import BeautifulSoup
 from .base import *
 import datetime
+from feedback.models import IndividualFeedback
 
 
 class StatusCheckTest(TestCase):
@@ -53,6 +54,7 @@ class HomePageTest(TeacherUnitTest):
         response = home(request)
         self.assertContains(response, 'Acme University')
 
+
 class HomePageForStudentTest(StudentUnitTest):
     """Student homepage is shown"""
 
@@ -62,15 +64,161 @@ class HomePageForStudentTest(StudentUnitTest):
         response = home(request)
         self.assertTemplateUsed(response, 'student_home.html')
 
-class AdminDashboardStudentTest(StudentUnitTest):
-    """Admin Dashboard doesn't show for students"""
-
-    def test_admin_dashboard_redirects_students(self):
-        request = self.factory.get('/admin_dashboard/')
+    def test_student_sees_links_to_all_marksheets(self):
+        student = self.user.student
+        module1 = create_module()
+        performance1 = Performance.objects.create(
+            student=student, module=module1)
+        assessment1 = Assessment.objects.create(
+            module=module1,
+            value=50,
+            title='Essay'
+        )
+        assessment2 = Assessment.objects.create(
+            module=module1,
+            value=50,
+            title='Exam'
+        )
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=30,
+            resit_mark=40,
+        )
+        feedback_1_1 = IndividualFeedback.objects.create(
+            assessment_result = assessment_result_1,
+            attempt = 'first',
+            completed = True
+        )
+        feedback_1_2 = IndividualFeedback.objects.create(
+            assessment_result = assessment_result_1,
+            attempt = 'resit',
+            completed = True
+        )
+        performance1.assessment_results.add(assessment_result_1)
+        link1 = (
+            '<a href="/export_individual_feedback/' +
+            module1.code +
+            '/' +
+            str(module1.year) +
+            '/' +
+            assessment1.slug +
+            '/' +
+            student.student_id +
+            '/'
+        )
+        link1_1 = link1 + 'first/'
+        link1_2 = link1 + 'resit/'
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=30,
+            resit_mark=40,
+        )
+        feedback_2_1 = IndividualFeedback.objects.create(
+            assessment_result = assessment_result_2,
+            attempt = 'first',
+            completed = True
+        )
+        performance1.assessment_results.add(assessment_result_2)
+        link2_1 = (
+            '<a href="/export_individual_feedback/' +
+            module1.code +
+            '/' +
+            str(module1.year) +
+            '/' +
+            assessment2.slug +
+            '/' +
+            student.student_id +
+            '/first/'
+        )
+        module2 = Module.objects.create(
+            title="Introduction to Squaredance",
+            year=1901,
+            code='i2sq42'
+        )
+        student.modules.add(module2)
+        performance2 = Performance.objects.create(
+            student=student, module=module2)
+        assessment3 = Assessment.objects.create(
+            module=module2,
+            value=50,
+            title='Essay'
+        )
+        assessment_result_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=30,
+            resit_mark=40,
+        )
+        feedback_3_1 = IndividualFeedback.objects.create(
+            assessment_result = assessment_result_3,
+            attempt = 'first',
+            completed = True
+        )
+        feedback_3_2 = IndividualFeedback.objects.create(
+            assessment_result = assessment_result_3,
+            attempt = 'resit',
+            completed = True
+        )
+        performance2.assessment_results.add(assessment_result_3)
+        link3 = (
+            '<a href="/export_individual_feedback/' +
+            module2.code +
+            '/' +
+            str(module2.year) +
+            '/' +
+            assessment3.slug +
+            '/' +
+            student.student_id
+        )
+        link3_1 = link3 + '/first/'
+        link3_2 = link3 + '/resit/'
+        assessment4 = Assessment.objects.create(
+            module=module2,
+            value=50,
+            title='Exam'
+        )
+        assessment_result_4 = AssessmentResult.objects.create(
+            assessment=assessment4,
+            mark=30,
+            resit_mark=40,
+        )
+        feedback_4_1 = IndividualFeedback.objects.create(
+            assessment_result = assessment_result_4,
+            attempt = 'first',
+            completed = True
+        )
+        performance2.assessment_results.add(assessment_result_4)
+        link4_1 = (
+            '<a href="/export_individual_feedback/' +
+            module2.code +
+            '/' +
+            str(module2.year) +
+            '/' +
+            assessment2.slug +
+            '/' +
+            student.student_id +
+            '/first/'
+        )
+        request = self.factory.get('/')
         request.user = self.user
-        response = admin(request)
-        self.assertRedirects(
-            response, '/accounts/login/?next=/admin_dashboard/')
+        response = home(request)
+        self.assertContains(response, link1_1)
+        self.assertContains(response, link1_2)
+        self.assertContains(response, link2_1)
+        self.assertContains(response, link3_1)
+        self.assertContains(response, link3_2)
+        self.assertContains(response, link4_1)
+
+
+#class AdminDashboardStudentTest(StudentUnitTest):
+#    """Admin Dashboard doesn't show for students"""
+#
+#    def test_admin_dashboard_redirects_students(self):
+#        request = self.factory.get('/admin_dashboard/')
+#        request.user = self.user
+#        response = admin(request)
+#        self.assertRedirects(
+#            response, '/accounts/login/?next=/admin_dashboard/')
+
 
 class AdminDashboardTest(AdminUnitTest):
     """Checks the Admin Dashboard"""
@@ -246,6 +394,7 @@ class StudentViewTest(TeacherUnitTest):
         self.assertContains(response, "bb23")
         self.assertContains(response, "Bunny")
         self.assertContains(response, "Bugs")
+
 
 class AddEditStudentTest(TeacherUnitTest):
     """Tests for the student form function"""

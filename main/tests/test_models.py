@@ -1,3 +1,4 @@
+from feedback.models import IndividualFeedback
 from main.models import *
 from main.views import *
 from django.core.exceptions import ValidationError
@@ -863,3 +864,56 @@ class AssessmentResultTest(TeacherUnitTest):
             )
         }
         self.assertEqual(result_3, expected_3)
+
+    def test_get_marksheet_urls_returns_right_urls(self):
+        module1 = create_module()
+        student = create_student()
+        performance1 = Performance.objects.create(
+            student=student, module=module1)
+        assessment1 = Assessment.objects.create(
+            module=module1,
+            value=50,
+            title='Essay'
+        )
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=30,
+            resit_mark=40,
+        )
+        performance1.assessment_results.add(assessment_result_1)
+        feedback_1_1 = IndividualFeedback.objects.create(
+            assessment_result = assessment_result_1,
+            attempt = 'first',
+            completed = True
+        )
+        feedback_1_2 = IndividualFeedback.objects.create(
+            assessment_result = assessment_result_1,
+            attempt = 'resit',
+            completed = True
+        )
+        link1 = (
+            '/export_individual_feedback/' +
+            module1.code +
+            '/' +
+            str(module1.year) +
+            '/' +
+            assessment1.slug +
+            '/' +
+            student.student_id +
+            '/first/'
+        )
+        link2 = (
+            '/export_individual_feedback/' +
+            module1.code +
+            '/' +
+            str(module1.year) +
+            '/' +
+            assessment1.slug +
+            '/' +
+            student.student_id +
+            '/resit/'
+        )
+        self.assertEqual(
+            assessment_result_1.get_marksheet_urls(),
+            {'first': link1, 'resit': link2}
+        )
