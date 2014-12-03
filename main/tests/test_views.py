@@ -73,7 +73,8 @@ class HomePageForStudentTest(StudentUnitTest):
             module=module1,
             value=50,
             title='Essay',
-            available=True
+            available=True,
+            resit_available=True
         )
         assessment2 = Assessment.objects.create(
             module=module1,
@@ -144,8 +145,8 @@ class HomePageForStudentTest(StudentUnitTest):
             module=module2,
             value=50,
             title='Essay',
-            available=True,
-            resit_available=True
+            available=False,
+            resit_available=False
         )
         assessment_result_3 = AssessmentResult.objects.create(
             assessment=assessment3,
@@ -179,7 +180,7 @@ class HomePageForStudentTest(StudentUnitTest):
             module=module2,
             value=50,
             title='Exam',
-            available=True
+            available=False
         )
         assessment_result_4 = AssessmentResult.objects.create(
             assessment=assessment4,
@@ -209,9 +210,9 @@ class HomePageForStudentTest(StudentUnitTest):
         self.assertContains(response, link1_1)
         self.assertContains(response, link1_2)
         self.assertContains(response, link2_1)
-        self.assertContains(response, link3_1)
-        self.assertContains(response, link3_2)
-        self.assertContains(response, link4_1)
+        self.assertNotContains(response, link3_1)
+        self.assertNotContains(response, link3_2)
+        self.assertNotContains(response, link4_1)
 
 
 # class AdminDashboardStudentTest(StudentUnitTest):

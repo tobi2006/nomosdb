@@ -394,6 +394,10 @@ class Assessment(models.Model):
         verbose_name="Students can see the mark/feedback for the second resit",
         default=False
     )
+    qld_resit_available = models.BooleanField(
+        verbose_name="Students can see the mark/feedback for the QLD resit",
+        default=False
+    )
 
     class Meta:
         ordering = ['title']

@@ -140,11 +140,22 @@ def home(request):
                 for result in results:
                     this_result = {'title': result.assessment.title}
                     url_dict = result.get_marksheet_urls()
-                    for key, value in url_dict.items():
-                        this_result[key] = value
-                    this_performance['results'].append(this_result)
-                    if 'first' in this_result:
+                    if result.assessment.available and 'first' in url_dict:
+                        this_result['first'] = url_dict['first']
                         add = True
+                    if (result.assessment.resit_available and
+                            'resit' in url_dict):
+                        this_result['resit'] = url_dict['resit']
+                        add = True
+                    if (result.assessment.second_resit_available and
+                            'second_resit' in url_dict):
+                        this_result['second_resit'] = url_dict['second_resit']
+                        add = True
+                    if (result.assessment.qld_resit_available and
+                            'qld_resit' in url_dict):
+                        this_result['qld_resit'] = url_dict['qld_resit']
+                        add = True
+                    this_performance['results'].append(this_result)
                 year = performance.module.year
                 if add:
                     if year in years:
@@ -1561,6 +1572,11 @@ def toggle_assessment_availability(request, code, year, slug, attempt):
             assessment.resit_available = False
         else:
             assessment.resit_available = True
+    elif attempt == 'qld_resit':
+        if assessment.qld_resit_available:
+            assessment.qld_resit_available = False
+        else:
+            assessment.qld_resit_available = True
     else:
         if assessment.second_resit_available:
             assessment.second_resit_available = False

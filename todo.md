@@ -13,11 +13,11 @@ Modules
 
 + Add AJAX functionality to module_form
 + Marking
++ Toggle assessment availability
 
 Students
 
 + Logout button / password changing
-+ Only available assessments shownImplement!
 + Invite students function 
 
 Staff
