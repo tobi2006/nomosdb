@@ -140,22 +140,25 @@ def home(request):
                 for result in results:
                     this_result = {'title': result.assessment.title}
                     url_dict = result.get_marksheet_urls()
+                    add_this_result = False
                     if result.assessment.available and 'first' in url_dict:
                         this_result['first'] = url_dict['first']
-                        add = True
+                        add_this_result = True
                     if (result.assessment.resit_available and
                             'resit' in url_dict):
                         this_result['resit'] = url_dict['resit']
-                        add = True
+                        add_this_result = True
                     if (result.assessment.second_resit_available and
                             'second_resit' in url_dict):
                         this_result['second_resit'] = url_dict['second_resit']
-                        add = True
+                        add_this_result = True
                     if (result.assessment.qld_resit_available and
                             'qld_resit' in url_dict):
                         this_result['qld_resit'] = url_dict['qld_resit']
+                        add_this_result = True
+                    if add_this_result:
+                        this_performance['results'].append(this_result)
                         add = True
-                    this_performance['results'].append(this_result)
                 year = performance.module.year
                 if add:
                     if year in years:
