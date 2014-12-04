@@ -90,7 +90,7 @@
             </th>
             {% for assessment in module.all_assessment_titles %}
                 <th>
-                    {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
+                    {% if assessment.2 %}<span class="glyphicon glyphicon-eye-open">{% else %}<span class="glyphicon glyphicon-eye-close">{% endif %}</span> {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
                 </th>
             {% endfor %}
             <th>

@@ -238,7 +238,8 @@ class ModuleTest(TeacherUnitTest):
         module1 = create_module()
         m_1_assessment_1 = Assessment.objects.create(
             title='Practical Exercise',
-            value=40
+            value=40,
+            available=True
         )
         module1.assessments.add(m_1_assessment_1)
         m_1_assessment_2 = Assessment.objects.create(
@@ -259,6 +260,7 @@ class ModuleTest(TeacherUnitTest):
         m_2_assessment_2 = Assessment.objects.create(
             title="Assessment 2",
             value=20,
+            available=True
         )
         module2.assessments.add(m_2_assessment_2)
         m_2_assessment_3 = Assessment.objects.create(
@@ -267,13 +269,13 @@ class ModuleTest(TeacherUnitTest):
         )
         module2.assessments.add(m_2_assessment_3)
         list_of_assessments_1 = [
-            ("Practical Exercise", 40),
-            ("Exam", 60)
+            ("Practical Exercise", 40, True),
+            ("Exam", 60, False)
         ]
         list_of_assessments_2 = [
-            ("Assessment 1", 20),
-            ("Assessment 2", 20),
-            ("Assessment 3", 60)
+            ("Assessment 1", 20, False),
+            ("Assessment 2", 20, True),
+            ("Assessment 3", 60, False)
         ]
         self.assertEqual(
             module1.all_assessment_titles(), list_of_assessments_1)

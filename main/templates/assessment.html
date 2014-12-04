@@ -108,7 +108,7 @@ $(document).ready(function() {
             bootbox.confirm("Are you sure you want to delete this assessment and all associated results?", function(confirm) {
                 if (confirm)
                 {
-                    window.location.replace("")
+                    window.location.replace("{{ assessment.get_delete_url }}")
                 }
             });
         });

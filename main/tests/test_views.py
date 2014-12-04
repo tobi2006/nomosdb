@@ -215,17 +215,6 @@ class HomePageForStudentTest(StudentUnitTest):
         self.assertNotContains(response, link4_1)
 
 
-# class AdminDashboardStudentTest(StudentUnitTest):
-#    """Admin Dashboard doesn't show for students"""
-#
-#    def test_admin_dashboard_redirects_students(self):
-#        request = self.factory.get('/admin_dashboard/')
-#        request.user = self.user
-#        response = admin(request)
-#        self.assertRedirects(
-#            response, '/accounts/login/?next=/admin_dashboard/')
-
-
 class AdminDashboardTest(AdminUnitTest):
     """Checks the Admin Dashboard"""
 
@@ -500,6 +489,44 @@ class ModuleViewTest(TeacherUnitTest):
         response = module_view(request, module.code, module.year)
         self.assertContains(response, 'Bunny, Bugs')
         self.assertNotContains(response, 'Pig, Porky')
+
+    def test_assessment_availability_is_shown_correctly(self):
+        module = create_module()
+        student = create_student()
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            student=student, module=module)
+        assessment = Assessment.objects.create(
+            title="Dissertation",
+            value=100,
+            available=False
+        )
+        module.assessments.add(assessment)
+        request = self.factory.get(module.get_absolute_url())
+        request.user = self.user
+        response = module_view(request, module.code, module.year)
+        self.assertContains(
+            response,
+            '<span class="glyphicon glyphicon-eye-close">'
+        )
+        self.assertContains(
+            response,
+            'Show Dissertation to students'
+        )
+        assessment.available = True
+        assessment.save()
+        request = self.factory.get(module.get_absolute_url())
+        request.user = self.user
+        response = module_view(request, module.code, module.year)
+        self.assertContains(
+            response,
+            '<span class="glyphicon glyphicon-eye-open">'
+        )
+        self.assertContains(
+            response,
+            'Hide Dissertation from students'
+        )
+        
 
 
 class AddStudentsToModuleTest(TeacherUnitTest):

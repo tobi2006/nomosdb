@@ -260,9 +260,11 @@ class Module(models.Model):
         exam = False
         for assessment in self.assessments.all():
             if assessment.title != 'Exam':  # Make sure the exam comes last
-                returnlist.append((assessment.title, assessment.value))
+                returnlist.append(
+                    (assessment.title, assessment.value, assessment.available)
+                )
             else:
-                exam = ('Exam', assessment.value)
+                exam = ('Exam', assessment.value, assessment.available)
         if exam:
             returnlist.append(exam)
         return returnlist
@@ -323,10 +325,28 @@ class Module(models.Model):
                     assessment.get_assessment_group_overview_url() +
                     '">Assessment group overview for ' +
                     assessment.title +
-                    '</a></li>' +
-                    '<li class="divider"></li>'
+                    '</a></li>' 
                 )
                 returnlist.append(html)
+            if assessment.available:
+                html = (
+                    '<li><a href="' +
+                    assessment.get_toggle_availability_url() +
+                    '">Hide ' +
+                    assessment.title +
+                    ' from students</a></li>' +
+                    '<li class="divider"></li>'
+                )
+            else:
+                html = (
+                    '<li><a href="' +
+                    assessment.get_toggle_availability_url() +
+                    '">Show ' +
+                    assessment.title +
+                    ' to students</a></li>' +
+                    '<li class="divider"></li>'
+                )
+            returnlist.append(html)
         return returnlist
 
     def all_group_assessments(self):
