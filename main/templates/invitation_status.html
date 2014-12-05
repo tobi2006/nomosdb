@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if students_without_email %}
+<div id="no_email">
+    <p>The following students did not have an email address on the system and could therefore not be invited. Please go to their pages and add the email addresses. You then have to invite them the same way you did now.</p>
+
+    <ul id="students_without_email">
+        {% for student in students_without_email %}
+        <li><a href="{{ student.get_edit_url }}">{{ student.name }} ({{ student.student_id }})</a>
+        {% endfor %}
+    </ul>
+</div>
+
+<br><hr><br>
+
+{% endif %}
+
+{% if students_added %}
+
+<div id="added">
+    <p>The following students were successfully invited and should have received their invitation emails. Please check with them in case the emails were blocked by spam filtering.</p>
+
+    <ul id="students_added">
+        {% for student in students_added %}
+        <li>{{ student.name }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endif %}
+
+{% endblock %}

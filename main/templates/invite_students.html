@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block formstart %}
+    <form action="" id="invite_students_form" method="post"> 
+{% endblock %}
+
+{% block content %}
+
+<h1>Invite Students to NomosDB</h1>
+
+<p>
+This function will give the students access to the Database and will send them an email with their
+user name and an automatically generated password. Students that were added to the database and
+already have been given access will not appear in this list.
+</p>
+
+<br><hr><br>
+
+<div class="btn-group">
+    {% if year.1 %}
+    <button class="btn btn-default" type="button" id="toggle_1">Hide Year 1</button>
+    {% endif %}
+    {% if year.2 %}
+    <button class="btn btn-default" type="button" id="toggle_2">Hide Year 2</button>
+    {% endif %}
+    {% if year.3 %}
+    <button class="btn btn-default" type="button" id="toggle_3">Hide Year 3</button>
+    {% endif %}
+</div>
+
+<br><br>
+
+<input type="checkbox" id="select_all_visible"> Select all
+
+<table id="sortable_table" class="table table-hover table-sortable">
+    <thead>
+        <th>
+            &nbsp;
+        </th>
+        <th>
+            Student
+        </th>
+        <th>
+            Year
+        </th>
+        <th>
+            Course
+        </th>
+    </thead>
+    <tbody>
+        {% for student in students %}
+            <tr class="year_{{ student.year }}">
+                <td>
+                    <input type="checkbox" name="selected_student_id" class="cb checkbox_{{ student.year }}" value="{{ student.student_id }}">
+                </td>
+                <td>
+                    {{ student.short_name }}
+                </td>
+                <td>
+                    {{ student.year }}
+                </td>
+                <td>
+                    {{ student.course.short_title }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<br><input type="submit" value="Invite Students" class="btn btn-default">
+
+{% endblock %}
+
+{% block formend %}
+    {% csrf_token %}
+    </form>
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+
+    $(document).ready(function(){
+
+        $("#select_all_visible").change(function(){
+            $(".cb").each(function(){
+                if ($(this).is(":visible"))
+                {
+                    if ($("#select_all_visible").attr('checked'))
+                    {
+                        $(this).attr('checked', 'checked');
+                    }
+                    else
+                    {
+                        $(this).removeAttr('checked');
+                    };
+                };
+            });
+        });
+
+        {% if year.1 %}
+            $("#toggle_1").click(function(){
+                $(".year_1").toggle();
+                if ($(this).text() == "Hide Year 1")
+                {
+                    $(this).text("Show Year 1");
+                    $(".checkbox_1").each(function(){
+                        $(this).removeAttr('checked');
+                    });
+                }
+                else
+                {
+                    $(this).text("Hide Year 1");
+                }
+            });
+        {% endif %}
+        {% if year.2 %}
+            $("#toggle_2").click(function(){
+                $(".year_2").toggle();
+                if ($(this).text() == "Hide Year 2")
+                {
+                    $(this).text("Show Year 2");
+                    $(".checkbox_2").each(function(){
+                        $(this).removeAttr('checked');
+                    });
+                }
+                else
+                {
+                    $(this).text("Hide Year 2");
+                }
+            });
+        {% endif %}
+        {% if year.3 %}
+            $("#toggle_3").click(function(){
+                $(".year_3").toggle();
+                if ($(this).text() == "Hide Year 3")
+                {
+                    $(this).text("Show Year 3");
+                    $(".checkbox_3").each(function(){
+                        $(this).removeAttr('checked');
+                    });
+                }
+                else
+                {
+                    $(this).text("Hide Year 3");
+                }
+            });
+        {% endif %}
+    });
+
+</script>
+
+{% endblock %}

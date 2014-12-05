@@ -17,7 +17,6 @@ Modules
 
 Students
 
-+ Logout button / password changing
 + Invite students function 
 
 Staff

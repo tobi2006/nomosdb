@@ -35,6 +35,39 @@ Enjoy the experience,
     )
     return message
 
+def new_student_email(name, username, password):
+    uni_name = Setting.objects.get(name='uni_name').value
+    nomosdb_url = Setting.objects.get(name='nomosdb_url').value
+    admin_email = Setting.objects.get(name='admin_email').value
+    admin_name = Setting.objects.get(name='admin_name').value
+    message = """
+Dear %s,
+
+You now have access to NomosDB, a simple and convenient way to download
+your marksheets.
+
+You can find NomosDB at %s, and you can get access with the following details:
+
+Username: %s
+Password: %s
+
+After you log in, please change your password using the appropriate button.
+
+Please remember to log out after you downloaded your marksheets, especially
+if you are using a publicly available computer.
+
+If you have any problems, please contact %s - thanks a lot!
+
+Best wishes,
+%s""" % (
+        name,
+        nomosdb_url,
+        username,
+        password,
+        admin_email,
+        admin_name
+    )
+    return message
 
 def password_reset_email(name, username, password):
     uni_name = Setting.objects.get(name='uni_name').value

@@ -130,6 +130,11 @@ urlpatterns += patterns(
         'export_tier_4_attendance',
         name='export_tier_4_attendance'
     ),
+    url(
+        r'^invite_students/([-\w]+)/$',
+        'invite_students',
+        name='invite_students'
+    ),
     url(r'^main_settings/$', 'main_settings', name='main_settings'),
     url(r'^my_tutees/$', 'my_tutees', name='my_tutees'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),

@@ -431,6 +431,81 @@ class AddEditStudentTest(TeacherUnitTest):
         self.assertContains(response, 'bb23')
 
 
+class InviteStudentTest(AdminUnitTest):
+    """Already added students can be invited"""
+
+    def test_students_can_be_invited_users_get_created(self):
+        subject_area = create_subject_area()
+        course = Course.objects.create(
+            title='BA in Cartoon Studies',
+            short_title='BA CS',
+        )
+        course.subject_areas.add(subject_area)
+        course.save()
+        student1 = create_student()
+        student1.email = 'bb23@acme.edu'
+        student1.save()
+        student2 = Student.objects.create(
+            student_id='bb4223',
+            first_name='Buster Middle Names',
+            last_name='Bunny',
+            email='bb4223@acme.edu',
+            year=2,
+            course=course
+        )
+        url = '/invite_students/' + subject_area.slug + '/'
+        request = self.factory.post(
+            url,
+            data={'selected_student_id': [
+                student1.student_id, student2.student_id
+                ]
+            }
+        )
+        request.user = self.user
+        invite_students(request, subject_area.slug, testing=True)
+        user1 = User.objects.get(username='bmnb1')
+        user2 = User.objects.get(username='bmnb2')
+        student1_out = Student.objects.get(student_id='bb23')
+        student2_out = Student.objects.get(first_name='Buster Middle Names')
+        self.assertEqual(student1_out.user, user1)
+        self.assertEqual(student2_out.user, user2)
+
+    def test_invitation_status_is_displayed_correctly(self):
+        subject_area = create_subject_area()
+        course = Course.objects.create(
+            title='BA in Cartoon Studies',
+            short_title='BA CS',
+        )
+        course.subject_areas.add(subject_area)
+        course.save()
+        student1 = create_student()  # No email address
+        student2 = Student.objects.create(
+            student_id='bb4223',
+            first_name='Buster',
+            last_name='Bunny',
+            year=2,
+            email='bb4423@acme.edu',
+            course=course
+        )
+        url = '/invite_students/' + subject_area.slug + '/'
+        request = self.factory.post(
+            url,
+            data={'selected_student_id': [
+                student1.student_id, student2.student_id
+                ]
+            }
+        )
+        request.user = self.user
+        response = invite_students(request, subject_area.slug, testing=True)
+        soup = BeautifulSoup(response.content)
+        added = str(soup.select('#students_added')[0])
+        not_added = str(soup.select('#students_without_email')[0])
+        self.assertIn(student1.name(), not_added)
+        self.assertIn(student2.name(), added)
+
+        
+
+
 class ModuleViewTest(TeacherUnitTest):
     """Tests for the module view"""
 
@@ -526,7 +601,6 @@ class ModuleViewTest(TeacherUnitTest):
             response,
             'Hide Dissertation from students'
         )
-        
 
 
 class AddStudentsToModuleTest(TeacherUnitTest):

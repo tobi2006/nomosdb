@@ -9,7 +9,7 @@ from django.shortcuts import redirect, render
 from main.forms import *
 from main.functions import week_number, week_starting_date
 from main.messages import (
-    new_staff_email, attendance_email, password_reset_email
+    new_staff_email, attendance_email, password_reset_email, new_student_email
 )
 from main.models import *
 from main.unisettings import *
@@ -418,10 +418,11 @@ def add_or_edit_staff(request, username=None, testing=False):
                 if not testing:
                     send_mail(subject, message, sender, [email, ])
                 else:
-                    print('\n')
-                    print('Subject: %s' % (subject,))
-                    print('---')
-                    print(message)
+                    pass
+                    # print('\n')
+                    # print('Subject: %s' % (subject,))
+                    # print('---')
+                    # print(message)
                 staff = Staff.objects.create(user=user)
             for subject_area in staff.subject_areas.all():
                 if subject_area.name not in form.cleaned_data['subject_areas']:
@@ -515,6 +516,82 @@ def add_or_edit_student(request, student_id=None):
         else:
             form = StudentForm()
     return render(request, 'student_form.html', {'form': form, 'edit': edit})
+
+
+@login_required
+@user_passes_test(is_admin)
+def invite_students(request, subject_area, testing=False):
+    """Creates users for students and sends an email with login details"""
+    if request.method == 'POST':
+        student_ids = request.POST.getlist('selected_student_id')
+        students_without_email = []
+        students_added = []
+        for student_id in student_ids:
+            student = Student.objects.get(student_id=student_id)
+            if student.email:
+                initials = ''
+                for word in student.first_name.split():
+                    initials += word[0]
+                initials = initials[:3]
+                initials += student.last_name[0]
+                initials = initials.lower()
+                number = 1
+                still_searching = True
+                while still_searching:
+                    username = initials + str(number)
+                    if User.objects.filter(username=username).exists():
+                        number += 1
+                    else:
+                        still_searching = False
+                password = User.objects.make_random_password()
+                user = User.objects.create_user(
+                    username=username, password=password)
+                student.user = user
+                student.save()
+                message = new_student_email(
+                    student.short_first_name(),
+                    username,
+                    password
+                )
+                subject = 'NomosDB Login Data'
+                sender = Setting.objects.get(name='admin_email').value
+                if not testing:
+                    send_mail(subject, message, sender, [student.email, ])
+                else:
+                    pass
+                    # print('\n')
+                    # print('Subject: %s' % (subject,))
+                    # print('---')
+                    # print(message)
+                students_added.append(student)
+            else:
+                students_without_email.append(student)
+        return render(
+            request,
+            'invitation_status.html',
+            {
+                'students_without_email': students_without_email,
+                'students_added': students_added
+            }
+        )
+
+
+                
+    else:
+        subject_area = SubjectArea.objects.get(slug=subject_area)
+        all_students = Student.objects.filter(active=True)
+        students = []
+        years = {}
+        for student in all_students:
+            if subject_area in student.course.subject_areas.all():
+                if student.user is None:
+                    students.append(student)
+                    years[student.year] = True
+        return render(
+            request,
+            'invite_students.html',
+            {'students': students, 'years': years}
+        )
 
 
 @login_required

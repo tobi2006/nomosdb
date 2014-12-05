@@ -103,4 +103,12 @@
     <a href="{% url "view_staff_by_name" %}" id="view_staff_by_name" class="btn btn-default">View Staff sorted by name</a>
     <a href="{% url "view_staff_by_subject" %}" id="view_staff_by_name" class="btn btn-default">View Staff sorted by subject areas</a>
 </div>
+
+<h2>Invite Students to NomosDB</h2>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+        <a href="{% url "invite_students" subject_area.slug %}" class="btn btn-default">{{ subject_area.name }}</a>
+    {% endfor %}
+</div>
 {% endblock %}
