@@ -1,7 +1,6 @@
 General
 
 + Implement IS specialties
-+ marking stuff!
 
 Courses / Subject Areas
 
@@ -13,11 +12,8 @@ Modules
 
 + Add AJAX functionality to module_form
 + Marking
-+ Toggle assessment availability
 
 Students
-
-+ Invite students function 
 
 Staff
 
