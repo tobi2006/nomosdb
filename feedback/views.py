@@ -243,37 +243,35 @@ def individual_marksheet(assessment, student, attempt):
             TableStyle(
                 [
                     ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-#                    ('BACKGROUND', (0, 3), (-1, 3), colors.lightgrey),
-#                    ('BACKGROUND', (0, 4), (0, -1), colors.lightgrey),
-#                    ('ALIGN', (1, 4), (-1, -1), 'CENTER'),
                     ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
                 ]
             )
         )
         elements.append(t1)
-        elements.append(Spacer(1, 1))
+        elements.append(Spacer(1, 4))
         data = [
             [
                 paragraph('Mode of Assessment'),
                 paragraph('Assessment Criteria'),
-                paragraph('Mark Allocation'),
                 paragraph('Mark')
             ]
         ]
         for x in range(1, 4):
             category = 'i-' + str(x)
-            row = [marksheet_type[category]]
+            row = [paragraph(marksheet_type[category])]
             helptext = category + '-helptext'
             row.append(paragraph(marksheet_type[helptext]))
-            row.append('100')
             row.append(str(feedback.category_mark(x, free=True)))
             data.append(row)
-        t = Table(data)
+        t = Table(data, colWidths=[1*inch, 4.4*inch, .7*inch])
         t.setStyle(
             TableStyle(
                 [
                     ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                    ('ALIGN', (-1, 1), (-1, -1), 'RIGHT'),
                 ]
             )
         )
@@ -373,6 +371,7 @@ def individual_marksheet(assessment, student, attempt):
             )
         )
     elements.append(t)
+    elements.append(Spacer(1, 4))
     comments = [
         bold_paragraph('General Comments'),
         Spacer(1, 4)
@@ -442,7 +441,7 @@ def export_individual_feedback(
             )
             all_students = module.students.all()
             documentlist = []
-            students = [] # Only the students where feedback has been entered
+            students = []  # Only the students where feedback has been entered
             for student in all_students:
                 performance = Performance.objects.get(
                     student=student, module=module)
@@ -451,7 +450,7 @@ def export_individual_feedback(
                         part_of=performance, assessment=assessment)
                     try:
                         feedback = IndividualFeedback.objects.get(
-                                assessment_result=result, attempt=attempt)
+                            assessment_result=result, attempt=attempt)
                         if feedback.completed:
                             students.append(student)
                     except IndividualFeedback.DoesNotExist:
@@ -474,7 +473,7 @@ def export_individual_feedback(
             return HttpResponseForbidden()
     else:
         student = Student.objects.get(student_id=student_id)
-        own_marksheet = False # Just for the filename
+        own_marksheet = False  # Just for the filename
         allowed = False
         if is_staff(request.user):
             allowed = True
