@@ -33,24 +33,24 @@ class GroupFeedbackTest(TeacherUnitTest):
             attempt='first'
         )
         comment = 'Generally a good presentation, but too many carrots'
-        feedback_in.set_individual_mark(1, student_1.student_id, 40)
-        feedback_in.set_individual_mark(
+        feedback_in.set_individual_part(1, student_1.student_id, 40)
+        feedback_in.set_individual_part(
             'comments',
             student_1.student_id,
             comment
         )
-        feedback_in.set_individual_mark(1, student_2.student_id, 50)
+        feedback_in.set_individual_part(1, student_2.student_id, 50)
         feedback_out = GroupFeedback.objects.first()
         self.assertEqual(
-            feedback_out.get_individual_mark(1, student_1.student_id),
+            feedback_out.get_individual_part(1, student_1.student_id),
             40
         )
         self.assertEqual(
-            feedback_out.get_individual_mark(1, student_2.student_id),
+            feedback_out.get_individual_part(1, student_2.student_id),
             50
         )
         self.assertEqual(
-            feedback_out.get_individual_mark('comments', student_1.student_id),
+            feedback_out.get_individual_part('comments', student_1.student_id),
             comment
         )
 
@@ -64,13 +64,23 @@ class GroupFeedbackTest(TeacherUnitTest):
             attempt='first'
         )
         marks = {student_1.student_id: 45, student_2.student_id: 55}
-        feedback_in.set_multiple_individual_marks(1, marks)
+        comments = {student_1.student_id: 'aaa', student_2.student_id: 'bbb'}
+        feedback_in.set_multiple_individual_parts(1, marks)
+        feedback_in.set_multiple_individual_parts('comments', comments)
         feedback_out = GroupFeedback.objects.first()
         self.assertEqual(
-            feedback_out.get_individual_mark(1, student_1.student_id),
+            feedback_out.get_individual_part(1, student_1.student_id),
             45
         )
         self.assertEqual(
-            feedback_out.get_individual_mark(1, student_2.student_id),
+            feedback_out.get_individual_part(1, student_2.student_id),
             55
+        )
+        self.assertEqual(
+            feedback_out.get_individual_part('comments', student_1.student_id),
+            'aaa'
+        )
+        self.assertEqual(
+            feedback_out.get_individual_part('comments', student_2.student_id),
+            'bbb'
         )

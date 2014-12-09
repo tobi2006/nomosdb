@@ -202,7 +202,7 @@ class GroupFeedback(models.Model):
             else:
                 return self.category_mark_8
 
-    def get_individual_mark(self, number, student_id):
+    def get_individual_part(self, number, student_id):
         if number == 1:
             all_marks = self.individual_mark_1
         elif number == 2:
@@ -237,7 +237,7 @@ class GroupFeedback(models.Model):
         else:
             return None
 
-    def set_individual_mark(self, number, student_id, mark):
+    def set_individual_part(self, number, student_id, mark):
         if number == 1:
             all_marks = self.individual_mark_1
         elif number == 2:
@@ -289,7 +289,7 @@ class GroupFeedback(models.Model):
             self.individual_comments = string_to_save
         self.save()
 
-    def set_multiple_individual_marks(self, number, set_mark_dict):
+    def set_multiple_individual_parts(self, number, set_mark_dict):
         if number == 1:
             all_marks = self.individual_mark_1
         elif number == 2:
