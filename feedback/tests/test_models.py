@@ -2,6 +2,7 @@ from .base import *
 from main.models import *
 from feedback.models import *
 
+
 class IndividualFeedbackTest(TeacherUnitTest):
     """Tests around the Individual Feedback Model"""
 
@@ -25,21 +26,21 @@ class GroupFeedbackTest(TeacherUnitTest):
     def test_individual_categories_can_be_saved_and_retrieved(self):
         stuff = set_up_stuff()
         module = stuff[0]
-        student1 = stuff[1]
-        student2 = stuff[2]
-        assessment = Assessment.objects.create(
-            module=module,
-            title='Group Presentation',
-            value=100
-        )
+        student_1 = stuff[1]
+        student_2 = stuff[2]
         feedback_in = GroupFeedback(
-            assessment=assessment,
             group_no=1,
             attempt='first'
         )
+        comment = 'Generally a good presentation, but too many carrots'
         feedback_in.set_individual_mark(1, student_1.student_id, 40)
+        feedback_in.set_individual_mark(
+            'comments',
+            student_1.student_id,
+            comment
+        )
         feedback_in.set_individual_mark(1, student_2.student_id, 50)
-        feedback_out.GroupFeedback.objects.first()
+        feedback_out = GroupFeedback.objects.first()
         self.assertEqual(
             feedback_out.get_individual_mark(1, student_1.student_id),
             40
@@ -47,4 +48,29 @@ class GroupFeedbackTest(TeacherUnitTest):
         self.assertEqual(
             feedback_out.get_individual_mark(1, student_2.student_id),
             50
+        )
+        self.assertEqual(
+            feedback_out.get_individual_mark('comments', student_1.student_id),
+            comment
+        )
+
+    def test_multiple_individual_categories_can_be_saved(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student_1 = stuff[1]
+        student_2 = stuff[2]
+        feedback_in = GroupFeedback(
+            group_no=1,
+            attempt='first'
+        )
+        marks = {student_1.student_id: 45, student_2.student_id: 55}
+        feedback_in.set_multiple_individual_marks(1, marks)
+        feedback_out = GroupFeedback.objects.first()
+        self.assertEqual(
+            feedback_out.get_individual_mark(1, student_1.student_id),
+            45
+        )
+        self.assertEqual(
+            feedback_out.get_individual_mark(1, student_2.student_id),
+            55
         )

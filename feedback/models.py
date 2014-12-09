@@ -127,8 +127,8 @@ class GroupFeedback(models.Model):
         ('second_resit', 'Second Resit'),
         ('qld_resit', 'QLD Resit')
     )
-    assessment = models.ManyToManyField(
-        Assessment, related_name='group_component_feedback')
+    assessment_results = models.ManyToManyField(
+        AssessmentResult, related_name='group_component_feedback')
     group_no = models.IntegerField()
     attempt = models.CharField(max_length=15, choices=ATTEMPTS)
     completed = models.BooleanField(blank=True, default=False)
@@ -157,10 +157,6 @@ class GroupFeedback(models.Model):
     individual_mark_6 = models.TextField(blank=True, null=True)
     individual_mark_7 = models.TextField(blank=True, null=True)
     individual_mark_8 = models.TextField(blank=True, null=True)
-    deduction = models.IntegerField(blank=True, null=True)
-    deduction_explanation = models.TextField(blank=True)
-    part_1_mark = models.IntegerField(blank=True, null=True)
-    part_2_mark = models.IntegerField(blank=True, null=True)
     comments = models.TextField(blank=True)
     individual_comments = models.TextField(blank=True)
 
@@ -223,13 +219,21 @@ class GroupFeedback(models.Model):
             all_marks = self.individual_mark_7
         elif number == 8:
             all_marks = self.individual_mark_8
+        elif number == 'comments':
+            all_marks = self.individual_comments
         mark_dict = {}
-        marks = all.split('\\\///')
-        for mark in marks:
-            mark_list = mark.split('||:||')
-            mark_dict[mark_list[0]] = mark_list[1]
+        if all_marks:
+            marks = all_marks.split('/-/-/-/')
+            for mark in marks:
+                if mark != '':
+                    mark_list = mark.split('||::||')
+                    mark_dict[mark_list[0]] = mark_list[1]
         if student_id in mark_dict:
-            return mark_dict[student_id]
+            try:
+                return_value = int(mark_dict[student_id])
+            except ValueError:
+                return_value = mark_dict[student_id]
+            return return_value
         else:
             return None
 
@@ -250,17 +254,21 @@ class GroupFeedback(models.Model):
             all_marks = self.individual_mark_7
         elif number == 8:
             all_marks = self.individual_mark_8
+        elif number == 'comments':
+            all_marks = self.individual_comments
         mark_dict = {}
-        marks = all.split('\\\///')
-        for mark in marks:
-            mark_list = mark.split('||:||')
-            mark_dict[mark_list[0]] = mark_list[1]
+        if all_marks:
+            marks = all_marks.split('/-/-/-/')
+            for existing_mark in marks:
+                if existing_mark != '':
+                    mark_list = existing_mark.split('||::||')
+                    mark_dict[mark_list[0]] = mark_list[1]
         mark_dict[student_id] = mark
         string_to_save = ''
-        for key, value in mark_dict.items:
-            this_string = key + '||::||' + value
+        for key, value in mark_dict.items():
+            this_string = key + '||::||' + str(value)
             string_to_save += this_string
-            string_to_save += '\\\///'
+            string_to_save += '/-/-/-/'
         if number == 1:
             self.individual_mark_1 = string_to_save
         elif number == 2:
@@ -277,6 +285,8 @@ class GroupFeedback(models.Model):
             self.individual_mark_7 = string_to_save
         elif number == 8:
             self.individual_mark_8 = string_to_save
+        elif number == 'comments':
+            self.individual_comments = string_to_save
         self.save()
 
     def set_multiple_individual_marks(self, number, set_mark_dict):
@@ -296,18 +306,22 @@ class GroupFeedback(models.Model):
             all_marks = self.individual_mark_7
         elif number == 8:
             all_marks = self.individual_mark_8
+        elif number == 'comments':
+            all_marks = self.individual_comments
         mark_dict = {}
-        marks = all.split('\\\///')
-        for mark in marks:
-            mark_list = mark.split('||:||')
-            mark_dict[mark_list[0]] = mark_list[1]
-        for key, value in set_mark_dict.items:
+        if all_marks:
+            marks = all_marks.split('/-/-/-/')
+            for existing_mark in marks:
+                if existing_mark != '':
+                    mark_list = existing_mark.split('||:||')
+                    mark_dict[mark_list[0]] = mark_list[1]
+        for key, value in set_mark_dict.items():
             mark_dict[key] = value
         string_to_save = ''
-        for key, value in mark_dict.items:
-            this_string = key + '||::||' + value
+        for key, value in mark_dict.items():
+            this_string = key + '||::||' + str(value)
             string_to_save += this_string
-            string_to_save += '\\\///'
+            string_to_save += '/-/-/-/'
         if number == 1:
             self.individual_mark_1 = string_to_save
         elif number == 2:
@@ -324,4 +338,6 @@ class GroupFeedback(models.Model):
             self.individual_mark_7 = string_to_save
         elif number == 8:
             self.individual_mark_8 = string_to_save
+        elif number == 'comments':
+            self.individual_comments = string_to_save
         self.save()
