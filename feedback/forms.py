@@ -131,3 +131,5 @@ def get_individual_feedback_form(marksheet_type):
                 fields.append(fieldname(marksheet_type, x))
 
     return IndividualFeedbackForm
+
+def get_group_feedback_form(marksheet_type):
