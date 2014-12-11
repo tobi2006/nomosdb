@@ -194,6 +194,11 @@ class Module(models.Model):
     class Meta:
         unique_together = ('code', 'year')
 
+    def save(self, *args, **kwargs):
+        self.code = self.code.replace(' ', '')
+        super(Module, self).save(*args, **kwargs)
+
+
     def __str__(self):
         next_year = str(int(self.year) + 1)
         nxt = next_year[-2:]
