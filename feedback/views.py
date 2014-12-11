@@ -86,6 +86,10 @@ def individual_feedback(
     )
 
 
+def group_feedback(
+        request, code, year, assessment_slug, student_id, attempt='first'):
+    pass
+
 # Functions for Reportlab stuff
 
 def logo():

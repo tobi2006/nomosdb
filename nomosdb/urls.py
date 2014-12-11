@@ -176,6 +176,16 @@ urlpatterns += patterns(
 urlpatterns += patterns(
     'feedback.views',
     url(
+        r'^group_feedback/(\w+)/(\d{4})/([-\w]+)/(\w+)/$',
+        'group_feedback',
+        name='group_feedback_first_attempt'
+    ),
+    url(
+        r'^group_feedback/(\w+)/(\d{4})/([-\w]+)/(\w+)/(\w+)/$',
+        'group_feedback',
+        name='group_feedback'
+    ),
+    url(
         r'^export_individual_feedback/(\w+)/(\d{4})/([-\w]+)/(\w+)/(\w+)/$',
         'export_individual_feedback',
         name='export_individual_feedback'
