@@ -575,8 +575,6 @@ def invite_students(request, subject_area, testing=False):
             }
         )
 
-
-                
     else:
         subject_area = SubjectArea.objects.get(slug=subject_area)
         all_students = Student.objects.filter(active=True)
@@ -590,7 +588,7 @@ def invite_students(request, subject_area, testing=False):
         return render(
             request,
             'invite_students.html',
-            {'students': students, 'years': years}
+            {'students': students, 'year': years}
         )
 
 
