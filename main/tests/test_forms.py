@@ -1,5 +1,7 @@
 from django.test import TestCase
 from main.forms import *
+from main.models import Module
+from .base import *
 
 class StudentFormTest(TestCase):
 
@@ -41,6 +43,21 @@ class ModuleFormTest(TestCase):
         self.assertIn('id="id_title"', form.as_p())
         self.assertIn('id="id_code"', form.as_p())
         self.assertIn('id="id_year"', form.as_p())
+
+    def test_module_form_cuts_spacebars_at_module_code(self):
+        subject_area = create_subject_area()
+        teacher = create_teacher()
+        form = ModuleForm(data={
+            'code': 'CE42 ',
+            'year': 2014,
+            'title': 'The Art of Carrot Eating',
+            'credits': 40,
+            'subject_areas': [subject_area.slug],
+            'teachers': [teacher.id]
+        })
+        form.save()
+        module = Module.objects.first()
+        self.assertEqual(module.code, 'CE42')
 
 
 class StaffFormTest(TestCase):
