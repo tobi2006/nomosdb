@@ -158,7 +158,9 @@ class GroupFeedback(models.Model):
     individual_mark_7 = models.TextField(blank=True, null=True)
     individual_mark_8 = models.TextField(blank=True, null=True)
     comments = models.TextField(blank=True)
-    individual_comments = models.TextField(blank=True)
+    individual_comments = models.TextField(blank=True, null=True)
+    individual_component_mark = models.TextField(blank=True, null=True)
+    group_component_mark = models.IntegerField(blank=True, null=True)
 
     def get_group_mark(self, number, free=False):
         if number == 1:
@@ -221,6 +223,8 @@ class GroupFeedback(models.Model):
             all_marks = self.individual_mark_8
         elif number == 'comments':
             all_marks = self.individual_comments
+        elif number == 'individual_component_mark':
+            all_marks = self.individual_component_mark
         mark_dict = {}
         if all_marks:
             marks = all_marks.split('/-/-/-/')
@@ -256,6 +260,8 @@ class GroupFeedback(models.Model):
             all_marks = self.individual_mark_8
         elif number == 'comments':
             all_marks = self.individual_comments
+        elif number == 'individual_component_mark':
+            all_marks = self.individual_component_mark
         mark_dict = {}
         if all_marks:
             marks = all_marks.split('/-/-/-/')
@@ -287,6 +293,8 @@ class GroupFeedback(models.Model):
             self.individual_mark_8 = string_to_save
         elif number == 'comments':
             self.individual_comments = string_to_save
+        elif number == 'individual_component_mark':
+            self.individual_component_mark = string_to_save
         self.save()
 
     def set_multiple_individual_parts(self, number, set_mark_dict):
@@ -308,6 +316,8 @@ class GroupFeedback(models.Model):
             all_marks = self.individual_mark_8
         elif number == 'comments':
             all_marks = self.individual_comments
+        elif number == 'individual_component_mark':
+            all_marks = self.individual_component_mark
         mark_dict = {}
         if all_marks:
             marks = all_marks.split('/-/-/-/')
@@ -340,4 +350,6 @@ class GroupFeedback(models.Model):
             self.individual_mark_8 = string_to_save
         elif number == 'comments':
             self.individual_comments = string_to_save
+        elif number == 'individual_component_mark':
+            self.individual_component_mark = string_to_save
         self.save()

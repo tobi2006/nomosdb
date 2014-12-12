@@ -88,7 +88,46 @@ def individual_feedback(
 
 def group_feedback(
         request, code, year, assessment_slug, student_id, attempt='first'):
-    pass
+    module = Module.objects.get(code=code, year=year)
+    assessment = Assessment.objects.get(module=module, slug=assessment_slug)
+    this_student = Student.objects.get(student_id=student_id)
+    jump_to = '#' + this_student.student_id
+    performance = Performance.objects.get(module=module, student=this_student)
+    try:
+        assessment_result = AssessmentResult.objects.get(
+            assessment=assessment, part_of=performance)
+    except AssessmentResult.DoesNotExist:
+        assessment_result = AssessmentResult.objects.create(
+            assessment=assessment)
+        performance.assessment_results.add(assessment_result)
+        performance.save()
+
+    # Group Numbers!
+
+    try:
+        feedback = GroupFeedback.objects.get(
+            assessment_result=assessment_result, attempt=attempt)
+    except GroupFeedback.DoesNotExist:
+        feedback = GroupFeedback.objects.create(
+            attempt=attempt,
+            marking_date=datetime.date.today(),
+        )
+        feedback.assessment_results.add(assessment_result)
+        if assessment.co_marking:
+            for staff in module.teachers.all():
+                feedback.markers.add(staff)
+        else:
+            feedback.markers.add(request.user.staff)
+    students = {}
+    for assessment_result in feedback.assessment_results.all():
+        student = assessment_result.part_of.student
+
+        # Get components here! Check categories
+
+
+
+        students[student] = ''
+
 
 # Functions for Reportlab stuff
 

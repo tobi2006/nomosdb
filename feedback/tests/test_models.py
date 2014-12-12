@@ -40,6 +40,11 @@ class GroupFeedbackTest(TeacherUnitTest):
             comment
         )
         feedback_in.set_individual_part(1, student_2.student_id, 50)
+        feedback_in.set_individual_part(
+            'individual_component_mark',
+            student_1.student_id,
+            55
+        )
         feedback_out = GroupFeedback.objects.first()
         self.assertEqual(
             feedback_out.get_individual_part(1, student_1.student_id),
@@ -53,6 +58,25 @@ class GroupFeedbackTest(TeacherUnitTest):
             feedback_out.get_individual_part('comments', student_1.student_id),
             comment
         )
+        self.assertEqual(
+            feedback_out.get_individual_part(
+                'individual_component_mark',
+                student_1.student_id
+            ),
+            55
+        )
+
+    def test_empty_values_return_none(self):
+        feedback = GroupFeedback(
+            group_no=1,
+            attempt='first'
+        )
+        self.assertEqual(feedback.get_individual_part(1, 'x'), None)
+        self.assertEqual(feedback.get_individual_part('comments', 'x'), None)
+        self.assertEqual(
+            feedback.get_individual_part('individual_component_mark', 'x'),
+            None
+        )
 
     def test_multiple_individual_categories_can_be_saved(self):
         stuff = set_up_stuff()
@@ -65,8 +89,11 @@ class GroupFeedbackTest(TeacherUnitTest):
         )
         marks = {student_1.student_id: 45, student_2.student_id: 55}
         comments = {student_1.student_id: 'aaa', student_2.student_id: 'bbb'}
+        individual_marks = {student_1.student_id: 66, student_2.student_id: 77}
         feedback_in.set_multiple_individual_parts(1, marks)
         feedback_in.set_multiple_individual_parts('comments', comments)
+        feedback_in.set_multiple_individual_parts(
+            'individual_component_mark', individual_marks)
         feedback_out = GroupFeedback.objects.first()
         self.assertEqual(
             feedback_out.get_individual_part(1, student_1.student_id),
@@ -83,4 +110,18 @@ class GroupFeedbackTest(TeacherUnitTest):
         self.assertEqual(
             feedback_out.get_individual_part('comments', student_2.student_id),
             'bbb'
+        )
+        self.assertEqual(
+            feedback_out.get_individual_part(
+                'individual_component_mark',
+                student_1.student_id
+            ),
+            66
+        )
+        self.assertEqual(
+            feedback_out.get_individual_part(
+                'individual_component_mark',
+                student_2.student_id
+            ),
+            77
         )
