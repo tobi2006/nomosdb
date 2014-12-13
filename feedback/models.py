@@ -4,7 +4,7 @@ from main.models import Assessment, AssessmentResult, Staff
 class IndividualFeedback(models.Model):
     """The model for a marksheet for an individual performance.
 
-    Make sure to implement setting complete = True in the functions,
+    Make sure to implement setting completed = True in the functions,
     otherwise there will be a warning sign next to the download
     icon in the module view.
     """
@@ -111,7 +111,7 @@ class IndividualFeedback(models.Model):
 
 
 class GroupFeedback(models.Model):
-    """The model for a marksheet for a Group Assessment."""
+    """The model for the group part of a Group Assessment."""
     MARKS = (
         (29, '0 - 39 %'),
         (39, '30 - 39 %'),
@@ -127,12 +127,12 @@ class GroupFeedback(models.Model):
         ('second_resit', 'Second Resit'),
         ('qld_resit', 'QLD Resit')
     )
-    assessment_results = models.ManyToManyField(
-        AssessmentResult, related_name='group_component_feedback')
-    group_no = models.IntegerField()
+    group_number = models.IntegerField()
     attempt = models.CharField(max_length=15, choices=ATTEMPTS)
+    assessment = models.ForeignKey(
+        Assessment, related_name="group_feedback")
     completed = models.BooleanField(blank=True, default=False)
-    marking_date = models.DateField(blank=True, null=True)
+    group_mark = models.IntegerField(blank=True, null=True)
     category_mark_1 = models.IntegerField(choices=MARKS, blank=True, null=True)
     category_mark_2 = models.IntegerField(choices=MARKS, blank=True, null=True)
     category_mark_3 = models.IntegerField(choices=MARKS, blank=True, null=True)
@@ -149,18 +149,7 @@ class GroupFeedback(models.Model):
     category_mark_6_free = models.IntegerField(blank=True, null=True)
     category_mark_7_free = models.IntegerField(blank=True, null=True)
     category_mark_8_free = models.IntegerField(blank=True, null=True)
-    individual_mark_1 = models.TextField(blank=True, null=True)
-    individual_mark_2 = models.TextField(blank=True, null=True)
-    individual_mark_3 = models.TextField(blank=True, null=True)
-    individual_mark_4 = models.TextField(blank=True, null=True)
-    individual_mark_5 = models.TextField(blank=True, null=True)
-    individual_mark_6 = models.TextField(blank=True, null=True)
-    individual_mark_7 = models.TextField(blank=True, null=True)
-    individual_mark_8 = models.TextField(blank=True, null=True)
     comments = models.TextField(blank=True)
-    individual_comments = models.TextField(blank=True, null=True)
-    individual_component_mark = models.TextField(blank=True, null=True)
-    group_component_mark = models.IntegerField(blank=True, null=True)
 
     def get_group_mark(self, number, free=False):
         if number == 1:
@@ -203,153 +192,3 @@ class GroupFeedback(models.Model):
                 return self.category_mark_8_free
             else:
                 return self.category_mark_8
-
-    def get_individual_part(self, number, student_id):
-        if number == 1:
-            all_marks = self.individual_mark_1
-        elif number == 2:
-            all_marks = self.individual_mark_2
-        elif number == 3:
-            all_marks = self.individual_mark_3
-        elif number == 4:
-            all_marks = self.individual_mark_4
-        elif number == 5:
-            all_marks = self.individual_mark_5
-        elif number == 6:
-            all_marks = self.individual_mark_6
-        elif number == 7:
-            all_marks = self.individual_mark_7
-        elif number == 8:
-            all_marks = self.individual_mark_8
-        elif number == 'comments':
-            all_marks = self.individual_comments
-        elif number == 'individual_component_mark':
-            all_marks = self.individual_component_mark
-        mark_dict = {}
-        if all_marks:
-            marks = all_marks.split('/-/-/-/')
-            for mark in marks:
-                if mark != '':
-                    mark_list = mark.split('||::||')
-                    mark_dict[mark_list[0]] = mark_list[1]
-        if student_id in mark_dict:
-            try:
-                return_value = int(mark_dict[student_id])
-            except ValueError:
-                return_value = mark_dict[student_id]
-            return return_value
-        else:
-            return None
-
-    def set_individual_part(self, number, student_id, mark):
-        if number == 1:
-            all_marks = self.individual_mark_1
-        elif number == 2:
-            all_marks = self.individual_mark_2
-        elif number == 3:
-            all_marks = self.individual_mark_3
-        elif number == 4:
-            all_marks = self.individual_mark_4
-        elif number == 5:
-            all_marks = self.individual_mark_5
-        elif number == 6:
-            all_marks = self.individual_mark_6
-        elif number == 7:
-            all_marks = self.individual_mark_7
-        elif number == 8:
-            all_marks = self.individual_mark_8
-        elif number == 'comments':
-            all_marks = self.individual_comments
-        elif number == 'individual_component_mark':
-            all_marks = self.individual_component_mark
-        mark_dict = {}
-        if all_marks:
-            marks = all_marks.split('/-/-/-/')
-            for existing_mark in marks:
-                if existing_mark != '':
-                    mark_list = existing_mark.split('||::||')
-                    mark_dict[mark_list[0]] = mark_list[1]
-        mark_dict[student_id] = mark
-        string_to_save = ''
-        for key, value in mark_dict.items():
-            this_string = key + '||::||' + str(value)
-            string_to_save += this_string
-            string_to_save += '/-/-/-/'
-        if number == 1:
-            self.individual_mark_1 = string_to_save
-        elif number == 2:
-            self.individual_mark_2 = string_to_save
-        elif number == 3:
-            self.individual_mark_3 = string_to_save
-        elif number == 4:
-            self.individual_mark_4 = string_to_save
-        elif number == 5:
-            self.individual_mark_5 = string_to_save
-        elif number == 6:
-            self.individual_mark_6 = string_to_save
-        elif number == 7:
-            self.individual_mark_7 = string_to_save
-        elif number == 8:
-            self.individual_mark_8 = string_to_save
-        elif number == 'comments':
-            self.individual_comments = string_to_save
-        elif number == 'individual_component_mark':
-            self.individual_component_mark = string_to_save
-        self.save()
-
-    def set_multiple_individual_parts(self, number, set_mark_dict):
-        if number == 1:
-            all_marks = self.individual_mark_1
-        elif number == 2:
-            all_marks = self.individual_mark_2
-        elif number == 3:
-            all_marks = self.individual_mark_3
-        elif number == 4:
-            all_marks = self.individual_mark_4
-        elif number == 5:
-            all_marks = self.individual_mark_5
-        elif number == 6:
-            all_marks = self.individual_mark_6
-        elif number == 7:
-            all_marks = self.individual_mark_7
-        elif number == 8:
-            all_marks = self.individual_mark_8
-        elif number == 'comments':
-            all_marks = self.individual_comments
-        elif number == 'individual_component_mark':
-            all_marks = self.individual_component_mark
-        mark_dict = {}
-        if all_marks:
-            marks = all_marks.split('/-/-/-/')
-            for existing_mark in marks:
-                if existing_mark != '':
-                    mark_list = existing_mark.split('||:||')
-                    mark_dict[mark_list[0]] = mark_list[1]
-        for key, value in set_mark_dict.items():
-            mark_dict[key] = value
-        string_to_save = ''
-        for key, value in mark_dict.items():
-            this_string = key + '||::||' + str(value)
-            string_to_save += this_string
-            string_to_save += '/-/-/-/'
-        if number == 1:
-            self.individual_mark_1 = string_to_save
-        elif number == 2:
-            self.individual_mark_2 = string_to_save
-        elif number == 3:
-            self.individual_mark_3 = string_to_save
-        elif number == 4:
-            self.individual_mark_4 = string_to_save
-        elif number == 5:
-            self.individual_mark_5 = string_to_save
-        elif number == 6:
-            self.individual_mark_6 = string_to_save
-        elif number == 7:
-            self.individual_mark_7 = string_to_save
-        elif number == 8:
-            self.individual_mark_8 = string_to_save
-        elif number == 'comments':
-            self.individual_comments = string_to_save
-        elif number == 'individual_component_mark':
-            self.individual_component_mark = string_to_save
-        self.save()

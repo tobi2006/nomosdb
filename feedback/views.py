@@ -93,37 +93,53 @@ def group_feedback(
     this_student = Student.objects.get(student_id=student_id)
     jump_to = '#' + this_student.student_id
     performance = Performance.objects.get(module=module, student=this_student)
+    assessment_result = AssessmentResult.objects.get(
+        assessment=assessment, part_of=performance)
+    group_number = assessment_result.assessment_group
+    if attempt == 'first':
+        marksheet_type = assessment.marksheet_type
+    else:
+        marksheet_type = assessment.resit_marksheet_type
     try:
-        assessment_result = AssessmentResult.objects.get(
-            assessment=assessment, part_of=performance)
-    except AssessmentResult.DoesNotExist:
-        assessment_result = AssessmentResult.objects.create(
-            assessment=assessment)
-        performance.assessment_results.add(assessment_result)
-        performance.save()
-    try:
-        feedback = GroupFeedback.objects.get(
-            assessment_result=assessment_result, attempt=attempt)
-    except GroupFeedback.DoesNotExist:
-        feedback = GroupFeedback.objects.create(
+        group_feedback = GroupFeedback.objects.get(
+            assessment=assessment,
             attempt=attempt,
+            group_number = group_number
+        )
+    except GroupFeedback.DoesNotExist:
+        group_feedback = GroupFeedback.objects.create(
+            assessment=assessment,
+            attempt=attempt,
+            group_number = group_number,
             marking_date=datetime.date.today(),
         )
-        feedback.assessment_results.add(assessment_result)
-        if assessment.co_marking:
-            for staff in module.teachers.all():
-                feedback.markers.add(staff)
-        else:
-            feedback.markers.add(request.user.staff)
-
-    # Group Numbers!
-    # Migrate groups if not fitting!
-    results_supposed_to_be_in = AssessmentResults
-
-
+    results_in_group = AssessmentResult.objects.filter(
+        assessment=assessment,
+        attempt=attempt,
+        assessment_group=group_number
+    )
     students = {}
-    for assessment_result in feedback.assessment_results.all():
+    for assessment_result in results_in_group:
         student = assessment_result.part_of.student
+        try:
+            feedback = IndividualFeedback.objects.get(
+                assessment_result=assessment_result,
+                attempt=attempt
+            )
+        except IndividualFeedback.DoesNotExist:
+            feedback = IndividualFeedback.objects.create(
+                assessment_result=assessment_result,
+                attempt=attempt
+                marking_date=datetime.date.today(),
+            )
+            if assessment.co_marking:
+                for staff in module.teachers.all():
+                    feedback.markers.add(staff)
+            else:
+                feedback.markers.add(request.user.staff)
+
+
+
 
         # Get components here! Check categories
 
