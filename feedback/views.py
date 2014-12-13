@@ -101,9 +101,6 @@ def group_feedback(
             assessment=assessment)
         performance.assessment_results.add(assessment_result)
         performance.save()
-
-    # Group Numbers!
-
     try:
         feedback = GroupFeedback.objects.get(
             assessment_result=assessment_result, attempt=attempt)
@@ -118,6 +115,12 @@ def group_feedback(
                 feedback.markers.add(staff)
         else:
             feedback.markers.add(request.user.staff)
+
+    # Group Numbers!
+    # Migrate groups if not fitting!
+    results_supposed_to_be_in = AssessmentResults
+
+
     students = {}
     for assessment_result in feedback.assessment_results.all():
         student = assessment_result.part_of.student
