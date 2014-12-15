@@ -88,6 +88,7 @@ def individual_feedback(
 
 def group_feedback(
         request, code, year, assessment_slug, student_id, attempt='first'):
+
     module = Module.objects.get(code=code, year=year)
     assessment = Assessment.objects.get(module=module, slug=assessment_slug)
     this_student = Student.objects.get(student_id=student_id)
@@ -96,31 +97,34 @@ def group_feedback(
     assessment_result = AssessmentResult.objects.get(
         assessment=assessment, part_of=performance)
     group_number = assessment_result.assessment_group
-    if attempt == 'first':
-        marksheet_type = assessment.marksheet_type
-    else:
-        marksheet_type = assessment.resit_marksheet_type
     try:
         group_feedback = GroupFeedback.objects.get(
             assessment=assessment,
+            group_number = group_number,
             attempt=attempt,
-            group_number = group_number
         )
     except GroupFeedback.DoesNotExist:
         group_feedback = GroupFeedback.objects.create(
             assessment=assessment,
-            attempt=attempt,
             group_number = group_number,
+            attempt=attempt,
             marking_date=datetime.date.today(),
         )
+        if assessment.co_marking:
+            for staff in module.teachers.all():
+                group_feedback.markers.add(staff)
+        else:
+            group_feedback.markers.add(request.user.staff)
     results_in_group = AssessmentResult.objects.filter(
         assessment=assessment,
-        attempt=attempt,
         assessment_group=group_number
     )
-    students = {}
+    students_in_group = []
+    original_marks = {}
+    feedback_dict = {}
     for assessment_result in results_in_group:
-        student = assessment_result.part_of.student
+        student = assessment_result.part_of.first().student
+        students_in_group.append(student)
         try:
             feedback = IndividualFeedback.objects.get(
                 assessment_result=assessment_result,
@@ -130,13 +134,44 @@ def group_feedback(
             feedback = IndividualFeedback.objects.create(
                 assessment_result=assessment_result,
                 attempt=attempt
-                marking_date=datetime.date.today(),
             )
-            if assessment.co_marking:
-                for staff in module.teachers.all():
-                    feedback.markers.add(staff)
-            else:
-                feedback.markers.add(request.user.staff)
+        feedback_dict[student.student_id] = feedback
+        original_marks[student.student_id] = assessment_result.get_one_mark(
+            attempt)
+    if attempt == 'first':
+        marksheet_type = assessment.marksheet_type
+    else:
+        marksheet_type = assessment.resit_marksheet_type
+    IndividualFeedbackForm = get_individual_feedback_form_for_group(
+        marksheet_type)
+    GroupFeedbackForm = get_group_feedback_form(marksheet_type)
+
+    if request.method == 'POST':
+#        group_form = GroupForm(request.POST, prefix='group')
+#        if group_form.is_valid():
+#            group_form.save()
+        pass
+    else:
+        group_form = GroupFeedbackForm(prefix='group')
+        student_forms = {}
+        for student in students_in_group:
+            student_form = IndividualFeedbackForm(
+                instance=feedback_dict[student.student_id],
+                prefix=student.student_id
+            )
+            student_forms[student] = student_form
+        return render(
+            request,
+            'group_feedback.html',
+            {
+                'assessment': assessment,
+                'group_form': group_form,
+                'student_forms': student_forms,
+                'jump_to': jump_to,
+                'original_marks': original_marks,
+                'group_number': group_number,
+            }
+        )
 
 
 

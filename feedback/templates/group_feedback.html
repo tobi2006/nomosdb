@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ STATIC_URL }}js/chosen/chosen.css" type="text/css" media="screen">
+{% endblock %}
+
+{% block style %}
+.tooltip-inner {
+    max-width: 100%;
+    /* If max-width does not work, try using width instead */
+    width: 100%; 
+}
+
+.help-block {
+    visibility: hidden
+}
+
+{% endblock %}
+
+{% block content %}
+<h1>{{ module }}</h1>
+<h2>{{ assessment }} Feedback for Group {{ group_number }}</h2>
+<br>
+
+<div class="panel-group" id="accordion">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseGroup">
+                    Group Part{% comment %}<span class="badge pull-right" id="badge_group">No group mark yet</span>{% endcomment %}
+                </a>
+            </h4>
+        </div>
+        <div id="collapseGroup" class="panel-collapse collapse in">
+            <div class="panel-body">
+                {% crispy group_form %}
+            </div>
+        </div>
+    </div>
+    {% for student, form in student_forms.items %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ student.student_id }}">
+                        {{ student.first_name }} {{ student.last_name }}{% comment %}<span class="badge pull-right" id="badge_{{ student.student_id }}">Not marked yet</span>{% endcomment %}
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse{{ student.student_id }}" class="panel-collapse collapse">
+                <div class="panel-body">
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<br><br>
+    <input type = "submit" value="Save" class="btn btn-default">
+</form>
+
+
+{% endblock %}
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/chosen/chosen.jquery.min.js"> </script>
+<script src="{{ STATIC_URL }}js/bootstrap-datepicker.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        $('.glyphicon-question-sign').tooltip();
+        $(".chosen-select").chosen();
+        $(".datepicker").datepicker({
+            format: "dd/mm/yyyy",
+            weekstart: 1
+        });
+
+        {% if assessment.submission_date %}
+            var deadline = new Date("{{ assessment.submission_date }}");
+            $('#id_submission_date').change(function() {
+                var datestring = $(this).val();
+                var datearray = datestring.split('/');
+                var year = datearray[2];
+                var month = parseInt(datearray[1]) - 1;
+                var day = datearray[0]
+                var submission_date = new Date(year, month, day);
+                if (submission_date > deadline) {
+                    var difference = submission_date - deadline;
+                    var seconds = difference / 1000;
+                    var minutes = seconds / 60;
+                    var hours =  minutes / 60;
+                    var days = hours / 24;
+                    if (days > 4) {
+                        var penalty_suggestion = 'The submission was 5 or more days after the deadline. If this group has no extenuating circumstances, this should result in a mark of 0';
+                    }
+                    else {
+                        var penalty = days * 5;
+                        var penalty_suggestion = 'The submission was ' + days + ' days after the deadline. If this group has no extenuating circumstances, the mark should be reduced by ' + penalty + ' points.';
+                    };
+                }
+                else {
+                    penalty_suggestion = '';
+                };
+                $('#penalty_suggestion').text(penalty_suggestion);
+            });
+        {% endif %}
+
+        {% if marksheet_type == 'MEDIATION_ROLE_PLAY' %}
+
+        function calculateAndValidate() {
+            var sum_of_marks = 0;
+            var number_of_marks = 0;
+            var any_error = false;
+            for (i=1; i<4; i++) {
+                var error = false;
+                entry_id = '#id_category_mark_' + i.toString() + '_free';
+                entry = $(entry_id).val();
+                console.log(entry_id);
+                console.log(entry);
+                if (entry==null || entry=="") {
+                }
+                else {
+                    var mark = parseInt(entry);
+                    if (mark > 100) {
+                        var errortext = "The highest mark possible is 100";
+                        error = true;
+                    }
+                    else {
+                        sum_of_marks = sum_of_marks + mark;
+                        number_of_marks++;
+                    };
+                    var error_id = '#error_' + i.toString();
+                    if (error) {
+                        $(error_id).text(errortext);
+                        any_error = true;
+                    }
+                    else {
+                        $(error_id).text('');
+                    };
+                };
+            };
+            if (any_error) {
+                $('#submit-id-save').prop('disabled', true);
+            }
+            else {
+                $('#submit-id-save').prop('disabled', false);
+            }
+            if (number_of_marks > 0) {
+                var tmp = sum_of_marks/number_of_marks;
+                var overall_mark = Math.round(tmp);
+            }
+            else {
+                var overall_mark = '';
+            };
+            $('#id_mark').val(overall_mark.toString());
+        };
+
+        $('#id_category_mark_1_free').change(function(){
+            calculateAndValidate();
+        });
+        $('#id_category_mark_2_free').change(function(){
+            calculateAndValidate();
+        });
+        $('#id_category_mark_3_free').change(function(){
+            calculateAndValidate();
+        });
+
+        {% endif %}
+
+    });
+
+</script>
+{% endblock %}

@@ -455,7 +455,17 @@ class Assessment(models.Model):
 
     def get_blank_feedback_url(self):
         if self.group_assessment:
-            return_url = '/na'
+            url = reverse(
+                'group_feedback',
+                args=[
+                    self.module.code,
+                    self.module.year,
+                    self.slug,
+                    'xxxxx',
+                    'xxxxx'
+                ]
+            )
+            return_url = url.replace('xxxxx/xxxxx/', '')
         else:
             url = reverse(
                 'individual_feedback',
@@ -943,14 +953,17 @@ class Performance(models.Model):
                     result = all_results[assessment]
                     return_list.append(result.result_with_feedback())
                 else:
-                    if any(ms in x for x in AVAILABLE_MARKSHEETS):
-                        url = (
-                            assessment.get_blank_feedback_url() +
-                            self.student.student_id +
-                            '/first/'
-                        )
-                    else:
+                    if assessment.group_assessment:
                         url = None
+                    else:
+                        if any(ms in x for x in AVAILABLE_MARKSHEETS):
+                            url = (
+                                assessment.get_blank_feedback_url() +
+                                self.student.student_id +
+                                '/first/'
+                            )
+                        else:
+                            url = None
                     result = {'first': (None, url, None)}
                     return_list.append(result)
             else:

@@ -40,6 +40,7 @@ class IndividualFeedback(models.Model):
         related_name="feedback_as_second_marker"
     )
     marking_date = models.DateField(blank=True, null=True)
+    individual_mark = models.IntegerField(blank=True, null=True)
     category_mark_1 = models.IntegerField(choices=MARKS, blank=True, null=True)
     category_mark_2 = models.IntegerField(choices=MARKS, blank=True, null=True)
     category_mark_3 = models.IntegerField(choices=MARKS, blank=True, null=True)
@@ -133,6 +134,20 @@ class GroupFeedback(models.Model):
         Assessment, related_name="group_feedback")
     completed = models.BooleanField(blank=True, default=False)
     group_mark = models.IntegerField(blank=True, null=True)
+    markers = models.ManyToManyField(
+        Staff,
+        blank=True,
+        null=True,
+        related_name="group_feedback"
+    )
+    second_marker = models.ForeignKey(
+        Staff,
+        blank=True,
+        null=True,
+        related_name="group_feedback_as_second_marker"
+    )
+    marking_date = models.DateField(blank=True, null=True)
+    submission_date = models.DateField(blank=True, null=True)
     category_mark_1 = models.IntegerField(choices=MARKS, blank=True, null=True)
     category_mark_2 = models.IntegerField(choices=MARKS, blank=True, null=True)
     category_mark_3 = models.IntegerField(choices=MARKS, blank=True, null=True)
@@ -150,6 +165,9 @@ class GroupFeedback(models.Model):
     category_mark_7_free = models.IntegerField(blank=True, null=True)
     category_mark_8_free = models.IntegerField(blank=True, null=True)
     comments = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ('assessment', 'group_number', 'attempt')
 
     def get_group_mark(self, number, free=False):
         if number == 1:
