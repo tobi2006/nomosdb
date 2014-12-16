@@ -164,11 +164,6 @@ def get_individual_feedback_form_for_group(marksheet_type):
                 ),
                 HTML('<div id="error_3" class="has-error"></div>'),
                 'comments',
-                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
-                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
-                        '<p id="penalty_suggestion" class="text-warning">' +
-                        '</p></div>'
-                ),
                 'individual_mark',
             )
         elif number == 4:
@@ -194,11 +189,6 @@ def get_individual_feedback_form_for_group(marksheet_type):
                 ),
                 HTML('<div id="error_4" class="has-error"></div>'),
                 'comments',
-                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
-                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
-                        '<p id="penalty_suggestion" class="text-warning">' +
-                        '</p></div>'
-                ),
                 'individual_mark',
             )
         # helper.form_class = "form-horizontal"
