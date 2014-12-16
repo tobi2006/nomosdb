@@ -100,13 +100,13 @@ def group_feedback(
     try:
         group_feedback = GroupFeedback.objects.get(
             assessment=assessment,
-            group_number = group_number,
+            group_number=group_number,
             attempt=attempt,
         )
     except GroupFeedback.DoesNotExist:
         group_feedback = GroupFeedback.objects.create(
             assessment=assessment,
-            group_number = group_number,
+            group_number=group_number,
             attempt=attempt,
             marking_date=datetime.date.today(),
         )
@@ -147,12 +147,55 @@ def group_feedback(
     GroupFeedbackForm = get_group_feedback_form(marksheet_type)
 
     if request.method == 'POST':
-#        group_form = GroupForm(request.POST, prefix='group')
-#        if group_form.is_valid():
-#            group_form.save()
-        pass
+        group_form = GroupFeedbackForm(
+            instance=group_feedback,
+            data=request.POST,
+            prefix='group'
+        )
+        student_forms = {}
+        for student in students_in_group:
+            student_form = IndividualFeedbackForm(
+                instance=feedback_dict[student.student_id],
+                data=request.POST,
+                prefix=student.student_id
+            )
+            student_forms[student] = student_form
+        if group_form.is_valid():
+            valid = True
+            for student in students_in_group:
+                if not student_forms[student].is_valid():
+                    valid = False
+            if valid:
+                group_form.save()
+                data = group_form.cleaned_data
+                group_mark = int(data['group_mark'])
+                marksheet_type = CATEGORIES[assessment.marksheet_type]
+                split = marksheet_type['split']
+                group_weighting = int(split[0])
+                individual_weighting = int(split[1])
+                together = group_weighting + individual_weighting
+                group_part = group_mark * group_weighting
+                for student in students_in_group:
+                    student_forms[student].save()
+                    data = student_forms[student].cleaned_data
+                    individual_mark = int(data['individual_mark'])
+                    performance = Performance.objects.get(
+                        student=student,
+                        module=module
+                    )
+                    assessment_result = AssessmentResult.objects.get(
+                        assessment=assessment,
+                        part_of=performance
+                    )
+                    individual_part = individual_mark * individual_weighting
+                    mark_sum = group_part + individual_part
+                    mark = int(round(mark_sum/together))
+                    assessment_result.set_one_mark(attempt, mark)
+
+                return redirect(module.get_absolute_url())
+
     else:
-        group_form = GroupFeedbackForm(prefix='group')
+        group_form = GroupFeedbackForm(prefix='group', instance=group_feedback)
         student_forms = {}
         for student in students_in_group:
             student_form = IndividualFeedbackForm(
@@ -173,17 +216,8 @@ def group_feedback(
             }
         )
 
-
-
-
-        # Get components here! Check categories
-
-
-
-        students[student] = ''
-
-
 # Functions for Reportlab stuff
+
 
 def logo():
     """Returns the university logo, unless it is not available"""

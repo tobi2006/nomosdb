@@ -201,9 +201,11 @@ def get_individual_feedback_form_for_group(marksheet_type):
                 ),
                 'individual_mark',
             )
-        helper.form_class = "form-horizontal"
-        helper.label_class = "col-lg-4 col-md-2 col-sm-2"
-        helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+        # helper.form_class = "form-horizontal"
+        # helper.label_class = "col-lg-4 col-md-2 col-sm-2"
+        # helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+        helper.form_tag = False
+        helper.disable_csrf = True
 
         def __init__(self, *args, **kwargs):
             super(IndividualFeedbackForm, self).__init__(*args, **kwargs)
@@ -282,9 +284,11 @@ def get_group_feedback_form(marksheet_type):
                 ),
                 'group_mark'
             )
-        helper.form_class = "form-horizontal"
-        helper.label_class = "col-lg-4 col-md-2 col-sm-2"
-        helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+        # helper.form_class = "form-horizontal"
+        # helper.label_class = "col-lg-4 col-md-2 col-sm-2"
+        # helper.field_class = "col-lg-6 col-md-8 col-sm-10"
+        helper.form_tag = False
+        helper.disable_csrf = True
 
         def __init__(self, *args, **kwargs):
             super(GroupFeedbackForm, self).__init__(*args, **kwargs)

@@ -18,6 +18,11 @@
 
 {% endblock %}
 
+{% block formstart %}
+<form action="" method="post">
+{% csrf_token %}
+{% endblock %}
+
 {% block content %}
 <h1>{{ module }}</h1>
 <h2>{{ assessment }} Feedback for Group {{ group_number }}</h2>
@@ -58,9 +63,12 @@
 
 <br><br>
     <input type = "submit" value="Save" class="btn btn-default">
+
+
+{% endblock %}
+
+{% block formend %}
 </form>
-
-
 {% endblock %}
 
 {% block loadscripts %}
