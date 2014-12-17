@@ -164,7 +164,7 @@ def get_individual_feedback_form_for_group(marksheet_type):
                 ),
                 HTML('<div id="error_3" class="has-error"></div>'),
                 'comments',
-                'individual_mark',
+                Field('individual_mark', css_class='individual_mark')
             )
         elif number == 4:
             helper.layout = Layout(
@@ -242,9 +242,11 @@ def get_group_feedback_form(marksheet_type):
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +
-                        '</p></div>'
+                        '</p></div><br>'
                 ),
-                'group_mark'
+                'group_mark',
+                HTML('<div id="group-mark_error" class="has-error"></div>'),
+
             )
         if number == 3:
             helper.layout = Layout(
@@ -270,7 +272,7 @@ def get_group_feedback_form(marksheet_type):
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +
-                        '</p></div>'
+                        '</p></div><br>'
                 ),
                 'group_mark'
             )

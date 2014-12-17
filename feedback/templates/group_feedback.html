@@ -7,8 +7,7 @@
 
 {% block style %}
 .tooltip-inner {
-    max-width: 100%;
-    /* If max-width does not work, try using width instead */
+    max-width: 100%; /* If max-width does not work, try using width instead */
     width: 100%; 
 }
 
@@ -33,7 +32,7 @@
         <div class="panel-heading">
             <h4 class="panel-title">
                 <a data-toggle="collapse" data-parent="#accordion" href="#collapseGroup">
-                    Group Part{% comment %}<span class="badge pull-right" id="badge_group">No group mark yet</span>{% endcomment %}
+                    Group Part<span class="badge pull-right" id="badge_group">No group mark given yet</span>
                 </a>
             </h4>
         </div>
@@ -48,7 +47,7 @@
             <div class="panel-heading">
                 <h4 class="panel-title">
                     <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ student.student_id }}">
-                        {{ student.first_name }} {{ student.last_name }}{% comment %}<span class="badge pull-right" id="badge_{{ student.student_id }}">Not marked yet</span>{% endcomment %}
+                        {{ student.first_name }} {{ student.last_name }}<span class="badge pull-right" id="badge_{{ student.student_id }}">Not marked yet</span>
                     </a>
                 </h4>
             </div>
@@ -89,7 +88,7 @@
 
         {% if assessment.submission_date %}
             var deadline = new Date("{{ assessment.submission_date }}");
-            $('#id_submission_date').change(function() {
+            $('#id_group-submission_date').change(function() {
                 var datestring = $(this).val();
                 var datearray = datestring.split('/');
                 var year = datearray[2];
@@ -117,7 +116,82 @@
             });
         {% endif %}
 
+        function calculate_and_validate_group() {
+            var entry = $('#id_group-group_mark').val();
+            var badgetext = entry;
+            if (entry.length == 0) {
+                badgetext = 'No group mark given yet';
+            }
+            else {
+                var tmp = parseInt(entry);
+                if(isNaN(tmp)) {
+                    badgetext = 'Invalid Entry - please enter a number';
+                }
+                else {
+                    if (tmp>100) {
+                        badgetext = 'Mark too high - the highest mark possible is 100.';
+                    };
+                };
+            };
+            $("#badge_group").text(badgetext);
+            return badgetext;
+        };
 
+        function calculate_and_validate_student(student_id) {
+            var field_id = '#id_' + student_id + '-individual_mark';
+            var badge_id = '#badge_' + student_id;
+            var entry = $(field_id).val();
+            var badgetext = 'Huhu';
+            if (entry.length == 0) {
+                badgetext = 'No mark given yet';
+            }
+            else {
+                var tmp = parseInt(entry);
+                if(isNaN(tmp)) {
+                    badgetext = 'Invalid Entry - please enter a number';
+                }
+                else {
+                    if (tmp>100) {
+                        badgetext = 'Mark too high - the highest mark possible is 100.';
+                    }
+                    else {
+                        var group_mark_raw = calculate_and_validate_group();
+                        var group_mark = parseInt(group_mark_raw);
+                        if (isNaN(group_mark)) {
+                            badgetext = 'Individual Part: ' + entry + ' / Please enter a valid group mark';
+                        }
+                        else {
+                            var group_weighting = parseInt({{ split.0 }});
+                            var individual_weighting = parseInt({{ split.1 }});
+                            var together = group_weighting + individual_weighting;
+                            var a = group_weighting * group_mark;
+                            var b = individual_weighting * tmp;
+                            var both = a + b;
+                            var combined = both / together;
+                            badgetext = 'Individual Part: ' + entry + ' / Combined: ' + combined;
+                        };
+                    };
+                };
+            };
+            $(badge_id).text(badgetext);
+        };
+
+        function check_all() {
+            {% for student_id in student_ids %}
+            calculate_and_validate_student('{{ student_id }}');
+            {% endfor %}
+        };
+
+
+        $('#id_group-group_mark').change(function() {
+            check_all();
+        });
+
+        $('.individual_mark').change(function() {
+            check_all();
+        });
+
+        check_all();
 
     });
 

@@ -120,11 +120,13 @@ def group_feedback(
         assessment_group=group_number
     )
     students_in_group = []
+    student_ids = []
     original_marks = {}
     feedback_dict = {}
     for assessment_result in results_in_group:
         student = assessment_result.part_of.first().student
         students_in_group.append(student)
+        student_ids.append(student.student_id)
         try:
             feedback = IndividualFeedback.objects.get(
                 assessment_result=assessment_result,
@@ -145,6 +147,8 @@ def group_feedback(
     IndividualFeedbackForm = get_individual_feedback_form_for_group(
         marksheet_type)
     GroupFeedbackForm = get_group_feedback_form(marksheet_type)
+    marksheet_type = CATEGORIES[assessment.marksheet_type]
+    split = marksheet_type['split']
 
     if request.method == 'POST':
         group_form = GroupFeedbackForm(
@@ -169,8 +173,6 @@ def group_feedback(
                 group_form.save()
                 data = group_form.cleaned_data
                 group_mark = int(data['group_mark'])
-                marksheet_type = CATEGORIES[assessment.marksheet_type]
-                split = marksheet_type['split']
                 group_weighting = int(split[0])
                 individual_weighting = int(split[1])
                 together = group_weighting + individual_weighting
@@ -216,18 +218,20 @@ def group_feedback(
                 prefix=student.student_id
             )
             student_forms[student] = student_form
-        return render(
-            request,
-            'group_feedback.html',
-            {
-                'assessment': assessment,
-                'group_form': group_form,
-                'student_forms': student_forms,
-                'jump_to': jump_to,
-                'original_marks': original_marks,
-                'group_number': group_number,
-            }
-        )
+    return render(
+        request,
+        'group_feedback.html',
+        {
+            'assessment': assessment,
+            'group_form': group_form,
+            'student_forms': student_forms,
+            'jump_to': jump_to,
+            'original_marks': original_marks,
+            'group_number': group_number,
+            'student_ids': student_ids,
+            'split': split,
+        }
+    )
 
 # Functions for Reportlab stuff
 
