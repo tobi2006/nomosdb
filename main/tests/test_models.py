@@ -894,7 +894,7 @@ class AssessmentResultTest(TeacherUnitTest):
             completed = True
         )
         link1 = (
-            '/export_individual_feedback/' +
+            '/export_feedback/' +
             module1.code +
             '/' +
             str(module1.year) +
@@ -905,7 +905,7 @@ class AssessmentResultTest(TeacherUnitTest):
             '/first/'
         )
         link2 = (
-            '/export_individual_feedback/' +
+            '/export_feedback/' +
             module1.code +
             '/' +
             str(module1.year) +

@@ -175,6 +175,13 @@ def group_feedback(
                 individual_weighting = int(split[1])
                 together = group_weighting + individual_weighting
                 group_part = group_mark * group_weighting
+                group_feedback = GroupFeedback.objects.get(
+                    assessment=assessment,
+                    group_number=group_number,
+                    attempt=attempt
+                )
+                group_feedback.completed = True
+                group_feedback.save()
                 for student in students_in_group:
                     student_forms[student].save()
                     data = student_forms[student].cleaned_data
@@ -191,6 +198,12 @@ def group_feedback(
                     mark_sum = group_part + individual_part
                     mark = int(round(mark_sum/together))
                     assessment_result.set_one_mark(attempt, mark)
+                    feedback = IndividualFeedback.objects.get(
+                        assessment_result=assessment_result,
+                        attempt=attempt
+                    )
+                    feedback.completed = True
+                    feedback.save()
 
                 return redirect(module.get_absolute_url())
 
@@ -545,9 +558,269 @@ def individual_marksheet(assessment, student, attempt):
     return elements
 
 
+def group_presentation_marksheet(assessment, student, attempt):
+    """Marksheet for the standard Group Presentation Marksheets"""
+    styles = getSampleStyleSheet()
+    elements = []
+    module = assessment.module
+    performance = Performance.objects.get(student=student, module=module)
+    assessment_result = AssessmentResult.objects.get(
+        assessment=assessment, part_of=performance)
+    feedback = IndividualFeedback.objects.get(
+        assessment_result=assessment_result,
+        attempt=attempt
+    )
+    group_feedback = GroupFeedback.objects.get(
+        assessment=assessment,
+        group_number=assessment_result.assessment_group,
+        attempt=attempt
+    )
+    assessment_title = bold(assessment.title)
+    if attempt == 'first':
+        marksheet_type = CATEGORIES[assessment.marksheet_type]
+    else:
+        marksheet_type = CATEGORIES[assessment.marksheet_type_resit]
+    if attempt == 'first':
+        mark = str(assessment_result.mark)
+    elif attempt == 'resit':
+        mark = str(assessment_result.resit_mark)
+    elif attempt == 'second_resit':
+        mark = str(assessment_result.second_resit_mark)
+    elif attempt == 'qld_resit':
+        mark = str(assessment_result.qld_resit)
+    elements.append(logo())
+    elements.append(Spacer(1, 5))
+    title = heading('Law Undergraduate Assessment Sheet')
+    elements.append(title)
+    elements.append(Spacer(1, 5))
+    last_name = [
+        paragraph('Student family name'),
+        Spacer(1, 3),
+        bold_paragraph(student.last_name)
+    ]
+    first_name = [
+        paragraph('First name'),
+        Spacer(1, 3),
+        bold_paragraph(student.first_name)
+    ]
+    module_title = [
+        paragraph('Module Title'),
+        Spacer(1, 3),
+        bold_paragraph(module.title)
+    ]
+    module_code = [
+        paragraph('Module Code'),
+        Spacer(1, 3),
+        bold_paragraph(module.code)
+    ]
+    tmp = formatted_date(group_feedback.submission_date)
+    submission_date = [
+        paragraph('Date'),
+        Spacer(1, 3),
+        bold_paragraph(tmp)
+    ]
+    assessment_title = [
+        paragraph('Assessment Title'),
+        Spacer(1, 3),
+        bold_paragraph(assessment.title)
+    ]
+    group_no = [
+        paragraph('Group Number'),
+        Spacer(1, 3),
+        bold_paragraph(str(assessment_result.assessment_group))
+    ]
+    criteria = paragraph('Criteria')
+    categorylist = [criteria]
+    i_number = marksheet_type['number_of_individual_categories']
+    g_number = marksheet_type['number_of_group_categories']
+    number = i_number + g_number
+    for x in range(1, i_number+1):
+        tmp = 'i-' + str(x)
+        categorylist.append(paragraph(marksheet_type[tmp]))
+    for x in range(1, g_number+1):
+        tmp = 'g-' + str(x)
+        categorylist.append(paragraph(marksheet_type[tmp]))
+    data = [
+        [last_name, '', first_name, '', group_no, ''],
+        [module_title, '', assessment_title, '', module_code, submission_date],
+        [
+            '',
+            bold_paragraph('Individual Component'),
+            '',
+            '',
+            bold_paragraph('Group Component'),
+            ''
+        ],
+        categorylist
+    ]
+    row = ['80 +']
+    for category in range(1, i_number+1):
+        if feedback.category_mark(category) == 80:
+            row.append('X')
+        else:
+            row.append(' ')
+    for category in range(1, g_number+1):
+        if group_feedback.category_mark(category) == 80:
+            row.append('X')
+        else:
+            row.append(' ')
+    data.append(row)
+    row = ['70 - 79']
+    for category in range(1, i_number+1):
+        if feedback.category_mark(category) == 79:
+            row.append('X')
+        else:
+            row.append(' ')
+    for category in range(1, g_number+1):
+        if group_feedback.category_mark(category) == 79:
+            row.append('X')
+        else:
+            row.append(' ')
+    data.append(row)
+    row = ['60 - 69']
+    for category in range(1, i_number+1):
+        if feedback.category_mark(category) == 69:
+            row.append('X')
+        else:
+            row.append(' ')
+    for category in range(1, g_number+1):
+        if group_feedback.category_mark(category) == 69:
+            row.append('X')
+        else:
+            row.append(' ')
+    data.append(row)
+    row = ['50 - 59']
+    for category in range(1, i_number+1):
+        if feedback.category_mark(category) == 59:
+            row.append('X')
+        else:
+            row.append(' ')
+    for category in range(1, g_number+1):
+        if group_feedback.category_mark(category) == 59:
+            row.append('X')
+        else:
+            row.append(' ')
+    data.append(row)
+    row = ['40 - 49']
+    for category in range(1, i_number+1):
+        if feedback.category_mark(category) == 49:
+            row.append('X')
+        else:
+            row.append(' ')
+    for category in range(1, g_number+1):
+        if group_feedback.category_mark(category) == 49:
+            row.append('X')
+        else:
+            row.append(' ')
+    data.append(row)
+    row = ['30 - 39']
+    for category in range(1, i_number+1):
+        if feedback.category_mark(category) == 39:
+            row.append('X')
+        else:
+            row.append(' ')
+    for category in range(1, g_number+1):
+        if group_feedback.category_mark(category) == 39:
+            row.append('X')
+        else:
+            row.append(' ')
+    data.append(row)
+    row = ['Under 30']
+    for category in range(1, i_number+1):
+        if feedback.category_mark(category) == 29:
+            row.append('X')
+        else:
+            row.append(' ')
+    for category in range(1, g_number+1):
+        if group_feedback.category_mark(category) == 29:
+            row.append('X')
+        else:
+            row.append(' ')
+    data.append(row)
+    t = Table(data)
+    t.setStyle(
+        TableStyle(
+            [
+                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                ('SPAN', (0, 0), (1, 0)),
+                ('SPAN', (2, 0), (3, 0)),
+                ('SPAN', (4, 0), (5, 0)),
+                ('SPAN', (0, 1), (1, 1)),
+                ('SPAN', (2, 1), (3, 1)),
+                ('SPAN', (1, 2), (3, 2)),
+                ('SPAN', (4, 2), (-1, 2)),
+                ('BACKGROUND', (0, 2), (-1, 2), colors.lightgrey),
+                ('BACKGROUND', (0, 3), (-1, 3), colors.lightgrey),
+                ('BACKGROUND', (0, 4), (0, -1), colors.lightgrey),
+                ('ALIGN', (1, 4), (-1, -1), 'CENTER'),
+                ('BOX', (0, 2), (0, -1), 1, colors.black),
+                ('BOX', (0, 0), (-1, 1), 1, colors.black),
+                ('BOX', (4, 2), (-1, -1), 1, colors.black),
+                ('BOX', (0, 2), (0, -1), 1, colors.black),
+                ('BOX', (1, 2), (3, -1), 1, colors.black),
+            ]
+        )
+    )
+    elements.append(t)
+    elements.append(Spacer(1, 4))
+    group_comments = [
+        bold_paragraph('Comments on the Group Performance'),
+        Spacer(1, 4)
+    ]
+    feedbacklist = group_feedback.comments.split('\n')
+    for line in feedbacklist:
+        if line != "":
+            p = paragraph(line)
+            group_comments.append(p)
+            group_comments.append(Spacer(1, 4))
+    for comment in group_comments:
+        elements.append(comment)
+    elements.append(Spacer(1, 4))
+    comments = [
+        bold_paragraph('Comments on the Individual Performance'),
+        Spacer(1, 4)
+    ]
+    feedbacklist = feedback.comments.split('\n')
+    for line in feedbacklist:
+        if line != "":
+            p = paragraph(line)
+            comments.append(p)
+            comments.append(Spacer(1, 4))
+    for comment in comments:
+        elements.append(comment)
+    markers = group_feedback.markers.all()
+    marker_str = marker_string(markers)
+    marking_date = formatted_date(group_feedback.marking_date)
+    marked_by = [
+        [paragraph('Marked by'), bold_paragraph(marker_str)],
+        [paragraph('Date'), bold_paragraph(marking_date)]
+    ]
+    marked_by_table = Table(marked_by)
+    mark = [
+        [paragraph('Mark'), Paragraph(mark, styles['Heading1'])],
+        ['', '']
+    ]
+    mark_table = Table(mark)
+    mark_table.setStyle(TableStyle([('SPAN', (1, 0), (1, 1))]))
+    last_data = [[marked_by_table, '', '', mark_table, '']]
+    last_table = Table(last_data)
+    last_table.setStyle(
+        TableStyle(
+            [
+                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                ('SPAN', (0, 0), (2, 0)),
+                ('SPAN', (3, -1), (-1, -1))
+            ]
+        )
+    )
+    elements.append(last_table)
+    return elements
+
+
 # Export functions called from the website
 
-def export_individual_feedback(
+def export_feedback(
         request, code, year, assessment_slug, student_id, attempt='first'):
     """Will export either one or multiple feedback sheets.
 
@@ -589,7 +862,13 @@ def export_individual_feedback(
                 except AssessmentResult.DoesNotExist:
                     pass
             for student in students:
-                elements = individual_marksheet(assessment, student, attempt)
+                if assessment.group_assessment:
+                    elements = group_presentation_marksheet(
+                        assessment, student, attempt)
+                    pass
+                else:
+                    elements = individual_marksheet(
+                        assessment, student, attempt)
                 for element in elements:
                     documentlist.append(element)
                 documentlist.append(PageBreak())
@@ -624,7 +903,13 @@ def export_individual_feedback(
             document = SimpleDocTemplate(response)
             uni_name = Setting.objects.get(name="uni_name").value
             document.setAuthor = uni_name
-            elements = individual_marksheet(assessment, student, attempt)
+            if assessment.group_assessment:
+                elements = group_presentation_marksheet(
+                    assessment, student, attempt)
+                pass
+            else:
+                elements = individual_marksheet(
+                    assessment, student, attempt)
             document.build(elements)
             return response
         else:

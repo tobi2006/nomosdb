@@ -186,9 +186,9 @@ urlpatterns += patterns(
         name='group_feedback'
     ),
     url(
-        r'^export_individual_feedback/(\w+)/(\d{4})/([-\w]+)/(\w+)/(\w+)/$',
-        'export_individual_feedback',
-        name='export_individual_feedback'
+        r'^export_feedback/(\w+)/(\d{4})/([-\w]+)/(\w+)/(\w+)/$',
+        'export_feedback',
+        name='export_feedback'
     ),
     url(
         r'^individual_feedback/(\w+)/(\d{4})/([-\w]+)/(\w+)/$',

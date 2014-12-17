@@ -9,7 +9,7 @@ class IndividualFeedback(models.Model):
     icon in the module view.
     """
     MARKS = (
-        (29, '0 - 39 %'),
+        (29, '0 - 29 %'),
         (39, '30 - 39 %'),
         (49, '40 - 49 %'),
         (59, '50 - 59 %'),
@@ -114,7 +114,7 @@ class IndividualFeedback(models.Model):
 class GroupFeedback(models.Model):
     """The model for the group part of a Group Assessment."""
     MARKS = (
-        (29, '0 - 39 %'),
+        (29, '0 - 29 %'),
         (39, '30 - 39 %'),
         (49, '40 - 49 %'),
         (59, '50 - 59 %'),
@@ -169,7 +169,7 @@ class GroupFeedback(models.Model):
     class Meta:
         unique_together = ('assessment', 'group_number', 'attempt')
 
-    def get_group_mark(self, number, free=False):
+    def category_mark(self, number, free=False):
         if number == 1:
             if free:
                 return self.category_mark_1_free

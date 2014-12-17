@@ -465,7 +465,6 @@ class Assessment(models.Model):
                     'xxxxx'
                 ]
             )
-            return_url = url.replace('xxxxx/xxxxx/', '')
         else:
             url = reverse(
                 'individual_feedback',
@@ -477,24 +476,21 @@ class Assessment(models.Model):
                     'xxxxx'
                 ]
             )
-            return_url = url.replace('xxxxx/xxxxx/', '')
+        return_url = url.replace('xxxxx/xxxxx/', '')
         return return_url
 
     def get_blank_marksheet_url(self):
-        if self.group_assessment:
-            return_url = '/na'
-        else:
-            url = reverse(
-                'export_individual_feedback',
-                args=[
-                    self.module.code,
-                    self.module.year,
-                    self.slug,
-                    'xxxxx',
-                    'xxxxx'
-                ]
-            )
-            return_url = url.replace('xxxxx/xxxxx/', '')
+        url = reverse(
+            'export_feedback',
+            args=[
+                self.module.code,
+                self.module.year,
+                self.slug,
+                'xxxxx',
+                'xxxxx'
+            ]
+        )
+        return_url = url.replace('xxxxx/xxxxx/', '')
         return return_url
 
     def get_assessment_groups_url(self, attempt='first'):

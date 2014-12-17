@@ -99,7 +99,7 @@ class HomePageForStudentTest(StudentUnitTest):
         )
         performance1.assessment_results.add(assessment_result_1)
         link1 = (
-            '<a href="/export_individual_feedback/' +
+            '<a href="/export_feedback/' +
             module1.code +
             '/' +
             str(module1.year) +
@@ -123,7 +123,7 @@ class HomePageForStudentTest(StudentUnitTest):
         )
         performance1.assessment_results.add(assessment_result_2)
         link2_1 = (
-            '<a href="/export_individual_feedback/' +
+            '<a href="/export_feedback/' +
             module1.code +
             '/' +
             str(module1.year) +
@@ -165,7 +165,7 @@ class HomePageForStudentTest(StudentUnitTest):
         )
         performance2.assessment_results.add(assessment_result_3)
         link3 = (
-            '<a href="/export_individual_feedback/' +
+            '<a href="/export_feedback/' +
             module2.code +
             '/' +
             str(module2.year) +
@@ -194,7 +194,7 @@ class HomePageForStudentTest(StudentUnitTest):
         )
         performance2.assessment_results.add(assessment_result_4)
         link4_1 = (
-            '<a href="/export_individual_feedback/' +
+            '<a href="/export_feedback/' +
             module2.code +
             '/' +
             str(module2.year) +
