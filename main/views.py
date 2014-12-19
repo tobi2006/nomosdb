@@ -20,6 +20,7 @@ from reportlab.platypus import (
 )
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import landscape, A4
 from reportlab.platypus.flowables import PageBreak
 
 
@@ -1987,6 +1988,7 @@ def export_tier_4_attendance(request, slug, year):
         '.pdf'
     )
     document = SimpleDocTemplate(response)
+    document.pagesize = landscape(A4)
     elements = []
     styles = getSampleStyleSheet()
     next_year = str(int(year) + 1)
@@ -2033,9 +2035,7 @@ def export_tier_4_attendance(request, slug, year):
             print_date = (
                 str(starting_date.day) +
                 '/' +
-                str(starting_date.month) +
-                '/' +
-                str(starting_date.year)
+                str(starting_date.month)
             )
             header.append(print_date)
         data.append(header)
