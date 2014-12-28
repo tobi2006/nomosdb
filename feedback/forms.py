@@ -68,6 +68,11 @@ def get_individual_feedback_form(marksheet_type):
                 'comments',
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
+                        '<button id="check-spelling-button" class="' +
+                        'btn btn-sm pull-right">Check Spelling</button></div>'
+                ),
+                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
+                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +
                         '</p></div>'
                 ),
@@ -103,6 +108,11 @@ def get_individual_feedback_form(marksheet_type):
                 ),
                 HTML('<div id="error_4" class="has-error"></div>'),
                 'comments',
+                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
+                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
+                        '<button id="check-spelling-button" class="' +
+                        'btn btn-sm pull-right">Check Spelling</button></div>'
+                ),
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +

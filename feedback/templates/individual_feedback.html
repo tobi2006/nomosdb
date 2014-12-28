@@ -3,6 +3,7 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ STATIC_URL }}js/chosen/chosen.css" type="text/css" media="screen">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.spellchecker.min.css">
 {% endblock %}
 
 {% block style %}
@@ -28,10 +29,34 @@
 {% block loadscripts %}
 <script src="{{ STATIC_URL }}js/chosen/chosen.jquery.min.js"> </script>
 <script src="{{ STATIC_URL }}js/bootstrap-datepicker.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.spellchecker.min.js"></script>
 {% endblock %}
 
 {% block scripts %}
 <script type="text/javascript">
+
+    var spellchecker = new $.SpellChecker('.textarea', {
+        lang: 'en',
+        parser: 'text',
+        webservice: {
+            path: '../webservices/php/SpellChecker.php',
+            driver: 'google'
+        },
+        suggestBox: {
+            position: 'above'
+        },
+        incorrectWords: {
+            container: '#incorrect-word-list'
+        }
+    });
+
+    spellchecker.on('check.success', function() {
+        alert('There are no incorrectly spelt words.');
+    });
+
+    $("#check-spelling-button").click(function(e){
+        spellchecker.check();
+    });
 
     $(document).ready(function(){
         $('.glyphicon-question-sign').tooltip();
