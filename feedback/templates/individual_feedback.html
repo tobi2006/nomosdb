@@ -133,19 +133,19 @@
 
         {% endif %}
 
-    counter = function() {
-        var value = $('#id_comments').val();
+        counter = function() {
+            var value = $('#id_comments').val();
 
-        if (value.length == 0) {
-            $('#wc').html(0);
-            return;
-        }
-        var regex = /\s+/gi;
-        var wordCount = value.trim().replace(regex, ' ').split(' ').length;
-        $('#wc').html(wordCount);
-    };
+            if (value.length == 0) {
+                $('#wc').html(0);
+                return;
+            }
+            var regex = /\s+/gi;
+            var wordCount = value.trim().replace(regex, ' ').split(' ').length;
+            $('#wc').html(wordCount);
+        };
 
-    $(document).ready(function() {
+        counter();
         $('#id_comments').click(counter);
         $('#id_comments').change(counter);
         $('#id_comments').keydown(counter);
@@ -153,7 +153,6 @@
         $('#id_comments').keyup(counter);
         $('#id_comments').blur(counter);
         $('#id_comments').focus(counter);
-    });
 
     });
 
