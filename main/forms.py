@@ -41,8 +41,8 @@ class MainSettingsForm(forms.Form):
     helper.form_class = "form-horizontal"
     helper.label_class = "col-lg-4 col-md-2 col-sm-2"
     helper.field_class = "col-lg-6 col-md-8 col-sm-10"
-        
-    
+
+
 class SubjectAreaForm(forms.ModelForm):
     """The modelform for the subject area - very simple"""
 
@@ -286,10 +286,9 @@ class TuteeSessionForm(forms.ModelForm):
         fields = ['date_of_meet', 'meeting_took_place', 'notes']
 
 
-
 class CSVUploadForm(forms.Form):
     csvfile = forms.FileField(
         label='Select a .csv file',
         help_text=("Simply save the spreadsheet under Excel or LibreOffice " +
-            "as a .csv File (either under Save As or under Export")
+                   "as a .csv File (either under Save As or under Export")
     )

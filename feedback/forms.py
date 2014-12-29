@@ -39,6 +39,17 @@ def get_individual_feedback_form(marksheet_type):
 
     feedback_type = CATEGORIES[marksheet_type]
     number = int(feedback_type['number_of_categories'])
+    commenttext = (
+        '<div class="col-lg-4 col-md-2 col-sm-2"></div><div ' +
+        'class="col-lg-6 col-md-8 col-sm-10">' +
+        'For the sake of consistency, please stick ' +
+        'to the following general guidelines:<br> Your feedback should be ' +
+        'between 150 and 250 words long (currently: <b><span id="wc">0' +
+        '</span> words</b>) and ' +
+        'divided into 3 paragraphs:<br><ol><li>Summary of the content</li>' +
+        '<li>Areas the student did well in</li><li>Areas for Improvement' +
+        '</li></ol></div>'
+    )
 
     class IndividualFeedbackForm(forms.ModelForm):
         mark = forms.IntegerField(
@@ -65,6 +76,7 @@ def get_individual_feedback_form(marksheet_type):
                     get_helptext_html(marksheet_type, 3)
                 ),
                 HTML('<div id="error_3" class="has-error"></div>'),
+                HTML(commenttext),
                 'comments',
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
@@ -102,7 +114,8 @@ def get_individual_feedback_form(marksheet_type):
                     get_helptext_html(marksheet_type, 4)
                 ),
                 HTML('<div id="error_4" class="has-error"></div>'),
-                'comments',
+                HTML(commenttext),
+                Field('comments'),
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +
