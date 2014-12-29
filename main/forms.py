@@ -275,7 +275,7 @@ class TuteeSessionForm(forms.ModelForm):
             css_class="datepicker",
         ),
         'meeting_took_place',
-        Field('notes', 'spellcheck=true'),
+        'notes',
         FormActions(
             Submit('save', 'Save Session', css_class="btn btn-primary")
         )
