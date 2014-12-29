@@ -65,12 +65,7 @@ def get_individual_feedback_form(marksheet_type):
                     get_helptext_html(marksheet_type, 3)
                 ),
                 HTML('<div id="error_3" class="has-error"></div>'),
-                'comments',
-                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
-                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
-                        '<button id="check-spelling-button" class="' +
-                        'btn btn-sm pull-right">Check Spelling</button></div>'
-                ),
+                Field('comments', 'spellcheck=true'),
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +
@@ -107,12 +102,7 @@ def get_individual_feedback_form(marksheet_type):
                     get_helptext_html(marksheet_type, 4)
                 ),
                 HTML('<div id="error_4" class="has-error"></div>'),
-                'comments',
-                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
-                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
-                        '<button id="check-spelling-button" class="' +
-                        'btn btn-sm pull-right">Check Spelling</button></div>'
-                ),
+                Field('comments', 'spellcheck=true'),
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +
@@ -173,7 +163,7 @@ def get_individual_feedback_form_for_group(marksheet_type):
                     get_helptext_html(marksheet_type, 3)
                 ),
                 HTML('<div id="error_3" class="has-error"></div>'),
-                'comments',
+                Field('comments', 'spellcheck=true'),
                 Field('individual_mark', css_class='individual_mark')
             )
         elif number == 4:
@@ -198,7 +188,7 @@ def get_individual_feedback_form_for_group(marksheet_type):
                     get_helptext_html(marksheet_type, 4)
                 ),
                 HTML('<div id="error_4" class="has-error"></div>'),
-                'comments',
+                Field('comments', 'spellcheck=true'),
                 'individual_mark',
             )
         # helper.form_class = "form-horizontal"
@@ -248,7 +238,7 @@ def get_group_feedback_form(marksheet_type):
                     get_helptext_html(marksheet_type, 2, group=True)
                 ),
                 HTML('<div id="error_2" class="has-error"></div>'),
-                'comments',
+                Field('comments', 'spellcheck=true'),
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +
@@ -278,7 +268,7 @@ def get_group_feedback_form(marksheet_type):
                     get_helptext_html(marksheet_type, 3, group=True)
                 ),
                 HTML('<div id="error_3" class="has-error"></div>'),
-                'comments',
+                Field('comments', 'spellcheck=true'),
                 HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
                         '<div class="col-lg-6 col-md-8 col-sm-10">' +
                         '<p id="penalty_suggestion" class="text-warning">' +
