@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from main.models import *
 from main.views import *
 from bs4 import BeautifulSoup
@@ -503,7 +503,38 @@ class InviteStudentTest(AdminUnitTest):
         self.assertIn(student1.name(), not_added)
         self.assertIn(student2.name(), added)
 
-        
+
+class StaffResetPasswordTest(AdminUnitTest):
+    """Password can be reset by staff"""
+
+    def test_staff_can_reset_password(self):
+        request = self.factory.get(
+            '/reset_password/',
+            data={'email': self.user.email}
+        )
+        request.user = self.user
+        response = reset_password(request, testing=True)
+        self.assertContains(response, self.user.first_name)
+
+class StudentResetPasswordTest(NotYetLoggedInUnitTest):
+
+    def test_student_can_reset_password(self):
+        user = User.objects.create_user(
+            username='bb42', password='ilovecarrots')
+        student = Student.objects.create(
+            student_id='bb42',
+            last_name='Bunny',
+            first_name='Bugs',
+            user=user,
+            email = 'bb23@acme.edu'
+        )
+        request = self.factory.get(
+            '/reset_password/',
+            data={'email': student.email}
+        )
+        request.user = self.user
+        response = reset_password(request, testing=True)
+        self.assertContains(response, student.short_first_name())
 
 
 class ModuleViewTest(TeacherUnitTest):

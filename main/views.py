@@ -72,30 +72,51 @@ def is_student(user):
         return False
 
 
-def reset_password(request):
+def reset_password(request, testing=False):
     """Sends out a new password by email"""
     if 'email' in request.GET and request.GET['email']:
         email = request.GET['email']
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email=email)  # Works for staff
+            found = True
+            reset_for_student = False
+        except User.DoesNotExist:
+            try:
+                student = Student.objects.get(email=email)
+                user = student.user
+                found = False
+                if user:
+                    found = True
+                    reset_for_student = True
+            except Student.DoesNotExist:
+                found = False
+        if found:
             username = user.username
             new_password = User.objects.make_random_password()
             user.set_password(new_password)
             user.save()
-            if is_staff(user):
-                name = user.first_name
-            else:
+            if  reset_for_student:
                 name = user.student.short_first_name()
+            else:
+                name = user.first_name
             message = password_reset_email(name, username, new_password)
             sender = Setting.objects.get(name='admin_email').value
-            send_mail(
-                'Your new password on NomosDB',
-                message,
-                sender,
-                [email]
-            )
-            return redirect('/')
-        except User.DoesNotExist:
+            if testing:
+                text = message
+                return render(
+                    request,
+                    'test.html',
+                    {'text': text}
+                )
+            else:
+                send_mail(
+                    'Your new password on NomosDB',
+                    message,
+                    sender,
+                    [email]
+                )
+                return redirect('/')
+        else:
             return redirect(reverse(wrong_email))
     else:
         return redirect('/')

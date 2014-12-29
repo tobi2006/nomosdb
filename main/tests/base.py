@@ -38,7 +38,7 @@ def create_student(save=True):
         student_id='bb23',
         last_name='Bunny',
         first_name='Bugs Middle Names',
-        year=1
+        year=1,
     )
     if save:
         student.save()
@@ -190,4 +190,14 @@ class AdminUnitTest(TestCase):
             last_name="Jones"
         )
         admin = Staff.objects.create(user=user, role='admin')
+        self.user = user
+
+
+class NotYetLoggedInUnitTest(TestCase):
+    """For functions before logging in"""
+
+    def setUp(self):
+        set_initial_values()
+        self.factory = RequestFactory()
+        user = User()
         self.user = user

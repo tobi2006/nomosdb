@@ -61,11 +61,8 @@ def individual_feedback(
             form.save()
             mark = form.cleaned_data['mark']
             assessment_result.set_one_mark(attempt, int(mark))
-            if form.cleaned_data['mark']:
-                if form.cleaned_data['submission_date']:
-                    if form.cleaned_data['marking_date']:
-                        feedback.completed = True
-                        feedback.save()
+            feedback.completed = True
+            feedback.save()
             return redirect(module.get_absolute_url())
     else:
         form = IndividualFeedbackForm(
