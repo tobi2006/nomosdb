@@ -762,6 +762,16 @@ def year_view(request, year):
             if selected[1] == 'yes':
                 for student_id in selected_students:
                     student = Student.objects.get(student_id=student_id)
+                    performances = Performance.objects.filter(student=student)
+                    for performance in performances:
+                        for result in performance.assessment_results.all():
+                            try:
+                                for feedback in result.feedback.all():
+                                    feedback.delete()
+                            except AttributeError:
+                                pass
+                            result.delete()
+                        performance.delete()
                     student.delete()
             if selected[1] == 'no':
                 pass
@@ -1229,6 +1239,13 @@ def remove_student_from_module(request, code, year, student_id):
     module = Module.objects.get(code=code, year=year)
     student = Student.objects.get(student_id=student_id)
     performance = Performance.objects.get(module=module, student=student)
+    for result in performance.assessment_results.all():
+        try:
+            for feedback in result.feedback.all():
+                feedback.delete()
+        except AttributeError:
+            pass
+        result.delete()
     performance.delete()
     student.modules.remove(module)
     return redirect(module.get_absolute_url())
@@ -1240,6 +1257,15 @@ def delete_module(request, code, year):
     """Deletes a module and related performances, assessments and results"""
     module = Module.objects.get(code=code, year=year)
     if is_admin(request.user) or request.user.staff in module.teachers.all():
+        for performance in module.performances.all():
+            for assessment_result in performance.assessment_results.all():
+                try:
+                    for feedback in assessment_result.feedback.all():
+                        feedback.delete()
+                except AttributeError:
+                    pass
+                assessment_result.delete()
+            performance.delete()
         module.delete()
         return redirect(reverse('home'))
     else:

@@ -109,8 +109,7 @@ class IndividualFeedbackTest(TeacherUnitTest):
 #        )
 #        self.assertEqual(
 #            feedback_out.get_individual_part('comments', student_2.student_id),
-#            'bbb'
-#        )
+#            'bbb' #        )
 #        self.assertEqual(
 #            feedback_out.get_individual_part(
 #                'individual_component_mark',

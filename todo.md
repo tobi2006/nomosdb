@@ -15,7 +15,6 @@ Modules
 
 Students
 
-+ FIX BUG: Deleting student has to delete assessment results as well, same with removing student from module
 
 Staff
 

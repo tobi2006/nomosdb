@@ -516,6 +516,7 @@ class StaffResetPasswordTest(AdminUnitTest):
         response = reset_password(request, testing=True)
         self.assertContains(response, self.user.first_name)
 
+
 class StudentResetPasswordTest(NotYetLoggedInUnitTest):
 
     def test_student_can_reset_password(self):
@@ -726,6 +727,65 @@ class RemoveStudentFromModuleTest(TeacherUnitTest):
         self.assertEqual(Performance.objects.count(), 0)
         self.assertEqual(student.modules.count(), 0)
 
+    def test_assessment_results_are_deleted(self):
+        module = create_module()
+        student = create_student()
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment = Assessment.objects.create(
+            module=module,
+            title='Essay'
+        )
+        result = AssessmentResult.objects.create(assessment=assessment)
+        self.assertEqual(AssessmentResult.objects.count(), 1)
+        performance.assessment_results.add(result)
+        url = (
+            '/remove_student_from_module/' +
+            module.code +
+            '/' +
+            str(module.year) +
+            '/' +
+            student.student_id +
+            '/'
+        )
+        request = self.factory.get(url)
+        request.user = self.user
+        response = remove_student_from_module(
+            request, module.code, module.year, student.student_id)
+        self.assertEqual(AssessmentResult.objects.count(), 0)
+
+    def test_feedback_gets_deleted(self):
+        module = create_module()
+        student = create_student()
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment = Assessment.objects.create(
+            module=module,
+            title='Essay'
+        )
+        result = AssessmentResult.objects.create(assessment=assessment)
+        performance.assessment_results.add(result)
+        feedback = IndividualFeedback.objects.create(
+            assessment_result = result,
+            attempt = 'first'
+        )
+        url = (
+            '/remove_student_from_module/' +
+            module.code +
+            '/' +
+            str(module.year) +
+            '/' +
+            student.student_id +
+            '/'
+        )
+        request = self.factory.get(url)
+        request.user = self.user
+        response = remove_student_from_module(
+            request, module.code, module.year, student.student_id)
+        self.assertEqual(IndividualFeedback.objects.count(), 0)
+
 
 class DeleteModuleTest(TeacherUnitTest):
     """Tests that the Delete Module Function removes performances and marks"""
@@ -743,7 +803,7 @@ class DeleteModuleTest(TeacherUnitTest):
             value=100,
         )
         result = AssessmentResult.objects.create(
-            module=module,
+            assessment=assessment,
             mark=60
         )
         performance.assessment_results.add(result)
@@ -752,38 +812,9 @@ class DeleteModuleTest(TeacherUnitTest):
         delete_module(request, module.code, module.year)
         self.assertEqual(Module.objects.count(), 0)
         self.assertEqual(Student.objects.count(), 1)
-        self.assertEqual(Performance.objects.count(), 1)
+        self.assertEqual(Performance.objects.count(), 0)
         self.assertEqual(Assessment.objects.count(), 0)
         self.assertEqual(AssessmentResult.objects.count(), 0)
-
-    def test_only_instructor_or_admin_can_delete_a_module(self):
-        module = create_module()
-        student = create_student()
-        student.modules.add(module)
-        performance = Performance.objects.create(
-            module=module, student=student)
-        assessment = Assessment.objects.create(
-            module=module,
-            title="Dissertation",
-            value=100,
-        )
-        result = AssessmentResult.objects.create(
-            module=module,
-            part_of=performance,
-            mark=60
-        )
-        request = self.factory.get(module.get_delete_self_url())
-        request.user = self.user
-        response = delete_module(request, module.code, module.year)
-        self.assertEqual(Module.objects.count(), 0)
-        self.assertEqual(Student.objects.count(), 1)
-        self.assertEqual(Performance.objects.count(), 1)
-        self.assertEqual(Assessment.objects.count(), 0)
-        self.assertEqual(AssessmentResult.objects.count(), 0)
-
-
-class DeleteModuleTest(TeacherUnitTest):
-    """Tests that the Delete Module Function removes performances and marks"""
 
     def test_only_instructor_or_admin_can_delete_a_module(self):
         module = create_module()
@@ -804,6 +835,11 @@ class DeleteModuleTest(TeacherUnitTest):
         request = self.factory.get(module.get_delete_self_url())
         request.user = self.user
         response = delete_module(request, module.code, module.year)
+        self.assertEqual(Module.objects.count(), 1)
+        self.assertEqual(Student.objects.count(), 1)
+        self.assertEqual(Performance.objects.count(), 1)
+        self.assertEqual(Assessment.objects.count(), 1)
+        self.assertEqual(AssessmentResult.objects.count(), 1)
 
 
 class SeminarGroupTest(TeacherUnitTest):
@@ -1546,6 +1582,33 @@ class YearViewTest(AdminUnitTest):
         request.user = self.user
         response = year_view(request, '1')
         self.assertEqual(Student.objects.count(), 1)
+
+    def test_deleting_student_deletes_everything(self):
+        module = create_module()
+        student = create_student()
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        assessment = Assessment.objects.create(
+            module=module,
+            title='Essay'
+        )
+        result = AssessmentResult.objects.create(assessment=assessment)
+        feedback = IndividualFeedback.objects.create(
+            assessment_result = result,
+            attempt = 'first'
+        )
+        self.assertEqual(AssessmentResult.objects.count(), 1)
+        self.assertEqual(IndividualFeedback.objects.count(), 1)
+        performance.assessment_results.add(result)
+        request = self.factory.post('/year_view/1/', data={
+            'selected_student_id': [student.student_id],
+            'modify': 'delete_yes'
+        })
+        request.user = self.user
+        response = year_view(request, '1')
+        self.assertEqual(AssessmentResult.objects.count(), 0)
+        self.assertEqual(IndividualFeedback.objects.count(), 0)
 
 
 class CSVParsingTests(AdminUnitTest):
