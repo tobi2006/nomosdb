@@ -39,6 +39,7 @@ def get_individual_feedback_form(marksheet_type):
 
     feedback_type = CATEGORIES[marksheet_type]
     number = int(feedback_type['number_of_categories'])
+
     commenttext = (
         '<div class="col-lg-4 col-md-2 col-sm-2"></div><div ' +
         'class="col-lg-6 col-md-8 col-sm-10">' +
@@ -62,84 +63,168 @@ def get_individual_feedback_form(marksheet_type):
             'The date of the electronic submission is the relevant one' +
             '"></span>'
         )
-        if number == 3:
-            helper.layout = Layout(
-                Field('markers', css_class='chosen-select'),
-                Field('marking_date', css_class='datepicker'),
-                # The Prepended text for submission_date doesn't prepend anything!
-                PrependedText(
-                    Field('submission_date', css_class='datepicker'),
-                    submission_date_helptext
-                ),
-                PrependedText(
-                    fieldname(marksheet_type, 1),
-                    get_helptext_html(marksheet_type, 1)
-                ),
-                HTML('<div id="error_1" class="has-error"></div>'),
-                PrependedText(
-                    fieldname(marksheet_type, 2),
-                    get_helptext_html(marksheet_type, 2)
-                ),
-                HTML('<div id="error_2" class="has-error"></div>'),
-                PrependedText(
-                    fieldname(marksheet_type, 3),
-                    get_helptext_html(marksheet_type, 3)
-                ),
-                HTML('<div id="error_3" class="has-error"></div>'),
-                HTML(commenttext),
-                'comments',
-                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
-                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
-                        '<p id="penalty_suggestion" class="text-warning">' +
-                        '</p></div>'
-                ),
-                'mark',
-                FormActions(
-                    Submit(
-                        'save', 'Save', css_class="btn btn-primary")
+        if 'two_comment_parts' in feedback_type:
+            if feedback_type['two_comment_parts'] == True:
+                if number == 3:
+                    helper.layout = Layout(
+                        Field('markers', css_class='chosen-select'),
+                        Field('marking_date', css_class='datepicker'),
+                        # The Prepended text for submission_date doesn't
+                        # prepend
+                        PrependedText(
+                            Field('submission_date', css_class='datepicker'),
+                            submission_date_helptext
+                        ),
+                        PrependedText(
+                            fieldname(marksheet_type, 1),
+                            get_helptext_html(marksheet_type, 1)
+                        ),
+                        HTML('<div id="error_1" class="has-error"></div>'),
+                        PrependedText(
+                            fieldname(marksheet_type, 2),
+                            get_helptext_html(marksheet_type, 2)
+                        ),
+                        HTML('<div id="error_2" class="has-error"></div>'),
+                        PrependedText(
+                            fieldname(marksheet_type, 3),
+                            get_helptext_html(marksheet_type, 3)
+                        ),
+                        HTML('<div id="error_3" class="has-error"></div>'),
+                        HTML(commenttext),
+                        Field('comments'),
+                        Field('comments_2'),
+                        HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
+                                '<div class="col-lg-6 col-md-8 col-sm-10">' +
+                                '<p id="penalty_suggestion" ' +
+                                'class="text-warning"></p></div>'
+                        ),
+                        'mark',
+                        FormActions(
+                            Submit(
+                                'save', 'Save', css_class="btn btn-primary")
+                        )
+                    )
+                elif number == 4:
+                    helper.layout = Layout(
+                        Field('markers', css_class='chosen-select'),
+                        Field('marking_date', css_class='datepicker'),
+                        PrependedText(
+                            Field('submission_date', css_class='datepicker'),
+                            submission_date_helptext
+                        ),
+                        PrependedText(
+                            fieldname(marksheet_type, 1),
+                            get_helptext_html(marksheet_type, 1)
+                        ),
+                        HTML('<div id="error_1" class="has-error"></div>'),
+                        PrependedText(
+                            fieldname(marksheet_type, 2),
+                            get_helptext_html(marksheet_type, 2)
+                        ),
+                        HTML('<div id="error_2" class="has-error"></div>'),
+                        PrependedText(
+                            fieldname(marksheet_type, 3),
+                            get_helptext_html(marksheet_type, 3)
+                        ),
+                        HTML('<div id="error_3" class="has-error"></div>'),
+                        PrependedText(
+                            fieldname(marksheet_type, 4),
+                            get_helptext_html(marksheet_type, 4)
+                        ),
+                        HTML('<div id="error_4" class="has-error"></div>'),
+                        HTML(commenttext),
+                        Field('comments'),
+                        Field('comments_2'),
+                        HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
+                                '<div class="col-lg-6 col-md-8 col-sm-10">' +
+                                '<p id="penalty_suggestion" ' +
+                                'class="text-warning"></p></div>'
+                        ),
+                        'mark',
+                        FormActions(
+                            Submit(
+                                'save', 'Save', css_class="btn btn-primary")
+                        )
+                    )
+        else:
+            if number == 3:
+                helper.layout = Layout(
+                    Field('markers', css_class='chosen-select'),
+                    Field('marking_date', css_class='datepicker'),
+                    # The Prepended text for submission_date doesn't prepend
+                    PrependedText(
+                        Field('submission_date', css_class='datepicker'),
+                        submission_date_helptext
+                    ),
+                    PrependedText(
+                        fieldname(marksheet_type, 1),
+                        get_helptext_html(marksheet_type, 1)
+                    ),
+                    HTML('<div id="error_1" class="has-error"></div>'),
+                    PrependedText(
+                        fieldname(marksheet_type, 2),
+                        get_helptext_html(marksheet_type, 2)
+                    ),
+                    HTML('<div id="error_2" class="has-error"></div>'),
+                    PrependedText(
+                        fieldname(marksheet_type, 3),
+                        get_helptext_html(marksheet_type, 3)
+                    ),
+                    HTML('<div id="error_3" class="has-error"></div>'),
+                    HTML(commenttext),
+                    'comments',
+                    HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
+                            '<div class="col-lg-6 col-md-8 col-sm-10">' +
+                            '<p id="penalty_suggestion" ' +
+                            'class="text-warning"></p></div>'
+                    ),
+                    'mark',
+                    FormActions(
+                        Submit(
+                            'save', 'Save', css_class="btn btn-primary")
+                    )
                 )
-            )
-        elif number == 4:
-            helper.layout = Layout(
-                Field('markers', css_class='chosen-select'),
-                Field('marking_date', css_class='datepicker'),
-                PrependedText(
-                    Field('submission_date', css_class='datepicker'),
-                    submission_date_helptext
-                ),
-                PrependedText(
-                    fieldname(marksheet_type, 1),
-                    get_helptext_html(marksheet_type, 1)
-                ),
-                HTML('<div id="error_1" class="has-error"></div>'),
-                PrependedText(
-                    fieldname(marksheet_type, 2),
-                    get_helptext_html(marksheet_type, 2)
-                ),
-                HTML('<div id="error_2" class="has-error"></div>'),
-                PrependedText(
-                    fieldname(marksheet_type, 3),
-                    get_helptext_html(marksheet_type, 3)
-                ),
-                HTML('<div id="error_3" class="has-error"></div>'),
-                PrependedText(
-                    fieldname(marksheet_type, 4),
-                    get_helptext_html(marksheet_type, 4)
-                ),
-                HTML('<div id="error_4" class="has-error"></div>'),
-                HTML(commenttext),
-                Field('comments'),
-                HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
-                        '<div class="col-lg-6 col-md-8 col-sm-10">' +
-                        '<p id="penalty_suggestion" class="text-warning">' +
-                        '</p></div>'
-                ),
-                'mark',
-                FormActions(
-                    Submit(
-                        'save', 'Save', css_class="btn btn-primary")
+            elif number == 4:
+                helper.layout = Layout(
+                    Field('markers', css_class='chosen-select'),
+                    Field('marking_date', css_class='datepicker'),
+                    PrependedText(
+                        Field('submission_date', css_class='datepicker'),
+                        submission_date_helptext
+                    ),
+                    PrependedText(
+                        fieldname(marksheet_type, 1),
+                        get_helptext_html(marksheet_type, 1)
+                    ),
+                    HTML('<div id="error_1" class="has-error"></div>'),
+                    PrependedText(
+                        fieldname(marksheet_type, 2),
+                        get_helptext_html(marksheet_type, 2)
+                    ),
+                    HTML('<div id="error_2" class="has-error"></div>'),
+                    PrependedText(
+                        fieldname(marksheet_type, 3),
+                        get_helptext_html(marksheet_type, 3)
+                    ),
+                    HTML('<div id="error_3" class="has-error"></div>'),
+                    PrependedText(
+                        fieldname(marksheet_type, 4),
+                        get_helptext_html(marksheet_type, 4)
+                    ),
+                    HTML('<div id="error_4" class="has-error"></div>'),
+                    HTML(commenttext),
+                    Field('comments'),
+                    HTML('<div class="col-lg-4 col-md-2 col-sm-2"></div>' +
+                            '<div class="col-lg-6 col-md-8 col-sm-10">' +
+                            '<p id="penalty_suggestion" ' +
+                            'class="text-warning"></p></div>'
+                    ),
+                    'mark',
+                    FormActions(
+                        Submit(
+                            'save', 'Save', css_class="btn btn-primary")
+                    )
                 )
-            )
         helper.form_class = "form-horizontal"
         helper.label_class = "col-lg-4 col-md-2 col-sm-2"
         helper.field_class = "col-lg-6 col-md-8 col-sm-10"
@@ -161,6 +246,9 @@ def get_individual_feedback_form(marksheet_type):
             ]
             for x in range(1, number + 1):
                 fields.append(fieldname(marksheet_type, x))
+            if 'two_comment_parts' in feedback_type:
+                if feedback_type['two_comment_parts'] == True:
+                    fields.append('comments_2')
 
     return IndividualFeedbackForm
 

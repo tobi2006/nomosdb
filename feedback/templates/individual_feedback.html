@@ -131,6 +131,82 @@
             calculateAndValidate();
         });
 
+        {% elif marksheet_type == 'NEGOTIATION_CRITICAL_REFLECTION' %}
+
+        function calculateAndValidate() {
+            var sum_of_marks = 0;
+            var number_of_marks = 0;
+            var any_error = false;
+            for (i=1; i<4; i++) {
+                var error = false;
+                entry_id = '#id_category_mark_' + i.toString() + '_free';
+                entry = $(entry_id).val();
+                console.log(entry_id);
+                console.log(entry);
+                if (entry==null || entry=="") {
+                }
+                else {
+                    var mark = parseInt(entry);
+                    switch(i) {
+                        case 1:
+                            var max = 60;
+                            break;
+                        case 2:
+                            var max = 40;
+                            break;
+                        case 3:
+                            var max = 8;
+                            break;
+                    };
+                    if (mark > max) {
+                        var errortext = "The highest mark possible is ";
+                        errortext += max.toString();
+                        error = true;
+                    }
+                    else {
+                        if (i==3) {
+                            sum_of_marks = sum_of_marks - mark;
+                        }
+                        else {
+                            sum_of_marks = sum_of_marks + mark;
+                        };
+                        number_of_marks++;
+                    };
+                    var error_id = '#error_' + i.toString();
+                    if (error) {
+                        $(error_id).text(errortext);
+                        any_error = true;
+                    }
+                    else {
+                        $(error_id).text('');
+                    };
+                };
+            };
+            if (any_error) {
+                $('#submit-id-save').prop('disabled', true);
+            }
+            else {
+                $('#submit-id-save').prop('disabled', false);
+            }
+            if (number_of_marks > 0) {
+                var overall_mark = sum_of_marks;
+            }
+            else {
+                var overall_mark = '';
+            };
+            $('#id_mark').val(overall_mark.toString());
+        };
+
+        $('#id_category_mark_1_free').change(function(){
+            calculateAndValidate();
+        });
+        $('#id_category_mark_2_free').change(function(){
+            calculateAndValidate();
+        });
+        $('#id_category_mark_3_free').change(function(){
+            calculateAndValidate();
+        });
+
         {% endif %}
 
         counter = function() {

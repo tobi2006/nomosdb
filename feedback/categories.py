@@ -8,6 +8,7 @@ AVAILABLE_MARKSHEETS = (
     ('ESSAY', 'Essay'),
     ('LEGAL_PROBLEM', 'Legal Problem'),
     ('MEDIATION_ROLE_PLAY', 'Mediation Role Play'),
+    ('NEGOTIATION_CRITICAL_REFLECTION', 'Negotiation and Critical Reflection'),
     ('GROUP_PRESENTATION', 'Group Presentation'),
 )
 
@@ -69,6 +70,22 @@ CATEGORIES = {
         'i-3': 'Teamwork',
         'i-3-free': True,
         'i-3-helptext': "The preparation undertaken for the mediation. The relationship developed between the co-mediators. Effectiveness in working as a team; sharing responsibility and providing mutual support.",
+    },
+    'NEGOTIATION_CRITICAL_REFLECTION': {
+        'title': 'Assessed Negotiation and Critical Reflection',
+        'number_of_categories': 3,
+        'two_comment_parts': True,
+        'comment_1_title': 'Comment on negotiation',
+        'comment_2_title': 'Comment on written work',
+        'i-1': 'Individual performance in assessed negotiation',
+        'i-1-free': True,
+        'i-1-helptext': "60 Marks available",
+        'i-2': 'Individual written work',
+        'i-2-free': True,
+        'i-2-helptext': "Critical Reflection, 40 Marks available",
+        'i-3': 'Marks deducted for absence from seminars on 25 November and 9 December',
+        'i-3-free': True,
+        'i-3-helptext': "8 Marks total deduction possible",
     },
     'GROUP_PRESENTATION': {
         'title': 'Group Presentation',
