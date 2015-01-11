@@ -1031,7 +1031,7 @@ def my_tutees(request):
                 if tpl[1]:
                     if tpl[1] < 40:
                         problems.append('Failed %s for %s (%s)' % (
-                            tpl[0], module, tpl[1])
+                            tpl[0], performance.module, tpl[1])
                         )
         row['problems'] = problems
         row['meetings'] = TuteeSession.objects.filter(tutee=tutee)
