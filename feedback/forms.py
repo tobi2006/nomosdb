@@ -56,11 +56,21 @@ def get_individual_feedback_form(marksheet_type):
             validators=[MaxValueValidator(100), MinValueValidator(0)]
         )
         helper = FormHelper()
+        submission_date_helptext = (
+            '<span class="glyphicon glyphicon-question-sign" data-toggle=' +
+            '"tooltip" data-placement="bottom" data-html="true" title="' +
+            'The date of the electronic submission is the relevant one' +
+            '"></span>'
+        )
         if number == 3:
             helper.layout = Layout(
                 Field('markers', css_class='chosen-select'),
                 Field('marking_date', css_class='datepicker'),
-                Field('submission_date', css_class='datepicker'),
+                # The Prepended text for submission_date doesn't prepend anything!
+                PrependedText(
+                    Field('submission_date', css_class='datepicker'),
+                    submission_date_helptext
+                ),
                 PrependedText(
                     fieldname(marksheet_type, 1),
                     get_helptext_html(marksheet_type, 1)
@@ -93,7 +103,10 @@ def get_individual_feedback_form(marksheet_type):
             helper.layout = Layout(
                 Field('markers', css_class='chosen-select'),
                 Field('marking_date', css_class='datepicker'),
-                Field('submission_date', css_class='datepicker'),
+                PrependedText(
+                    Field('submission_date', css_class='datepicker'),
+                    submission_date_helptext
+                ),
                 PrependedText(
                     fieldname(marksheet_type, 1),
                     get_helptext_html(marksheet_type, 1)
