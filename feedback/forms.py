@@ -235,6 +235,11 @@ def get_individual_feedback_form(marksheet_type):
                 field_name = fieldname(marksheet_type, x)
                 labelname = 'i-' + str(x)
                 self.fields[field_name].label = feedback_type[labelname]
+                if feedback_type['title'] == (
+                        'Assessed Negotiation and Critical Reflection'):
+                    self.fields['comments'].label = 'Comments on negotiation'
+                    self.fields['comments_2'].label = (
+                        'Comments on written work')
 
         class Meta:
             model = IndividualFeedback

@@ -420,6 +420,121 @@ def individual_marksheet(assessment, student, attempt):
                 ]
             )
         )
+        elements.append(t)
+        elements.append(Spacer(1, 4))
+        comments = [
+            bold_paragraph('General Comments'),
+            Spacer(1, 4)
+        ]
+        feedbacklist = feedback.comments.split('\n')
+        for line in feedbacklist:
+            if line != "":
+                p = paragraph(line)
+                comments.append(p)
+                comments.append(Spacer(1, 4))
+        for comment in comments:
+            elements.append(comment)
+
+    elif assessment.marksheet_type == 'NEGOTIATION_CRITICAL_REFLECTION':
+        data = [
+            [last_name, first_name, ''],
+            [module_title, module_code, assessment_title],
+        ]
+        t1 = Table(data)
+        t1.setStyle(
+            TableStyle(
+                [
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('SPAN', (1, 0), (-1, 0)),
+                ]
+            )
+        )
+        elements.append(t1)
+        elements.append(Spacer(1, 4))
+        data = [
+            [
+                '',
+                paragraph('Marks Available'),
+                paragraph('Marks Awarded')
+            ],
+            [
+                bold_paragraph('Part 1: Assessed Negotiation 6 January 2015'),
+                '',
+                ''
+            ],
+            [
+                paragraph(marksheet_type['i-1']),
+                '60',
+                str(feedback.category_mark(1, free=True))
+            ],
+            [
+                bold_paragraph(
+                    'Part 2: Critical Reflection submitted 27 January 2015'),
+                '',
+                ''
+            ],
+            [
+                paragraph(marksheet_type['i-2']),
+                '40',
+                str(feedback.category_mark(2, free=True))
+            ],
+            [
+                bold_paragraph(
+                    'Marks deducted for Absences'),
+                '',
+                ''
+            ],
+            [
+                paragraph(marksheet_type['i-3']),
+                '8',
+                str(feedback.category_mark(3, free=True))
+            ],
+        ]
+        t = Table(data, colWidths=[4.3*inch, .9*inch, .9*inch])
+        #t = Table(data)
+        t.setStyle(
+            TableStyle(
+                [
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('SPAN', (0, 1), (-1, 1)),
+                    ('SPAN', (0, 3), (-1, 3)),
+                    ('SPAN', (0, 5), (-1, 5)),
+                    #                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    #                    ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                    ('ALIGN', (-1, 1), (-1, -1), 'RIGHT'),
+                ]
+            )
+        )
+        elements.append(t)
+        elements.append(Spacer(1, 4))
+        comments = [
+            bold_paragraph('Comments on negotiation'),
+            Spacer(1, 4)
+        ]
+        feedbacklist = feedback.comments.split('\n')
+        for line in feedbacklist:
+            if line != "":
+                p = paragraph(line)
+                comments.append(p)
+                comments.append(Spacer(1, 4))
+        for comment in comments:
+            elements.append(comment)
+        elements.append(Spacer(1, 4))
+        comments_2 = [
+            bold_paragraph('Comments on written work'),
+            Spacer(1, 4)
+        ]
+        feedbacklist = feedback.comments_2.split('\n')
+        for line in feedbacklist:
+            if line != "":
+                p = paragraph(line)
+                comments_2.append(p)
+                comments_2.append(Spacer(1, 4))
+        for comment in comments_2:
+            elements.append(comment)
+
 
     else:  # The standard marksheets following the standard template
         criteria = paragraph('Criteria')
@@ -515,20 +630,20 @@ def individual_marksheet(assessment, student, attempt):
                 ]
             )
         )
-    elements.append(t)
-    elements.append(Spacer(1, 4))
-    comments = [
-        bold_paragraph('General Comments'),
-        Spacer(1, 4)
-    ]
-    feedbacklist = feedback.comments.split('\n')
-    for line in feedbacklist:
-        if line != "":
-            p = paragraph(line)
-            comments.append(p)
-            comments.append(Spacer(1, 4))
-    for comment in comments:
-        elements.append(comment)
+        elements.append(t)
+        elements.append(Spacer(1, 4))
+        comments = [
+            bold_paragraph('General Comments'),
+            Spacer(1, 4)
+        ]
+        feedbacklist = feedback.comments.split('\n')
+        for line in feedbacklist:
+            if line != "":
+                p = paragraph(line)
+                comments.append(p)
+                comments.append(Spacer(1, 4))
+        for comment in comments:
+            elements.append(comment)
     markers = feedback.markers.all()
     marker_str = marker_string(markers)
     marking_date = formatted_date(feedback.marking_date)
