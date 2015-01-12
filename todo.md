@@ -20,4 +20,3 @@ Staff
 
 Feedback
 
-+ Change Label for Negotiation / written stuff (in feedback/forms.py)
