@@ -1274,6 +1274,17 @@ def delete_module(request, code, year):
 
 @login_required
 @user_passes_test(is_staff)
+def address_nines(request, code, year):
+    module = Module.objects.get(code=code, year=year)
+    return render(
+        request,
+        'address_nines.html',
+        {}
+    )
+
+
+@login_required
+@user_passes_test(is_staff)
 def assign_seminar_groups(request, code, year):
     """Allows to assign the students to seminar groups graphically"""
     module = Module.objects.get(code=code, year=year)

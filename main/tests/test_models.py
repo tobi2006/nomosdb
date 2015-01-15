@@ -290,6 +290,53 @@ class ModuleTest(TeacherUnitTest):
         sessions = [5, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17]
         self.assertEqual(module.all_teaching_weeks(), sessions)
 
+    def test_module_all_nine_averages_returns_all_averages_with_9_at_end(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        assessment_1 = Assessment.objects.create(
+            module=module,
+            title="Assessment 1",
+            value=50
+        )
+        assessment_2 = Assessment.objects.create(
+            module=module,
+            title="Assessment 2",
+            value=50
+        )
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        performance1 = Performance.objects.get(module=module, student=student1)
+        assessment_result1_1 = AssessmentResult.objects.create(
+            assessment=assessment_1,
+            mark=59
+        )
+        assessment_result1_2 = AssessmentResult.objects.create(
+            assessment=assessment_2,
+            mark=59
+        )
+        performance1.assessment_results.add(assessment_result1_1)
+        performance1.assessment_results.add(assessment_result1_2)
+        performance1.calculate_average()
+        performance2 = Performance.objects.get(module=module, student=student2)
+        assessment_result2_1 = AssessmentResult.objects.create(
+            assessment=assessment_1,
+            mark=54
+        )
+        assessment_result2_2 = AssessmentResult.objects.create(
+            assessment=assessment_2,
+            mark=54
+        )
+        performance2.assessment_results.add(assessment_result2_1)
+        performance2.assessment_results.add(assessment_result2_2)
+        performance2.calculate_average()
+        performance3 = Performance.objects.get(module=module, student=student3)
+        performance3.calculate_average()
+        all_nines = module.get_all_performances_with_9()
+        self.assertTrue(performance1 in all_nines)
+        self.assertFalse(performance2 in all_nines)
+        self.assertFalse(performance3 in all_nines)
+
 
 class PerformanceTest(TeacherUnitTest):
     """Tests for the Performance class"""

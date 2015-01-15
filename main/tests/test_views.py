@@ -1994,3 +1994,24 @@ class MyTuteesTests(TeacherUnitTest):
         response = my_tutees(request)
         self.assertContains(response, '1 Jan 1900')
         self.assertContains(response, '2 Jan 1900')
+
+
+
+class AddressNinesTest(TeacherUnitTest):
+    """Tests the function that allows to change averages ending with 9"""
+
+    def test_address_nines_uses_right_template(self):
+        module = create_module()
+        request = self.factory.get(module.get_address_nines_url())
+        request.user = self.user
+        response = address_nines(request, module.code, module.year)
+        self.assertTemplateUsed(response, 'address_nines.html')
+
+    def test_address_nines_shows_all_averages_ending_with_nine(self):
+        pass
+
+    def test_address_nines_shows_no_nines_found_message_when_no_nines(self):
+        pass
+
+    def test_address_nines_changes_marks(self):
+        pass

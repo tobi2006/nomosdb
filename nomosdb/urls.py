@@ -43,6 +43,11 @@ urlpatterns += patterns(
         'add_students_to_module',
         name='add_students_to_module'
     ),
+    url(
+        r'^address_nines/(\w+)/(\d{4})/$',
+        'address_nines',
+        name='address_nines'
+    ),
     url(r'^admin_dashboard/$', 'admin', name='admin'),
     url(
         r'^all_attendances/([-\w]+)/(\w+)/$',

@@ -252,6 +252,9 @@ class Module(models.Model):
             args=[self.code, self.year, student_id]
         )
 
+    def get_address_nines_url(self):
+        return reverse('address_nines', args=[self.code, self.year])
+
     def get_blank_remove_student_url(self):
         url = reverse(
             'remove_student_from_module',
@@ -359,6 +362,14 @@ class Module(models.Model):
         for assessment in self.assessments.all():
             if assessment.group_assessment:
                 returnlist.append(assessment)
+        return returnlist
+
+    def get_all_performances_with_9(self):
+        returnlist = []
+        for performance in self.performances.all():
+            average = str(performance.average)
+            if average[-1] == '9':
+                returnlist.append(performance)
         return returnlist
 
 
@@ -982,7 +993,7 @@ class Performance(models.Model):
             return_list.append(exam)
         return return_list
 
-    def all_assessment_results_as_tpls(self, only_result=False):
+    def all_assessment_results_as_tpls(self, only_result=False, slug=False):
         return_list = []
         there_is_an_exam = False
         all_results = {}
@@ -990,16 +1001,20 @@ class Performance(models.Model):
             all_results[result.assessment] = result
         for assessment in self.module.all_assessments():
             if assessment.title != 'Exam':
+                if slug:
+                    title = slugify(assessment.title)
+                else:
+                    title = assessment.title
                 if assessment in all_results:
                     result = all_results[assessment]
                     if only_result:
-                        return_tpl = (assessment.title, result.result())
+                        return_tpl = (title, result.result())
                     else:
                         return_tpl = (
-                            assessment.title, result.result_as_string())
+                            title, result.result_as_string())
                     return_list.append(return_tpl)
                 else:
-                    return_list.append((assessment.title, None))
+                    return_list.append((title, None))
             else:
                 there_is_an_exam = True
                 if assessment in all_results:
