@@ -47,18 +47,19 @@
             <td>
                 <label>{{ performance.student.short_name }}</label>
             </td>
-            {% for result in performance.all_assessment_results_as_tpls %}
+            {% for result in performance.all_results_as_slug_tpls %}
             <td>
                 <div class="input-group">
                     <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-minus-sign" id="{{ performance.student.student_id }}_minus_1"></span>
+                        <span class="glyphicon glyphicon-minus-sign" id="{{ performance.student.student_id }}_minus_{{ result.0 }}"></span>
                     </span>
-                        <input class="form-control mark_field {{ performance.student.student_id }}_input" id="{{ performance.student.student_id }}_1" name="{{ performance.student.student_id }}_1" value="{{ performance.assessment_1 }}">
+                    <input class="form-control mark_field {{ performance.student.student_id }}_input" id="{{ performance.student.student_id }}_1" name="{{ performance.student.student_id }}_{{ result.0 }}" value="{{ result.1 }}">
                     <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-plus-sign" id="{{ performance.student.student_id }}_plus_1"></span>
+                        <span class="glyphicon glyphicon-plus-sign" id="{{ performance.student.student_id }}_plus_{{ result.0 }}"></span>
                     </span>
                 </div>
-                <span class="help-block" id="{{ performance.student.student_id }}_error_1"></span>
+                (original: {{ result.1 }}
+                <span class="help-block" id="{{ performance.student.student_id }}_error_{{ result.0 }}"></span>
             </td>
             {% endfor %}
         </tr>

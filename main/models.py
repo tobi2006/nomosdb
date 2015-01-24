@@ -1031,6 +1031,9 @@ class Performance(models.Model):
             return_list.append(('<strong>Result</strong>', self.average))
         return return_list
 
+    def all_results_as_slug_tpls(self):
+        return self.all_assessment_results_as_tpls(only_result=True, slug=True)
+
     def calculate_average(self):
         sum_of_marks = 0
         for assessment in self.module.assessments.all():
