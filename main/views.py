@@ -1583,14 +1583,18 @@ def attendance(request, code, year, group):
     module = Module.objects.get(code=code, year=year)
     group = str(group)
     if group == 'all':
-        performances = Performance.objects.filter(module=module)
+        all_performances = Performance.objects.filter(module=module)
         seminar_group = False
     else:
-        performances = Performance.objects.filter(
+        all_performances = Performance.objects.filter(
             module=module,
             seminar_group=group
         )
         seminar_group = group
+    performances = []
+    for performance in all_performances:
+        if performance.student.active:
+            performances.append(performance)
     if request.method == 'POST':
         save = request.POST['save']
         save_li = save.split()
