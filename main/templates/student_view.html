@@ -34,7 +34,7 @@
                         <td><strong>Year</strong></td>
                         <td>{{ student.year }} {% if student.since %} (Studying since {{ student.since }}/{{ student.since|add:"1" }}) {% endif %}</td>
                         <td><strong>LSP</strong></td>
-                        <td>{% if student.lsp %}<a href="{{ student.get_lsp_view_url }}">View</a> / <a href="{{ student.get_lsp_edit_url }}">Edit</a>{% else %}No LSP - <a href="{{ student.get_lsp_edit_url }}">Add</a>{% endif %}</a></td>
+                        <td>{% if student.lsp %}This student has an LSP/IRAP{% else %}No LSP/IRAP{% endif %}</td>
                     </tr>
                 </table>
                 <p align="right">
