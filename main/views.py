@@ -95,7 +95,7 @@ def reset_password(request, testing=False):
             new_password = User.objects.make_random_password()
             user.set_password(new_password)
             user.save()
-            if  reset_for_student:
+            if reset_for_student:
                 name = user.student.short_first_name()
             else:
                 name = user.first_name
@@ -622,6 +622,7 @@ def student_view(request, student_id, meeting_id=None):
     form = None
     meetings = None
     edit = False
+    to_meetings = False
     if student in request.user.staff.tutees.all():
         tutor = True
         allowed_to_see_notes = True
@@ -636,7 +637,6 @@ def student_view(request, student_id, meeting_id=None):
         else:
             tutee_session = TuteeSession(
                 tutee=student, tutor=request.user.staff)
-            to_meetings = False
         if request.method == "POST":
             form = TuteeSessionForm(instance=tutee_session, data=request.POST)
             if form.is_valid():
