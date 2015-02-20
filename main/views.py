@@ -626,11 +626,17 @@ def student_view(request, student_id, meeting_id=None):
         tutor = True
         allowed_to_see_notes = True
         if meeting_id:
-            tutee_session = TuteeSession.objects.get(id=meeting_id)
-            edit = meeting_id
+            if '-edit' in meeting_id:
+                edit = meeting_id.strip('-edit')
+                tutee_session = TuteeSession.objects.get(id=edit)
+            else:
+                tutee_session = TuteeSession(
+                    tutee=student, tutor=request.user.staff)
+            to_meetings = True
         else:
             tutee_session = TuteeSession(
                 tutee=student, tutor=request.user.staff)
+            to_meetings = False
         if request.method == "POST":
             form = TuteeSessionForm(instance=tutee_session, data=request.POST)
             if form.is_valid():
@@ -662,6 +668,7 @@ def student_view(request, student_id, meeting_id=None):
             'form': form,
             'tutor': tutor,
             'meetings': meetings,
+            'to_meetings': to_meetings,
             'allowed_to_see_notes': allowed_to_see_notes,
             'performances': performances,
             'staff_pk': request.user.staff.pk

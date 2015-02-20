@@ -1160,18 +1160,17 @@ class TuteeSession(models.Model):
 
     def get_absolute_url(self):
         tutee_url = reverse(
-            'edit_tutee_meeting',
+            'tutee_meeting',
             args=[self.tutee.student_id, self.id]
         )
-        tutee_url += "#" + str(self.id)
         return tutee_url
 
     def get_edit_url(self):
+        edit_part = str(self.id) + '-edit'
         this_url = reverse(
-            'edit_tutee_meeting',
-            args=[self.tutee.student_id, self.id]
+            'tutee_meeting',
+            args=[self.tutee.student_id, edit_part]
         )
-        this_url += "#" + 'edit'
         return this_url
 
     def get_delete_url(self):

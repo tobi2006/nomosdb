@@ -15,7 +15,7 @@
                 </a>
             </h4>
         </div>
-        <div id="collapseProgramme" class="panel-collapse collapse in">
+        <div id="collapseProgramme" class="panel-collapse collapse{% if not to_meetings %} in{% endif %}">
             <div class="panel-body">
                 <table class="table" id="programme-table">
                     <tr>
@@ -312,7 +312,7 @@
                 </a>
             </h4>
         </div>
-        <div id="collapseMeetingNotes" class="panel-collapse collapse">
+        <div id="collapseMeetingNotes" class="panel-collapse collapse{% if to_meetings %} in{% endif %}">
             <div class="panel-body">
             {% if meetings %}
                 {% for meeting in meetings %}
