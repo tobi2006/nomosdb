@@ -1967,7 +1967,11 @@ def export_attendance_sheet(request, code, year):
     module = Module.objects.get(code=code, year=year)
     styles = getSampleStyleSheet()
     heading = module.__str__()
-    performances = Performance.objects.filter(module=module)
+    all_performances = Performance.objects.filter(module=module)
+    performances = []
+    for performance in all_performances:
+        if performance.student.active:
+            performances.append(performance)
     no_of_seminar_groups = 0
     for performance in performances:
         if performance.seminar_group > no_of_seminar_groups:
