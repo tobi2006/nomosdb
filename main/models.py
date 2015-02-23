@@ -1043,15 +1043,7 @@ class Performance(models.Model):
             assessment_result = AssessmentResult.objects.create(
                 assessment=assessment)
             self.assessment_results.add(assessment_result)
-        if attempt == 'first':
-            assessment_result.mark = int(mark)
-        elif attempt == 'resit':
-            assessment_result.resit_mark = int(mark)
-        elif attempt == 'second_resit':
-            assessment_result.second_resit_mark = int(mark)
-        elif attempt == 'qld_resit':
-            assessment_result.qld_resit = int(mark)
-        assessment_result.save()
+        assessment_result.set_one_mark(attempt, int(mark))
         self.calculate_average()
 
     def get_assessment_result(self, assessment_slug, attempt='all'):

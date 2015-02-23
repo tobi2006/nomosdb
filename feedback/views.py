@@ -60,7 +60,8 @@ def individual_feedback(
         if form.is_valid():
             form.save()
             mark = form.cleaned_data['mark']
-            assessment_result.set_one_mark(attempt, int(mark))
+            performance.set_assessment_result(
+                assessment.slug, int(mark), attempt)
             feedback.completed = True
             feedback.save()
             return redirect(module.get_absolute_url())
