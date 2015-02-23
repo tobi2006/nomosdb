@@ -198,7 +198,6 @@ class Module(models.Model):
         self.code = self.code.replace(' ', '')
         super(Module, self).save(*args, **kwargs)
 
-
     def __str__(self):
         next_year = str(int(self.year) + 1)
         nxt = next_year[-2:]
@@ -330,7 +329,7 @@ class Module(models.Model):
                     assessment.get_assessment_group_overview_url() +
                     '">Assessment group overview for ' +
                     assessment.title +
-                    '</a></li>' 
+                    '</a></li>'
                 )
                 returnlist.append(html)
             if assessment.available:
@@ -1022,8 +1021,9 @@ class Performance(models.Model):
             try:
                 assessment_result = AssessmentResult.objects.get(
                     assessment=assessment, part_of=self)
-                this = assessment_result.result() * assessment.value
-                sum_of_marks += this
+                if assessment_result.result():
+                    this = assessment_result.result() * assessment.value
+                    sum_of_marks += this
             except AssessmentResult.DoesNotExist:
                 pass
         average = sum_of_marks / 100
@@ -1036,15 +1036,19 @@ class Performance(models.Model):
             module=self.module,
             slug=assessment_slug
         )
-        if self.assessment_results.filter(assessment=assessment).exists():
-            assessment_result = self.assessment_results.get(
-                assessment=assessment)
-        else:
-            assessment_result = AssessmentResult.objects.create(
-                assessment=assessment)
-            self.assessment_results.add(assessment_result)
-        assessment_result.set_one_mark(attempt, int(mark))
-        self.calculate_average()
+        try:
+            mark = int(mark)
+            if self.assessment_results.filter(assessment=assessment).exists():
+                assessment_result = self.assessment_results.get(
+                    assessment=assessment)
+            else:
+                assessment_result = AssessmentResult.objects.create(
+                    assessment=assessment)
+                self.assessment_results.add(assessment_result)
+            assessment_result.set_one_mark(attempt, mark)
+            self.calculate_average()
+        except TypeError:
+            pass
 
     def get_assessment_result(self, assessment_slug, attempt='all'):
         assessment = Assessment.objects.get(

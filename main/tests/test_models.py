@@ -596,6 +596,30 @@ class PerformanceTest(TeacherUnitTest):
         self.assertEqual(performance.real_average, 14.4)
         self.assertEqual(performance.average, 14)
 
+    def test_average_calculation_does_not_give_errors_when_mark_is_None(self):
+        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        module.teachers.add(self.user.staff)
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Essay",
+            value=30
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Exam",
+            value=70
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        performance.set_assessment_result('essay', None)
+        self.assertEqual(performance.average, None)
+
     def test_set_and_get_marks_over_performance_functions(self):
         module = Module.objects.create(code="ML3", year=2014, title="ML")
         module.teachers.add(self.user.staff)
@@ -884,14 +908,14 @@ class AssessmentResultTest(TeacherUnitTest):
         )
         performance1.assessment_results.add(assessment_result_1)
         feedback_1_1 = IndividualFeedback.objects.create(
-            assessment_result = assessment_result_1,
-            attempt = 'first',
-            completed = True
+            assessment_result=assessment_result_1,
+            attempt='first',
+            completed=True
         )
         feedback_1_2 = IndividualFeedback.objects.create(
-            assessment_result = assessment_result_1,
-            attempt = 'resit',
-            completed = True
+            assessment_result=assessment_result_1,
+            attempt='resit',
+            completed=True
         )
         link1 = (
             '/export_feedback/' +
@@ -923,7 +947,7 @@ class AssessmentResultTest(TeacherUnitTest):
 
 class ConsistencyTest(TeacherUnitTest):
     """Tests to ensure that different model parts work together"""
-    
+
     def test_model_and_performance_as_tpls_are_the_same(self):
         module = create_module()
         student = create_student()
@@ -956,27 +980,27 @@ class ConsistencyTest(TeacherUnitTest):
         )
         result1 = AssessmentResult.objects.create(
             assessment=assessment1,
-            mark = 10
+            mark=10
         )
         performance.assessment_results.add(result1)
         result2 = AssessmentResult.objects.create(
             assessment=assessment2,
-            mark = 20
+            mark=20
         )
         performance.assessment_results.add(result2)
         result3 = AssessmentResult.objects.create(
             assessment=assessment3,
-            mark = 30
+            mark=30
         )
         performance.assessment_results.add(result3)
         result4 = AssessmentResult.objects.create(
             assessment=assessment4,
-            mark = 40
+            mark=40
         )
         performance.assessment_results.add(result4)
         result5 = AssessmentResult.objects.create(
             assessment=assessment5,
-            mark = 50
+            mark=50
         )
         performance.assessment_results.add(result5)
         all_assessments = module.all_assessment_titles()
