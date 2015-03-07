@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+{{ anoymous }}
+
+
+<table id ="sortable_table" class="table table-striped table-sortable">
+    <thead>
+        <tr>
+            {% if anonymous %}
+                <th>
+                    ID
+                </th>
+                <th>
+                    {{ assessment.title }}
+                </th>
+            {% else %}
+                <th>
+                    Student
+                </th>
+                {% for assessment in module.all_assessment_titles %}
+                    <th>
+                        {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
+                    </th>
+                {% endfor %}
+            {% endif %}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for performance in performances %}
+            <tr>
+                <td>
+                    {% if anonymous %}
+                        {{ performance.student.exam_id }}
+                    {% else %}
+                        {{ performance.student.name }}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

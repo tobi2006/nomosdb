@@ -1788,6 +1788,47 @@ def assessment_group_overview(request, code, year, slug, attempt):
     )
 
 
+@login_required
+@user_passes_test(is_staff)
+def mark_all(request, code, year, slug, attempt):
+    """Allows to enter all marks for an assessment"""
+    module = Module.objects.get(code=code, year=year)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    performances = Performance.objects.filter(module=module)
+
+
+    return render(
+        request,
+        'mark_all.html',
+        {
+            'anonymous': False,
+            'performances': performances,
+            'assessment': assessment,
+            'module': module,
+        }
+    )
+
+
+@login_required
+@user_passes_test(is_staff)
+def mark_all_anonymously(request, code, year, slug, attempt):
+    """Allows to enter all marks for an assessment"""
+    module = Module.objects.get(code=code, year=year)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    performances = Performance.objects.filter(module=module)
+
+
+    return render(
+        request,
+        'mark_all.html',
+        {
+            'anonymous': True,
+            'performances': performances,
+            'assessment': assessment,
+            'module': module,
+        }
+    )
+
 # Data import / export
 
 

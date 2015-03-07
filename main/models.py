@@ -308,6 +308,22 @@ class Module(models.Model):
     def assessment_sub_menu(self):
         returnlist = []
         for assessment in self.assessments.all():
+            html = (
+                '<li><a href="' +
+                assessment.get_mark_all_url() +
+                '">Enter all marks for ' +
+                assessment.title +
+                '</a></li>'
+            )
+            returnlist.append(html)
+            html = (
+                '<li><a href="' +
+                assessment.get_mark_all_url(anonymous=True) +
+                '">Enter all marks for ' +
+                assessment.title +
+                ' anonymously</a></li>'
+            )
+            returnlist.append(html)
             link = assessment.get_blank_marksheet_url()
             link += 'all/first/'
             html = (
@@ -424,6 +440,7 @@ class Assessment(models.Model):
     )
 
     class Meta:
+        unique_together = ('module', 'title')
         ordering = ['title']
 
     def save(self, *args, **kwargs):
@@ -509,6 +526,23 @@ class Assessment(models.Model):
             'toggle_assessment_availability',
             args=[self.module.code, self.module.year, self.slug, attempt]
         )
+
+    def get_mark_all_url(self, attempt='first', anonymous=False):
+        if anonymous:
+            return reverse(
+                'mark_all_anonymously',
+                args=[
+                    self.module.code,
+                    self.module.year,
+                    self.slug,
+                    attempt
+                ]
+            )
+        else:
+            return reverse(
+                'mark_all',
+                args=[self.module.code, self.module.year, self.slug, attempt]
+            )
 
 
 class Student(models.Model):

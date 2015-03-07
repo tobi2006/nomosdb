@@ -136,6 +136,16 @@ urlpatterns += patterns(
         name='invite_students'
     ),
     url(r'^main_settings/$', 'main_settings', name='main_settings'),
+    url(
+        r'^mark_all/([-\w]+)/(\d{4})/([-\w]+)/(\w+)/',
+        'mark_all',
+        name='mark_all'
+    ),
+    url(
+        r'^mark_all_anonymously/([-\w]+)/(\d{4})/([-\w]+)/(\w+)/',
+        'mark_all_anonymously',
+        name='mark_all_anonymously'
+    ),
     url(r'^my_tutees/$', 'my_tutees', name='my_tutees'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),
     url(r'^parse_csv/(\w+)/$', 'parse_csv', name='parse_csv'),

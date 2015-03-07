@@ -168,6 +168,30 @@ class AssessmentTest(TeacherUnitTest):
             '/delete_assessment/hl23/1900/practical-hunting-exercise/'
         )
 
+    def test_assessment_returns_correct_mark_all_url(self):
+        module = create_module()
+        assessment = Assessment.objects.create(
+            title='Practical Hunting Exercise',
+            value=100,
+            module=module
+        )
+        self.assertEqual(
+            assessment.get_mark_all_url(),
+            '/mark_all/hl23/1900/practical-hunting-exercise/first/'
+        )
+
+    def test_assessment_returns_correct_mark_all_anonymously_url(self):
+        module = create_module()
+        assessment = Assessment.objects.create(
+            title='Practical Hunting Exercise',
+            value=100,
+            module=module
+        )
+        self.assertEqual(
+            assessment.get_mark_all_url(anonymous=True),
+            '/mark_all_anonymously/hl23/1900/practical-hunting-exercise/first/'
+        )
+
 
 class ModuleTest(TeacherUnitTest):
     """Tests for the Module class"""
