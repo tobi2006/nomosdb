@@ -604,9 +604,10 @@ class ModuleViewTest(TeacherUnitTest):
         performance = Performance.objects.create(
             student=student, module=module)
         assessment = Assessment.objects.create(
-            title="Dissertation",
+            title="Essay",
             value=100,
-            available=False
+            available=False,
+            marksheet_type="Something"
         )
         module.assessments.add(assessment)
         request = self.factory.get(module.get_absolute_url())
@@ -618,7 +619,7 @@ class ModuleViewTest(TeacherUnitTest):
         )
         self.assertContains(
             response,
-            'Show Dissertation to students'
+            'Show Essay to students'
         )
         assessment.available = True
         assessment.save()
@@ -631,7 +632,38 @@ class ModuleViewTest(TeacherUnitTest):
         )
         self.assertContains(
             response,
-            'Hide Dissertation from students'
+            'Hide Essay from students'
+        )
+
+    def test_only_assessments_with_marksheet_show_availability(self):
+        module = create_module()
+        student = create_student()
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            student=student, module=module)
+        assessment1 = Assessment.objects.create(
+            title="Essay",
+            value=50,
+            available=False,
+            marksheet_type="Something"
+        )
+        assessment2 = Assessment.objects.create(
+            title="Exam",
+            value=50,
+            available=False,
+        )
+        module.assessments.add(assessment1)
+        module.assessments.add(assessment2)
+        request = self.factory.get(module.get_absolute_url())
+        request.user = self.user
+        response = module_view(request, module.code, module.year)
+        self.assertContains(
+            response,
+            'Show Essay to students'
+        )
+        self.assertNotContains(
+            response,
+            'Show Exam to students'
         )
 
 

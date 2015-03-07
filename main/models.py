@@ -326,14 +326,15 @@ class Module(models.Model):
             returnlist.append(html)
             link = assessment.get_blank_marksheet_url()
             link += 'all/first/'
-            html = (
-                '<li><a href="' +
-                link +
-                '">All Marksheets for ' +
-                assessment.title +
-                '</a></li>'
-            )
-            returnlist.append(html)
+            if assessment.marksheet_type:
+                html = (
+                    '<li><a href="' +
+                    link +
+                    '">All Marksheets for ' +
+                    assessment.title +
+                    '</a></li>'
+                )
+                returnlist.append(html)
             if assessment.group_assessment:
                 html = (
                     '<li><a href="' +
@@ -348,25 +349,26 @@ class Module(models.Model):
                     '</a></li>'
                 )
                 returnlist.append(html)
-            if assessment.available:
-                html = (
-                    '<li><a href="' +
-                    assessment.get_toggle_availability_url() +
-                    '">Hide ' +
-                    assessment.title +
-                    ' from students</a></li>' +
-                    '<li class="divider"></li>'
-                )
-            else:
-                html = (
-                    '<li><a href="' +
-                    assessment.get_toggle_availability_url() +
-                    '">Show ' +
-                    assessment.title +
-                    ' to students</a></li>' +
-                    '<li class="divider"></li>'
-                )
-            returnlist.append(html)
+            if assessment.marksheet_type:
+                if assessment.available:
+                    html = (
+                        '<li><a href="' +
+                        assessment.get_toggle_availability_url() +
+                        '">Hide ' +
+                        assessment.title +
+                        ' from students</a></li>' +
+                        '<li class="divider"></li>'
+                    )
+                else:
+                    html = (
+                        '<li><a href="' +
+                        assessment.get_toggle_availability_url() +
+                        '">Show ' +
+                        assessment.title +
+                        ' to students</a></li>' +
+                        '<li class="divider"></li>'
+                    )
+                returnlist.append(html)
         return returnlist
 
     def all_group_assessments(self):
