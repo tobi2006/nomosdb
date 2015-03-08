@@ -1794,15 +1794,45 @@ def mark_all(request, code, year, slug, attempt):
     """Allows to enter all marks for an assessment"""
     module = Module.objects.get(code=code, year=year)
     assessment = Assessment.objects.get(module=module, slug=slug)
-    performances = Performance.objects.filter(module=module)
-
-
+    rows = []
+    for performance in Performance.objects.filter(module=module):
+        if performance.student.active:
+            row = [performance.student.name(),]
+            for this_assessment in module.all_assessments():
+                try:
+                    result = performance.assessment_results.get(
+                        assessment=this_assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = AssessmentResult.objects.create(
+                        assessment=this_assessment)
+                    performance.assessment_results.add(result)
+                mark = result.get_one_mark(attempt)
+                if this_assessment == assessment:
+                    form_string = (
+                        '<input class="numberinput form-control" ' +
+                        'id="id_mark_' +
+                        performance.student.student_id +
+                        '" name="mark_' +
+                        performance.student.student_id +
+                        '" type="number" '
+                    )
+                    if mark:
+                        form_string += (
+                            'value="' +
+                            str(mark) +
+                            '" '
+                        )
+                    form_string += '/>'
+                    row.append(form_string)
+                else:
+                    row.append(str(mark))
+            rows.append(row)
     return render(
         request,
         'mark_all.html',
         {
             'anonymous': False,
-            'performances': performances,
+            'rows': rows,
             'assessment': assessment,
             'module': module,
         }

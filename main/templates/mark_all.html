@@ -28,15 +28,13 @@
         </tr>
     </thead>
     <tbody>
-        {% for performance in performances %}
+        {% for row in rows %}
             <tr>
+                {% for entry in row %}
                 <td>
-                    {% if anonymous %}
-                        {{ performance.student.exam_id }}
-                    {% else %}
-                        {{ performance.student.name }}
-                    {% endif %}
+                    {{ entry|safe }}
                 </td>
+                {% endfor %}
             </tr>
         {% endfor %}
     </tbody>
