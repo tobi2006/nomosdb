@@ -527,7 +527,7 @@ class StudentResetPasswordTest(NotYetLoggedInUnitTest):
             last_name='Bunny',
             first_name='Bugs',
             user=user,
-            email = 'bb23@acme.edu'
+            email='bb23@acme.edu'
         )
         request = self.factory.get(
             '/reset_password/',
@@ -800,8 +800,8 @@ class RemoveStudentFromModuleTest(TeacherUnitTest):
         result = AssessmentResult.objects.create(assessment=assessment)
         performance.assessment_results.add(result)
         feedback = IndividualFeedback.objects.create(
-            assessment_result = result,
-            attempt = 'first'
+            assessment_result=result,
+            attempt='first'
         )
         url = (
             '/remove_student_from_module/' +
@@ -1264,6 +1264,7 @@ class AttendanceTest(TeacherUnitTest):
         self.assertEqual(performance2_out.attendance_for(2), None)
         self.assertEqual(performance2_out.attendance_for(3), None)
 
+
 class MarkAllAssessmentsTest(TeacherUnitTest):
     """Testing the function to mark all for one assessment openly."""
 
@@ -1351,53 +1352,227 @@ class MarkAllAssessmentsTest(TeacherUnitTest):
         self.assertContains(response, html)
 
     def test_marks_can_be_saved_with_existing_ar_objects(self):
-        pass
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        assessment1 = Assessment.objects.create(
+            module=module, title="Essay 1", value=50)
+        assessment2 = Assessment.objects.create(
+            module=module, title="Essay 2", value=50)
+        result1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=50
+        )
+        performance1 = Performance.objects.get(module=module, student=student1)
+        performance1.assessment_results.add(result1)
+        result2 = AssessmentResult.objects.create(assessment=assessment1)
+        performance2 = Performance.objects.get(module=module, student=student2)
+        performance2.assessment_results.add(result2)
+        id1 = 'mark_' + student1.student_id
+        id2 = 'mark_' + student2.student_id
+        request = self.factory.post(
+            assessment1.get_mark_all_url(),
+            data={
+                id1: '20',
+                id2: '40'
+            }
+        )
+        request.user = self.user
+        response = mark_all(
+            request,
+            module.code,
+            module.year,
+            'essay-1',
+            'first'
+        )
+        performance1_out = Performance.objects.get(
+            module=module, student=student1)
+        self.assertEqual(
+            performance1_out.get_assessment_result('essay-1', 'first'),
+            20
+        )
+        performance2_out = Performance.objects.get(
+            module=module, student=student2)
+        self.assertEqual(
+            performance2_out.get_assessment_result('essay-1', 'first'),
+            40
+        )
+
+    def test_marks_can_be_saved_without_existing_ar_objects(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        assessment1 = Assessment.objects.create(
+            module=module, title="Essay 1", value=50)
+        assessment2 = Assessment.objects.create(
+            module=module, title="Essay 2", value=50)
+        id1 = 'mark_' + student1.student_id
+        id2 = 'mark_' + student2.student_id
+        request = self.factory.post(
+            assessment1.get_mark_all_url(),
+            data={
+                id1: '20',
+                id2: '40'
+            }
+        )
+        request.user = self.user
+        response = mark_all(
+            request,
+            module.code,
+            module.year,
+            'essay-1',
+            'first'
+        )
+        performance1_out = Performance.objects.get(
+            module=module, student=student1)
+        self.assertEqual(
+            performance1_out.get_assessment_result('essay-1', 'first'),
+            20
+        )
+        performance2_out = Performance.objects.get(
+            module=module, student=student2)
+        self.assertEqual(
+            performance2_out.get_assessment_result('essay-1', 'first'),
+            40
+        )
 
 
-#class MarkAllAssessmentsAnonymouslyTest(TeacherUnitTest):
-#    """Testing the function to mark all for one assessment anonymously."""
-#    def test_only_exam_ids_are_shown_if_anonymous_is_set(self):
-#        stuff = set_up_stuff()
-#        module = stuff[0]
-#        student1 = stuff[1]
-#        student1.exam_id = '1234'
-#        student1.save()
-#        student2 = stuff[2]
-#        student2.exam_id = '2345'
-#        student2.save()
-#        student3 = stuff[3]
-#        student3.exam_id = '3456'
-#        student3.save()
-#        assessment = Assessment.objects.create(
-#            module=module, title="Essay", value=100)
-#        request = self.factory.get(assessment.get_mark_all_url(anonymous=True))
-#        request.user = self.user
-#        response = mark_all_anonymously(
-#            request,
-#            module.code,
-#            module.year,
-#            'essay',
-#            'first',
-#        )
-#        self.assertContains(response, student1.exam_id)
-#        self.assertContains(response, student2.exam_id)
-#        self.assertContains(response, student3.exam_id)
-#        self.assertNotContains(response, student1.first_name)
-#        self.assertNotContains(response, student1.last_name)
-#        self.assertNotContains(response, student1.student_id)
-#        self.assertNotContains(response, student2.first_name)
-#        self.assertNotContains(response, student2.last_name)
-#        self.assertNotContains(response, student2.student_id)
-#        self.assertNotContains(response, student3.first_name)
-#        self.assertNotContains(response, student3.last_name)
-#        self.assertNotContains(response, student3.student_id)
-#
-#    def test_anonymous_marks_can_be_saved_with_existing_ar_objects(self):
-#        pass
-#
-#    def test_anonymous_marks_can_be_saved_without_existing_ar_objects(self):
-#        pass
-#
+class MarkAllAssessmentsAnonymouslyTest(TeacherUnitTest):
+    """Testing the function to mark all for one assessment anonymously."""
+
+    def test_only_exam_ids_are_shown_if_anonymous_is_set(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student1.exam_id = '1234'
+        student1.save()
+        student2 = stuff[2]
+        student2.exam_id = '2345'
+        student2.save()
+        student3 = stuff[3]
+        student3.exam_id = '3456'
+        student3.save()
+        assessment = Assessment.objects.create(
+            module=module, title="Essay", value=100)
+        request = self.factory.get(assessment.get_mark_all_url(anonymous=True))
+        request.user = self.user
+        response = mark_all_anonymously(
+            request,
+            module.code,
+            module.year,
+            'essay',
+            'first',
+        )
+        self.assertContains(response, student1.exam_id)
+        self.assertContains(response, student2.exam_id)
+        self.assertContains(response, student3.exam_id)
+        self.assertNotContains(response, student1.first_name)
+        self.assertNotContains(response, student1.last_name)
+        self.assertNotContains(response, student1.student_id)
+        self.assertNotContains(response, student2.first_name)
+        self.assertNotContains(response, student2.last_name)
+        self.assertNotContains(response, student2.student_id)
+        self.assertNotContains(response, student3.first_name)
+        self.assertNotContains(response, student3.last_name)
+        self.assertNotContains(response, student3.student_id)
+
+    def test_anonymous_marks_can_be_saved_with_existing_ar_objects(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student1.exam_id = '1234'
+        student1.save()
+        student2 = stuff[2]
+        student2.exam_id = '2345'
+        student2.save()
+        assessment1 = Assessment.objects.create(
+            module=module, title="Essay 1", value=50)
+        assessment2 = Assessment.objects.create(
+            module=module, title="Essay 2", value=50)
+        result1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=50
+        )
+        performance1 = Performance.objects.get(module=module, student=student1)
+        performance1.assessment_results.add(result1)
+        result2 = AssessmentResult.objects.create(assessment=assessment1)
+        performance2 = Performance.objects.get(module=module, student=student2)
+        performance2.assessment_results.add(result2)
+        id1 = 'mark_' + student1.exam_id
+        id2 = 'mark_' + student2.exam_id
+        request = self.factory.post(
+            assessment1.get_mark_all_url(anonymous=True),
+            data={
+                id1: '20',
+                id2: '40'
+            }
+        )
+        request.user = self.user
+        response = mark_all_anonymously(
+            request,
+            module.code,
+            module.year,
+            'essay-1',
+            'first'
+        )
+        performance1_out = Performance.objects.get(
+            module=module, student=student1)
+        self.assertEqual(
+            performance1_out.get_assessment_result('essay-1', 'first'),
+            20
+        )
+        performance2_out = Performance.objects.get(
+            module=module, student=student2)
+        self.assertEqual(
+            performance2_out.get_assessment_result('essay-1', 'first'),
+            40
+        )
+
+    def test_anonymous_marks_can_be_saved_without_existing_ar_objects(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student1.exam_id = '1234'
+        student1.save()
+        student2 = stuff[2]
+        student2.exam_id = '2345'
+        student2.save()
+        assessment1 = Assessment.objects.create(
+            module=module, title="Essay 1", value=50)
+        assessment2 = Assessment.objects.create(
+            module=module, title="Essay 2", value=50)
+        id1 = 'mark_' + student1.exam_id
+        id2 = 'mark_' + student2.exam_id
+        request = self.factory.post(
+            assessment1.get_mark_all_url(anonymous=True),
+            data={
+                id1: '20',
+                id2: '40'
+            }
+        )
+        request.user = self.user
+        response = mark_all_anonymously(
+            request,
+            module.code,
+            module.year,
+            'essay-1',
+            'first'
+        )
+        performance1_out = Performance.objects.get(
+            module=module, student=student1)
+        self.assertEqual(
+            performance1_out.get_assessment_result('essay-1', 'first'),
+            20
+        )
+        performance2_out = Performance.objects.get(
+            module=module, student=student2)
+        self.assertEqual(
+            performance2_out.get_assessment_result('essay-1', 'first'),
+            40
+        )
+
 
 class AddEditStaffTest(AdminUnitTest):
     """Tests for adding and adding a new staff member"""
@@ -1795,8 +1970,8 @@ class YearViewTest(AdminUnitTest):
         )
         result = AssessmentResult.objects.create(assessment=assessment)
         feedback = IndividualFeedback.objects.create(
-            assessment_result = result,
-            attempt = 'first'
+            assessment_result=result,
+            attempt='first'
         )
         self.assertEqual(AssessmentResult.objects.count(), 1)
         self.assertEqual(IndividualFeedback.objects.count(), 1)

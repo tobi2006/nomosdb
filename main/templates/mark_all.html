@@ -1,29 +1,29 @@
 {% extends "base.html" %}
+
+{% block formstart %}
+    <form action="" id="markAllForm" method="post">
+    {% csrf_token %}
+{% endblock %}
+
 {% block content %}
 
-{{ anoymous }}
 
+<h1>{{ module }}</h1>
+<h2>{{ assessment_title }}</h2>
+
+<br><br>
 
 <table id ="sortable_table" class="table table-striped table-sortable">
     <thead>
         <tr>
-            {% if anonymous %}
+            <th>
+                Student
+            </th>
+            {% for assessment in module.all_assessment_titles %}
                 <th>
-                    ID
+                    {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
                 </th>
-                <th>
-                    {{ assessment.title }}
-                </th>
-            {% else %}
-                <th>
-                    Student
-                </th>
-                {% for assessment in module.all_assessment_titles %}
-                    <th>
-                        {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
-                    </th>
-                {% endfor %}
-            {% endif %}
+            {% endfor %}
             </th>
         </tr>
     </thead>
@@ -40,4 +40,32 @@
     </tbody>
 </table>
 
+<div class="btn btn-group pull-right" role="group">
+    <a class="btn btn-primary" href="{{ module.get_absolute_url }}">Back to module (don't save changes)</a>
+    <input type="submit" name="action" value="Save Marks" class="btn btn-primary">
+</div>
+
 {% endblock %}
+
+{% block formend %}
+</form>
+{% endblock %}
+
+{% comment %}
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var prefixes = [{% for slug in slugs %}{{ slug }}, {% endfor %}];
+        $('.assessment_mark').change(function() {
+            var student_id = $(this).attr('id');
+            var sum = 0;
+            for (i=0; i < prefixes.length; i++) {
+                var identifier = 
+
+
+        });
+
+    });
+
+</script>
+{% endcomment %}

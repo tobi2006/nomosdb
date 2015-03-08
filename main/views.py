@@ -1794,49 +1794,66 @@ def mark_all(request, code, year, slug, attempt):
     """Allows to enter all marks for an assessment"""
     module = Module.objects.get(code=code, year=year)
     assessment = Assessment.objects.get(module=module, slug=slug)
-    rows = []
-    for performance in Performance.objects.filter(module=module):
-        if performance.student.active:
-            row = [performance.student.name(),]
-            for this_assessment in module.all_assessments():
-                try:
-                    result = performance.assessment_results.get(
-                        assessment=this_assessment)
-                except AssessmentResult.DoesNotExist:
-                    result = AssessmentResult.objects.create(
-                        assessment=this_assessment)
-                    performance.assessment_results.add(result)
-                mark = result.get_one_mark(attempt)
-                if this_assessment == assessment:
-                    form_string = (
-                        '<input class="numberinput form-control" ' +
-                        'id="id_mark_' +
-                        performance.student.student_id +
-                        '" name="mark_' +
-                        performance.student.student_id +
-                        '" type="number" '
-                    )
-                    if mark:
-                        form_string += (
-                            'value="' +
-                            str(mark) +
-                            '" '
+    if request.method == 'POST':
+        for performance in Performance.objects.filter(module=module):
+            if performance.student.active:
+                field_id = 'mark_' + performance.student.student_id
+                if field_id in request.POST and request.POST[field_id]:
+                    raw = request.POST[field_id]
+                    try:
+                        mark = int(raw)
+                        if mark in range(0, 100):
+                            performance.set_assessment_result(
+                                assessment.slug,
+                                mark,
+                                attempt
+                            )
+                    except ValueError:
+                        pass
+        return redirect(module.get_absolute_url())
+    else:
+        rows = []
+        for performance in Performance.objects.filter(module=module):
+            if performance.student.active:
+                row = [performance.student.name(), ]
+                for this_assessment in module.all_assessments():
+                    try:
+                        result = performance.assessment_results.get(
+                            assessment=this_assessment)
+                    except AssessmentResult.DoesNotExist:
+                        result = AssessmentResult.objects.create(
+                            assessment=this_assessment)
+                        performance.assessment_results.add(result)
+                    mark = result.get_one_mark(attempt)
+                    if this_assessment == assessment:
+                        form_string = (
+                            '<input class="form-control assessment_mark" ' +
+                            'type="number" min="0" max="100" id="' +
+                            performance.student.student_id +
+                            '" name="mark_' +
+                            performance.student.student_id +
+                            '" type="number" '
                         )
-                    form_string += '/>'
-                    row.append(form_string)
-                else:
-                    row.append(str(mark))
-            rows.append(row)
-    return render(
-        request,
-        'mark_all.html',
-        {
-            'anonymous': False,
-            'rows': rows,
-            'assessment': assessment,
-            'module': module,
-        }
-    )
+                        if mark:
+                            form_string += (
+                                'value="' +
+                                str(mark) +
+                                '" '
+                            )
+                        form_string += '/>'
+                        row.append(form_string)
+                    else:
+                        row.append(str(mark))
+                rows.append(row)
+        return render(
+            request,
+            'mark_all.html',
+            {
+                'rows': rows,
+                'module': module,
+                'assessment_title': assessment.title
+            }
+        )
 
 
 @login_required
@@ -1845,17 +1862,67 @@ def mark_all_anonymously(request, code, year, slug, attempt):
     """Allows to enter all marks for an assessment"""
     module = Module.objects.get(code=code, year=year)
     assessment = Assessment.objects.get(module=module, slug=slug)
-    performances = Performance.objects.filter(module=module)
-
-
+    if request.method == 'POST':
+        for performance in Performance.objects.filter(module=module):
+            if performance.student.active and performance.student.exam_id:
+                field_id = 'mark_' + performance.student.exam_id
+                if field_id in request.POST and request.POST[field_id]:
+                    raw = request.POST[field_id]
+                    try:
+                        mark = int(raw)
+                        if mark in range(0, 100):
+                            performance.set_assessment_result(
+                                assessment.slug,
+                                mark,
+                                attempt
+                            )
+                    except ValueError:
+                        pass
+        return redirect(module.get_absolute_url())
+    rows = []
+    students_without_id = []
+    admin_email = Setting.objects.get(name='admin_email').value
+    for performance in Performance.objects.filter(module=module):
+        if performance.student.active:
+            if performance.student.exam_id:
+                row = [performance.student.exam_id, ]
+                try:
+                    result = performance.assessment_results.get(
+                        assessment=assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = AssessmentResult.objects.create(
+                        assessment=assessment)
+                    performance.assessment_results.add(result)
+                mark = result.get_one_mark(attempt)
+                form_string = (
+                    '<input class="form-control" ' +
+                    'type="number" min="0" max="100" ' +
+                    'id="id_mark_' +
+                    performance.student.exam_id +
+                    '" name="mark_' +
+                    performance.student.exam_id +
+                    '" type="number" '
+                )
+                if mark:
+                    form_string += (
+                        'value="' +
+                        str(mark) +
+                        '" '
+                    )
+                form_string += '/>'
+                row.append(form_string)
+                rows.append(row)
+            else:
+                students_without_id.append(performance.student)
     return render(
         request,
-        'mark_all.html',
+        'mark_all_anonymously.html',
         {
-            'anonymous': True,
-            'performances': performances,
+            'students_without_id': students_without_id,
+            'rows': rows,
             'assessment': assessment,
             'module': module,
+            'admin_email': admin_email
         }
     )
 

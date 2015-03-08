@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block formstart %}
+    <form action="" id="markAllAnonymouslyForm" method="post">
+    {% csrf_token %}
+{% endblock %}
+
+{% block content %}
+
+{% if students_without_id %}
+<div class="panel panel-default" id="students_without_id">
+    <h5>There is no Exam ID for the following students on record. Please <a href="mailto:{{ admin_email }}?subject=Missing Exam IDs&body=Dear admin,%0D%0A%0D%0AThe following exam IDs are missing:%0D%0A%0D%0A{% for student in students_without_id %}{{ student.name }} ({{ student.student_id }})%0D%0A%0D%0A{% endfor %}Thanks for adding them!">contact your administrator to add these</a>:</h5>
+    <ul>
+    {% for student in students_without_id %}
+        <li>{{ student.name }} ({{ student.student_id }})</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<h1>Anonymous mark entry for {{ module }}: {{ assessment_title }}</h1>
+
+<table id ="sortable_table" class="table table-striped table-sortable">
+    <thead>
+        <tr>
+            <th>
+                ID
+            </th>
+            <th>
+                {{ assessment.title }}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+            <tr>
+                {% for entry in row %}
+                <td>
+                    {{ entry|safe }}
+                </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="btn btn-group pull-right" role="group">
+    <a class="btn btn-primary" href="{{ module.get_absolute_url }}">Back to module (don't save changes)</a>
+    <input type="submit" name="action" value="Save Marks" class="btn btn-primary">
+</div>
+
+{% endblock %}
+
+{% block formend %}
+    </form>
+{% endblock %}
