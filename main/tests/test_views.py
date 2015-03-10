@@ -1343,11 +1343,12 @@ class MarkAllAssessmentsTest(TeacherUnitTest):
         )
         self.assertContains(response, 60)
         html = (
-            '<input class="numberinput form-control" id="id_mark_' +
+            '<input class="form-control assessment_mark" type="number" ' +
+            'min="0" max="100" id="essay-1_' +
             student1.student_id +
             '" name="mark_' +
             student1.student_id +
-            '" type="number" value="50" />'
+            '" type="number" value="50" /><small>Previously: 50</small>'
         )
         self.assertContains(response, html)
 

@@ -1788,7 +1788,6 @@ def assessment_group_overview(request, code, year, slug, attempt):
     )
 
 
-@login_required
 @user_passes_test(is_staff)
 def mark_all(request, code, year, slug, attempt):
     """Allows to enter all marks for an assessment"""
@@ -1812,6 +1811,10 @@ def mark_all(request, code, year, slug, attempt):
                         pass
         return redirect(module.get_absolute_url())
     else:
+        slugs = []
+        for a in module.assessments.all():
+            tpl = (a.slug, a.value)
+            slugs.append(tpl)
         rows = []
         for performance in Performance.objects.filter(module=module):
             if performance.student.active:
@@ -1829,6 +1832,8 @@ def mark_all(request, code, year, slug, attempt):
                         form_string = (
                             '<input class="form-control assessment_mark" ' +
                             'type="number" min="0" max="100" id="' +
+                            this_assessment.slug +
+                            '_' +
                             performance.student.student_id +
                             '" name="mark_' +
                             performance.student.student_id +
@@ -1841,9 +1846,31 @@ def mark_all(request, code, year, slug, attempt):
                                 '" '
                             )
                         form_string += '/>'
-                        row.append(form_string)
+                        if mark:
+                            form_string += (
+                                '<small>Previously: ' +
+                                str(mark) +
+                                '</small>'
+                            )
                     else:
-                        row.append(str(mark))
+                        form_string = (
+                            '<div id="' +
+                            this_assessment.slug +
+                            '_' +
+                            performance.student.student_id +
+                            '">' +
+                            str(result.get_one_mark(attempt)) +
+                            '</div>'
+                        )
+                    row.append(form_string)
+                avg = (
+                    '<div id="average_' +
+                    performance.student.student_id +
+                    '">' +
+                    str(performance.average) +
+                    '</div>'
+                )
+                row.append(avg)
                 rows.append(row)
         return render(
             request,
@@ -1851,7 +1878,8 @@ def mark_all(request, code, year, slug, attempt):
             {
                 'rows': rows,
                 'module': module,
-                'assessment_title': assessment.title
+                'assessment': assessment,
+                'slugs': slugs
             }
         )
 

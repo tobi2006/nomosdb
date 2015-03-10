@@ -9,7 +9,7 @@
 
 
 <h1>{{ module }}</h1>
-<h2>{{ assessment_title }}</h2>
+<h2>{{ assessment.title }}</h2>
 
 <br><br>
 
@@ -24,6 +24,9 @@
                     {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
                 </th>
             {% endfor %}
+                <th>
+                    Average
+                </th>
             </th>
         </tr>
     </thead>
@@ -51,21 +54,41 @@
 </form>
 {% endblock %}
 
-{% comment %}
+{% block scripts %}
 
 <script type="text/javascript">
     $(document).ready(function() {
-        var prefixes = [{% for slug in slugs %}{{ slug }}, {% endfor %}];
+        var prefixes = [];
+        {% for slug in slugs %}
+            var tpl = ["{{ slug.0 }}", {{ slug.1 }}];
+            prefixes[prefixes.length] = tpl;
+        {% endfor %}
+
+        var to_remove = "{{ assessment.slug }}" + "_";
+
         $('.assessment_mark').change(function() {
-            var student_id = $(this).attr('id');
+            var tag_id = $(this).attr('id');
+            var student_id = tag_id.replace(to_remove, "");
             var sum = 0;
+            var txt = ''
             for (i=0; i < prefixes.length; i++) {
-                var identifier = 
-
-
+                var prefix = prefixes[i]
+                var identifier = '#' + prefix[0] + "_" + student_id;
+                var value = parseInt($(identifier).text());
+                if (isNaN(value)) {
+                    value = parseInt($(identifier).val());
+                };
+                var weighting = parseInt(prefix[1]);
+                var part_mark = value * weighting;
+                sum = sum + part_mark;
+            };
+            var average = sum / 100;
+            var show_average = Math.round(average);
+            var field_id = '#average_' + student_id;
+            $(field_id).text(show_average);
         });
 
     });
 
 </script>
-{% endcomment %}
+{% endblock %}
