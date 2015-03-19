@@ -758,6 +758,167 @@ class PerformanceTest(TeacherUnitTest):
             [expected_1, expected_2, expected_3]
         )
 
+    def test_resit_required_gets_shown(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        performance1 = Performance.objects.get(
+            module=module, student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module, student=student2
+        )
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Essay',
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Presentation',
+            value=30
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title='Exam',
+            value=50
+        )
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=42
+        )
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=35
+        )
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=42
+        )
+        performance1.assessment_results.add(result1_1)
+        performance1.assessment_results.add(result1_2)
+        performance1.assessment_results.add(result1_3)
+        # Student 1 should pass!
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=35,
+        )
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=42
+        )
+        result2_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=38,
+            concessions='G'
+        )
+        performance2.assessment_results.add(result2_1)
+        performance2.assessment_results.add(result2_2)
+        performance2.assessment_results.add(result2_3)
+        # Student 2 should fail
+        self.assertFalse(performance1.resit_required())
+        self.assertEqual(
+            performance2.resit_required(),
+            {assessment1: 'N', assessment3: 'G'}
+        )
+
+    def test_resit_required_gets_shown_for_concessions(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        performance1 = Performance.objects.get(
+            module=module, student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module, student=student2
+        )
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Essay',
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Presentation',
+            value=30
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title='Exam',
+            value=50
+        )
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=42
+        )
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=44,
+            concessions='G'
+        )
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=42,
+            concessions='P'
+        )
+        performance1.assessment_results.add(result1_1)
+        performance1.assessment_results.add(result1_2)
+        performance1.assessment_results.add(result1_3)
+        self.assertEqual(
+            performance1.resit_required(),
+            {assessment2: 'G', assessment3: 'P'}
+        )
+
+#    def test_second_resit_required_gets_shown(self):
+#        stuff = set_up_stuff()
+#        module = stuff[0]
+#        student1 = stuff[1]
+#        student2 = stuff[2]
+#        performance1 = Performance.objects.get(
+#            module=module, student=student1
+#        )
+#        performance2 = Performance.objects.get(
+#            module=module, student=student2
+#        )
+#        assessment1 = Assessment.objects.create(
+#            module=module,
+#            title='Essay',
+#            value=20
+#        )
+#        assessment2 = Assessment.objects.create(
+#            module=module,
+#            title='Presentation',
+#            value=30
+#        )
+#        assessment3 = Assessment.objects.create(
+#            module=module,
+#            title='Exam',
+#            value=50
+#        )
+#        result1_1 = AssessmentResult.objects.create(
+#            assessment=assessment1,
+#            mark=38,
+#            resit_mark=40
+#        )
+#        result1_2 = AssessmentResult.objects.create(
+#            assessment=assessment2,
+#            mark=42
+#        )
+#        result1_3 = AssessmentResult.objects.create(
+#            assessment=assessment3,
+#            mark=36,
+#            resit_mark=36
+#        )
+#        performance1.assessment_results.add(result1_1)
+#        performance1.assessment_results.add(result1_2)
+#        performance1.assessment_results.add(result1_3)
+#        self.assertEqual(
+#            performance1.second_resit_required(),
+#            [assessment3]
+#        )
+
 
 class AssessmentResultTest(TeacherUnitTest):
     """Testing the Assessment Result class"""

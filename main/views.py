@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from main.forms import *
-from main.functions import week_number, week_starting_date
+from main.functions import week_number, week_starting_date, formatted_date
 from main.messages import (
     new_staff_email, attendance_email, password_reset_email, new_student_email
 )
@@ -2335,4 +2335,140 @@ def export_tier_4_attendance(request, slug, year):
         )
         elements.append(table)
     document.build(elements)
+    return response
+
+def elements_for_module_mark_overview(module):
+    """Creates the elements necessary to create a mark overview of a module"""
+    elements = []
+    styles = getSampleStyleSheet()
+    all_assessments = module.all_assessments()
+    #    resit_marks_required = []
+    #    second_resit_marks_required = []
+    #    qld_resit_marks_required = []
+    header = ['Name', 'ID', 'Course']
+    for assessment in all_assessments:
+        headerstr = (
+            assessment.title +
+            ' (' +
+            str(assessment.value) +
+            '%)'
+        )
+        header.append(Paragraph(headerstr, styles['Normal']))
+    #        resit_1 = False
+    #        resit_2 = False
+    #        resit_q = False
+    #        for result in assessment.assessmentresult_set.all():
+    #            if result.resit_mark and assessment not in resit_marks_required:
+    #                    resit_marks_required.append(assessment)
+    #            if result.second_resit_mark:
+    #                if assessment not in second_resit_marks_required:
+    #                    second_resit_marks_required.append(assessment)
+    #            if result.qld_resit:
+    #                if assessment not in qld_resit_marks_required:
+    #                    qld_resit_marks_required.append(assessment)
+    #        if assessment in resit_marks_required:
+    #            header.append(assessment.title + ', Resit')
+    #        if assessment in second_resit_marks_required:
+    #            header.append(assessment.title + ', Second Resit')
+    #        if assessment in qld_resit_marks_required:
+    #            header.append(assessment.title + ', QLD Resit')
+    header.append('Average')
+    header.append('Comments')
+    data = [header]
+    linecounter = 0
+    highlight_yellow = []
+    highlight_red = []
+    for performance in module.performances.all():
+        linecounter += 1
+        line = [
+            Paragraph(performance.student.name(), styles['Normal']),
+            performance.student.student_id,
+            performance.student.course.short_title
+        ]
+        for assessment in all_assessments:
+            result = performance.get_assessment_result(
+                assessment.slug, 'first'
+            )
+            if result:
+                line.append(str(result))
+            else:
+                line.append('0')
+        line.append(performance.average)
+        if performance.average < PASSMARK:
+            highlight_yellow.append(linecounter)
+        else:
+            if performance.qld_resit_required():
+                highlight_red.append(linecounter)
+        resits = performance.resit_required()
+        comments = []
+        if resits:
+            for assessment in resits:
+                if resits[assessment] == 'G':
+                    if assessment.title == 'Exam':
+                        comments.append('Sit Exam')
+                    else:
+                        commentstr = 'Submit ' + assessment.title
+                        comments.append(commentstr)
+                elif resits[assessment] == 'P':
+                    commentstr = (
+                        'Concessions for ' +
+                        assessment.title +
+                        ' pending'
+                    )
+                    comments.append(commentstr)
+                else:
+                    if assessment.title == 'Exam':
+                        comments.append('Resit Exam')
+                    else:
+                        commentstr = 'Resubmit ' + assessment.title
+                        comments.append(commentstr)
+        allcomments = ', '.join(comments)
+        line.append(Paragraph(allcomments, styles['Normal']))
+        data.append(line)
+    table = Table(data, repeatRows=1)
+    tablestyle = [
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
+    ]
+    for line_number in highlight_yellow:
+        tablestyle.append(
+            ('BACKGROUND', (0, line_number), (-1, line_number), colors.yellow)
+        )
+    for line_number in highlight_red:
+        tablestyle.append(
+            ('BACKGROUND', (0, line_number), (-1, line_number), colors.red)
+        )
+    table.setStyle(TableStyle(tablestyle))
+    elements.append(table)
+    return elements
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_marks_for_module(request, code, year):
+    """Gives a useful sheet of all marks for the module.
+
+    Students will be highlighted if they failed the module, or if a QLD
+    student failed a component in a Foundational module
+    """
+    module = Module.objects.get(code=code, year=year)
+    response = HttpResponse(content_type='application/pdf')
+    filename = module.title.replace(" ", "_")
+    filename += "_Marks_" + str(module.year) + ".pdf"
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    doc.pagesize = landscape(A4)
+    story = []
+    elements = elements_for_module_mark_overview(module)
+    for element in elements:
+        story.append(element)
+    styles = getSampleStyleSheet()
+    d = formatted_date(datetime.date.today())
+    datenow = "Exported from MySDS, the CCCU Law DB on " + d
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(datenow, styles['Normal']))
+    story.append(PageBreak())
+    doc.build(story)
     return response

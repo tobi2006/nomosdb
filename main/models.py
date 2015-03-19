@@ -245,6 +245,9 @@ class Module(models.Model):
     def get_assessment_url(self):
         return reverse('assessment', args=[self.code, self.year])
 
+    def get_export_all_marks_url(self):
+        return reverse('export_marks_for_module', args=[self.code, self.year])
+
     def get_remove_student_url(self, student_id):
         return reverse(
             'remove_student_from_module',
@@ -853,16 +856,16 @@ class AssessmentResult(models.Model):
 
     def no_qld_problems(self):
         if self.mark:
-            if self.mark > 40:
+            if self.mark > PASSMARK:
                 return True
-            elif self.resit_mark and self.resit_mark > 40:
+            elif self.resit_mark and self.resit_mark > PASSMARK:
                 return True
             else:
                 if self.second_resit_mark:
-                    if self.second_resit_mark > 40:
+                    if self.second_resit_mark > PASSMARK:
                         return True
                 elif self.qld_resit:
-                    if self.qld_resit > 40:
+                    if self.qld_resit > PASSMARK:
                         return True
         return False
 
@@ -1109,6 +1112,59 @@ class Performance(models.Model):
         elif attempt == 'qld_resit':
             return assessment_result.qld_resit
 
+    def resit_required(self):
+        self.calculate_average()
+        returndict = {}
+        all_assessments = self.module.assessments.all()
+        if self.average < PASSMARK:
+            for assessment in all_assessments:
+                try:
+                    result = self.assessment_results.get(assessment=assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = AssessmentResult.objects.create(
+                        assessment=assessment
+                    )
+                    self.assessment_results.add(result)
+                if result.mark:
+                    mark = result.mark
+                else:
+                    mark = 0
+                if mark < PASSMARK:
+                    if result.resit_mark is None:
+                        returndict[result.assessment] = result.concessions
+        else:
+            for assessment in all_assessments:
+                try:
+                    result = self.assessment_results.get(assessment=assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = AssessmentResult.objects.create(
+                        assessment=assessment
+                    )
+                    self.assessment_results.add(result)
+                if result.concessions in ['G', 'P']:
+                    returndict[result.assessment] = result.concessions
+        if returndict:
+            return returndict
+        else:
+            return False
+
+    #    def second_resit_required(self):
+    #        self.calculate_average()
+    #        if self.average < PASSMARK:
+    #            returnlist = []
+    #            for result in self.assessment_results.all():
+    #                if result.mark < PASSMARK:
+    #                    if result.resit_mark is not None:
+    #                        returnlist.append(result.assessment)
+    #            return returnlist
+    #        else:
+    #            return False
+
+    def qld_resit_required(self):
+        result = False
+        if self.module.foundational:
+            pass
+            
     def attendance_as_dict(self):
         return_dict = {}
         if self.attendance:

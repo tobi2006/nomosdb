@@ -126,6 +126,11 @@ urlpatterns += patterns(
         name='export_attendance_sheet'
     ),
     url(
+        r'^export_marks/(\w+)/(\d{4})/$',
+        'export_marks_for_module',
+        name='export_marks_for_module'
+    ),
+    url(
         r'^export_tier_4_attendance/([-\w]+)/(\d{4})/$',
         'export_tier_4_attendance',
         name='export_tier_4_attendance'
