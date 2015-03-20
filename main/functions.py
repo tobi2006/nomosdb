@@ -71,3 +71,23 @@ def formatted_date(raw_date):
             str(raw_date.day) + '/' + str(raw_date.month) + '/' +
             str(raw_date.year))
     return result
+
+
+def academic_year_string(year):
+    """Returns the academic year starting with the given year
+
+    academic_year_string(2013) will return '2013/14'"""
+    year = int(year)
+    second = str(year + 1)
+    year = str(year)
+    if len(year) == 1:
+        year = '0' + year
+    if len(second) == 1:
+        second = '0' + second
+    returnstr = (
+        year +
+        '/' +
+        second[-2] +
+        second[-1]
+    )
+    return returnstr

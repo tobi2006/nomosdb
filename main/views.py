@@ -241,7 +241,8 @@ def admin(request):
         {
             'main_admin': main_admin,
             'subject_areas': subject_areas,
-            'subject_areas_real_years': subject_areas_real_years
+            'subject_areas_real_years': subject_areas_real_years,
+            'real_years': real_years,
         }
     )
 
@@ -2471,4 +2472,51 @@ def export_marks_for_module(request, code, year):
     story.append(Paragraph(datenow, styles['Normal']))
     story.append(PageBreak())
     doc.build(story)
+    return response
+
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_exam_board_overview(request, year, level):
+    """Exports all marks for all modules in a given year for exam boards"""
+    response = HttpResponse(content_type='application/pdf')
+    levelstr = str(int(level) + 3)
+    filename = (
+        'Exam_Board_Module_Overview_Year_' +
+        academic_year_string(year) +
+        '_Level_' +
+        levelstr +
+        '.pdf'
+    )
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    doc.pagesize = landscape(A4)
+    elements = []
+    styles = getSampleStyleSheet()
+    problem_performances = []
+    # Title Page
+    elements.append(Spacer(1, 100))
+    elements.append(logo())
+    elements.append(Spacer(1, 80))
+    titlestring = 'Exam Boards '
+    titlestring += academic_year_string(year)
+    tmp = '<para alignment = "' + alignment + '">' + titlestring + '</para>'
+    title = Paragraph(tmp, styles['Heading1'])
+    elements.append(title)
+    elements.append(Spacer(1, 40))
+    levelstring = 'Level ' + levelstr
+    tmp = '<para alignment = "' + alignment + '">' + levelstring + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading2'])
+    elements.append(subtitle)
+    elements.append(PageBreak())
+    modules = Module.objects.filter(year=year)
+    for module in modules:
+        if year in module.eligible:
+            processed_module = module_mark_overview(module)
+            for element in processed_module[0]:
+                elements.append(element)
+            elements.append(PageBreak())
+    doc.build(elements)
     return response
