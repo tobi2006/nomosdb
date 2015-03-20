@@ -154,7 +154,7 @@ class StudentForm(forms.ModelForm):
 
     class Meta:
         model = Student
-        exclude = ['modules', 'nalp', 'achieved_degree']
+        exclude = ['modules', 'nalp', 'achieved_degree', 'user']
         error_messages = {
             'student_id': {'required': NO_STUDENT_ID_ERROR}
         }
