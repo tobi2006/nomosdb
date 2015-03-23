@@ -61,27 +61,34 @@
     {% endfor %}
 </div>
 
+
+{% comment %}
 <h3>Assessment</h3>
 
 <h4>Exam Board Overview</h4>
 
-<table>
-    <tr>
-        <td>
-            <select id="select_year">
-                {% for year in real_years %}
-                    <option>{{ year }}</option>
-                {% endfor %}
-            </select>
-        </td>
-            <select_id="select_level">
-
+<div class="btn-group">
+    {% for subject_area, years in subject_areas_real_years.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+                <li><a href="{% url "export_exam_board_overview" subject_area.slug 2014 year %}">{{ year }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
 
 {% comment %}
 <h4>Anonymous marking</h4>
 {% endcomment %}
 
-<h3>Assign Tutors</h3>
+<h3>Tutors</h3>
+
+<h4>Assign Tutors</h4>
 
 <div class="btn-group">
     {% for subject_area, years in subject_areas.items %}
@@ -98,7 +105,7 @@
     {% endfor %}
 </div>
 
-<h3>All Tutor Meetings</h3>
+<h4>All Tutor Meetings</h4>
 
 <div class="btn-group">
     {% for subject_area, years in subject_areas.items %}

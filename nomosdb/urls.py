@@ -126,6 +126,12 @@ urlpatterns += patterns(
         name='export_attendance_sheet'
     ),
     url(
+        r'^export_exam_board_overview/([-\w]+)/(\d{4})/(\d{1})/$',
+        'export_exam_board_overview',
+        name='export_exam_board_overview'
+    ),
+ 
+    url(
         r'^export_marks/(\w+)/(\d{4})/$',
         'export_marks_for_module',
         name='export_marks_for_module'

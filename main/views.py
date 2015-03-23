@@ -210,6 +210,7 @@ def admin(request):
         staff_subject_areas = request.user.staff.subject_areas.all()
     subject_areas = {}
     subject_areas_real_years = {}
+    all_years = []
     for subject_area in staff_subject_areas:
         if subject_area.courses.exists():
             for course in subject_area.courses.all():
@@ -233,8 +234,11 @@ def admin(request):
             if subject_area in module.subject_areas.all():
                 if module.year not in real_years:
                     real_years.append(module.year)
+                if module.year not in all_years:
+                    all_years.append(module.year)
         real_years.sort()
         subject_areas_real_years[subject_area] = real_years
+    all_years.sort()
     return render(
         request,
         'admin.html',
@@ -242,7 +246,7 @@ def admin(request):
             'main_admin': main_admin,
             'subject_areas': subject_areas,
             'subject_areas_real_years': subject_areas_real_years,
-            'real_years': real_years,
+            'all_years': all_years,
         }
     )
 
@@ -2338,6 +2342,7 @@ def export_tier_4_attendance(request, slug, year):
     document.build(elements)
     return response
 
+
 def elements_for_module_mark_overview(module):
     """Creates the elements necessary to create a mark overview of a module"""
     elements = []
@@ -2359,7 +2364,7 @@ def elements_for_module_mark_overview(module):
     #        resit_2 = False
     #        resit_q = False
     #        for result in assessment.assessmentresult_set.all():
-    #            if result.resit_mark and assessment not in resit_marks_required:
+    #          if result.resit_mark and assessment not in resit_marks_required:
     #                    resit_marks_required.append(assessment)
     #            if result.second_resit_mark:
     #                if assessment not in second_resit_marks_required:
@@ -2475,10 +2480,9 @@ def export_marks_for_module(request, code, year):
     return response
 
 
-
 @login_required
 @user_passes_test(is_staff)
-def export_exam_board_overview(request, year, level):
+def export_exam_board_overview(request, subject_slug, year, level):
     """Exports all marks for all modules in a given year for exam boards"""
     response = HttpResponse(content_type='application/pdf')
     levelstr = str(int(level) + 3)
@@ -2500,8 +2504,14 @@ def export_exam_board_overview(request, year, level):
     elements.append(Spacer(1, 100))
     elements.append(logo())
     elements.append(Spacer(1, 80))
-    titlestring = 'Exam Boards '
-    titlestring += academic_year_string(year)
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    titlestring = (
+        'Exam Boards ' +
+        subject_area.title +
+        ' (' +
+        academic_year_string(year) +
+        ')'
+    )
     tmp = '<para alignment = "' + alignment + '">' + titlestring + '</para>'
     title = Paragraph(tmp, styles['Heading1'])
     elements.append(title)
@@ -2513,7 +2523,10 @@ def export_exam_board_overview(request, year, level):
     elements.append(PageBreak())
     modules = Module.objects.filter(year=year)
     for module in modules:
-        if year in module.eligible:
+        if (
+                year in module.eligible and
+                subject_area in module.subject.areas.all()
+        ):
             processed_module = module_mark_overview(module)
             for element in processed_module[0]:
                 elements.append(element)
