@@ -56,6 +56,7 @@ ROOT_URLCONF = 'nomosdb.urls'
 
 WSGI_APPLICATION = 'nomosdb.wsgi.application'
 
+PORT=7000
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases

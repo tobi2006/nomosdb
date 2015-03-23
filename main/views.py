@@ -27,48 +27,57 @@ from reportlab.platypus.flowables import PageBreak
 # Authentication
 
 def is_teacher(user):
-    if hasattr(user, 'staff'):
+    try:
         if user.staff.role == 'teacher':
             return True
+    except Staff.DoesNotExist:
+        pass
     return False
 
 
 def is_admin(user):
-    if hasattr(user, 'staff'):
+    try:
         if user.staff.role == 'admin':
             return True
         elif user.staff.programme_director:
             return True
+    except Staff.DoesNotExist:
+        pass
     return False
 
 
 def is_pd(user):
-    if hasattr(user, 'staff'):
+    try:
         if user.staff.programme_director:
             return True
         elif user.staff.main_admin:
             return True
-    return False
+    except Staff.DoesNotExist:
+        pass
 
 
 def is_main_admin(user):
-    if hasattr(user, 'staff'):
+    try:
         if user.staff.main_admin is True:
             return True
+    except Staff.DoesNotExist:
+        pass
     return False
 
 
 def is_staff(user):
-    if hasattr(user, 'staff'):
+    try:
+        staff = user.staff
         return True
-    else:
+    except Staff.DoesNotExist:
         return False
 
 
 def is_student(user):
-    if hasattr(user, 'student'):
+    try:
+        student = user.student
         return True
-    else:
+    except Student.DoesNotExist:
         return False
 
 
