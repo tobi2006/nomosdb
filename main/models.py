@@ -779,15 +779,15 @@ class AssessmentResult(models.Model):
             eligible = True
         return eligible
 
-    def eligible_for_qld_resit(self):
-        eligible = False
-        if self.assessment.module.foundational:
-            if self.mark and self.resit_mark:
-                if self.mark < PASSMARK and self.resit_mark < PASSMARK:
-                    eligible = True
-            if self.concessions == self.GRANTED:
-                eligible = True
-        return eligible
+#    def eligible_for_qld_resit(self):
+#        eligible = False
+#        if self.assessment.module.foundational and self.student.qld:
+#            if self.mark and self.resit_mark:
+#                if self.mark < PASSMARK and self.resit_mark < PASSMARK:
+#                    eligible = True
+#            if self.concessions == self.GRANTED:
+#                eligible = True
+#        return eligible
 
     def result_with_feedback(self):
         """Return dict of tpls: 0 - mark, 1 - edit url, 2 - marksheet url"""
@@ -848,6 +848,8 @@ class AssessmentResult(models.Model):
 
     def result(self):
         result = self.mark
+        if result is None:
+            result = 0
         if self.resit_mark:
             if self.resit_mark > result:
                 result = self.resit_mark
@@ -1171,9 +1173,19 @@ class Performance(models.Model):
     #            return False
 
     def qld_resit_required(self):
-        result = False
-        if self.module.foundational:
-            pass
+        returnlist = []
+        if self.module.foundational and self.student.qld:
+            for assessment in self.module.assessments.all():
+                try:
+                    result = self.assessment_results.get(assessment=assessment)
+                    if result.result() < PASSMARK:
+                        returnlist.append(assessment)
+                except AssessmentResult.DoesNotExist:
+                    returnlist.append(assessment)
+        if returnlist:
+            return returnlist
+        else:
+            return False
             
     def attendance_as_dict(self):
         return_dict = {}

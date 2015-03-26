@@ -1,5 +1,6 @@
 __pycache__/
 *.swp
+.*.swp
 *.pyc
 *.pyo
 server-data.json

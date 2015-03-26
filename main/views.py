@@ -2444,6 +2444,21 @@ def elements_for_module_mark_overview(module, highlight=True):
                     else:
                         commentstr = 'Resubmit ' + assessment.title
                         comments.append(commentstr)
+        else:
+            resits = []
+        qld_resits = performance.qld_resit_required()
+        if qld_resits:
+            for assessment in qld_resits:
+                if assessment not in resits:
+                    if assessment.title == 'Exam':
+                        comments.append('Resit Exam (QLD)')
+                    else:
+                        commentstr = (
+                            'Resubmit ' +
+                            assessment.title +
+                            ' (QLD)'
+                        )
+                        comments.append(commentstr)
         allcomments = ', '.join(comments)
         line.append(Paragraph(allcomments, styles['Normal']))
         data.append(line)

@@ -871,6 +871,83 @@ class PerformanceTest(TeacherUnitTest):
             {assessment2: 'G', assessment3: 'P'}
         )
 
+    def test_qld_resit_required_shows_properly(self):
+        stuff = set_up_stuff()
+        module1 = stuff[0]
+        student1 = stuff[1]
+        student1.qld = True
+        student1.save()
+        student2 = stuff[2]
+        student2.qld = False
+        student2.save()
+        # Test for foundational module
+        module1.foundational = True
+        module1.save()
+        performance1 = Performance.objects.get(
+            module=module1, student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module1, student=student2
+        )
+        assessment1 = Assessment.objects.create(
+            module=module1,
+            title='Essay',
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            module=module1,
+            title='Presentation',
+            value=30
+        )
+        assessment3 = Assessment.objects.create(
+            module=module1,
+            title='Exam',
+            value=50
+        )
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=70
+        )
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=38
+        )
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=70
+        )
+        performance1.assessment_results.add(result1_1)
+        performance1.assessment_results.add(result1_2)
+        performance1.assessment_results.add(result1_3)
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=70
+        )
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=38
+        )
+        result2_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=70
+        )
+        performance2.assessment_results.add(result2_1)
+        performance2.assessment_results.add(result2_2)
+        performance2.assessment_results.add(result2_3)
+        self.assertEqual(performance1.qld_resit_required(), [assessment2])
+        self.assertEqual(performance2.qld_resit_required(), False)
+        # Test for non-foundational module
+        module1.foundational = False
+        module1.save()
+        performance1 = Performance.objects.get(
+            module=module1, student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module1, student=student2
+        )
+        self.assertEqual(performance1.qld_resit_required(), False)
+        self.assertEqual(performance2.qld_resit_required(), False)
+
 #    def test_second_resit_required_gets_shown(self):
 #        stuff = set_up_stuff()
 #        module = stuff[0]
@@ -1128,6 +1205,29 @@ class AssessmentResultTest(TeacherUnitTest):
             assessment_result_1.get_marksheet_urls(),
             {'first': link1, 'resit': link2}
         )
+
+    def test_set_one_mark_sets_mark_and_timestamp(self):
+        module = create_module()
+        student = create_student()
+        performance = Performance.objects.create(
+            student=student, module=module)
+        assessment = Assessment.objects.create(
+            module=module,
+            value=50,
+            title='Essay'
+        )
+        assessment_result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=30,
+            resit_mark=40,
+        )
+        time_of_saving = datetime.datetime.now()
+        assessment_result.set_one_mark('first', 35)
+        result_out = AssessmentResult.objects.first()
+        self.assertEqual(result_out.mark, 35)
+        saved_time = result_out.last_modified
+        difference = saved_time - time_of_saving
+        self.assertTrue(difference.seconds<1)
 
 
 class ConsistencyTest(TeacherUnitTest):
