@@ -33,7 +33,7 @@ def is_teacher(user):
     try:
         if user.staff.role == 'teacher':
             return True
-    except Staff.DoesNotExist:
+    except:
         pass
     return False
 
@@ -44,7 +44,7 @@ def is_admin(user):
             return True
         elif user.staff.programme_director:
             return True
-    except Staff.DoesNotExist:
+    except:
         pass
     return False
 
@@ -55,7 +55,7 @@ def is_pd(user):
             return True
         elif user.staff.main_admin:
             return True
-    except Staff.DoesNotExist:
+    except:
         pass
 
 
@@ -63,7 +63,7 @@ def is_main_admin(user):
     try:
         if user.staff.main_admin is True:
             return True
-    except Staff.DoesNotExist:
+    except:
         pass
     return False
 
@@ -72,7 +72,7 @@ def is_staff(user):
     try:
         staff = user.staff
         return True
-    except Staff.DoesNotExist:
+    except:
         return False
 
 
@@ -80,7 +80,7 @@ def is_student(user):
     try:
         student = user.student
         return True
-    except Student.DoesNotExist:
+    except:
         return False
 
 
@@ -2357,7 +2357,7 @@ def export_tier_4_attendance(request, slug, year):
     return response
 
 
-def elements_for_module_mark_overview(module):
+def elements_for_module_mark_overview(module, highlight=True):
     """Creates the elements necessary to create a mark overview of a module"""
     elements = []
     styles = getSampleStyleSheet()
@@ -2413,6 +2413,8 @@ def elements_for_module_mark_overview(module):
                 line.append(str(result))
             else:
                 line.append('0')
+        if performance.average is None:
+            performance.calculate_average()
         line.append(performance.average)
         if performance.average < PASSMARK:
             highlight_yellow.append(linecounter)
@@ -2451,14 +2453,15 @@ def elements_for_module_mark_overview(module):
         ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
         ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
     ]
-    for line_number in highlight_yellow:
-        tablestyle.append(
-            ('BACKGROUND', (0, line_number), (-1, line_number), colors.yellow)
-        )
-    for line_number in highlight_red:
-        tablestyle.append(
-            ('BACKGROUND', (0, line_number), (-1, line_number), colors.red)
-        )
+    if highlight:
+        for line_number in highlight_yellow:
+            tablestyle.append(
+                ('BACKGROUND', (0, line_number), (-1, line_number), colors.yellow)
+            )
+        for line_number in highlight_red:
+            tablestyle.append(
+                ('BACKGROUND', (0, line_number), (-1, line_number), colors.red)
+            )
     table.setStyle(TableStyle(tablestyle))
     elements.append(table)
     return elements
@@ -2512,6 +2515,18 @@ def export_exam_board_overview(request, subject_slug, year, level):
     """Exports all marks for all modules in a given year for exam boards"""
     response = HttpResponse(content_type='application/pdf')
     levelstr = str(int(level) + 3)
+    now = datetime.datetime.now()
+    today = formatted_date(now)
+    minute = str(now.minute)
+    if len(minute) == 1:
+        minute = '0'+ minute
+    today = (
+        today +
+        ', ' +
+        str(now.hour) +
+        ':' +
+        minute
+    )
     filename = (
         'Exam_Board_Module_Overview_Year_' +
         academic_year_string(year) +
@@ -2527,9 +2542,9 @@ def export_exam_board_overview(request, subject_slug, year, level):
     styles = getSampleStyleSheet()
     problem_performances = []
     # Title Page
-    elements.append(Spacer(1, 100))
+    elements.append(Spacer(1, 60))
     elements.append(logo())
-    elements.append(Spacer(1, 80))
+    elements.append(Spacer(1, 60))
     subject_area = SubjectArea.objects.get(slug=subject_slug)
     titlestring = (
         'Exam Boards ' +
@@ -2546,6 +2561,10 @@ def export_exam_board_overview(request, subject_slug, year, level):
     tmp = '<para alignment = "center">' + levelstring + '</para>'
     subtitle = Paragraph(tmp, styles['Heading2'])
     elements.append(subtitle)
+    elements.append(Spacer(1, 40))
+    tmp = '<para alignment = "center">Exported ' + today + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading3'])
+    elements.append(subtitle)
     elements.append(PageBreak())
     modules = Module.objects.filter(year=year)
     for module in modules:
@@ -2556,7 +2575,8 @@ def export_exam_board_overview(request, subject_slug, year, level):
             tmp = '<para alignment = "center">' + module.title + '</para>'
             title = Paragraph(tmp, styles['Heading2'])
             elements.append(title)
-            processed_module = elements_for_module_mark_overview(module)
+            processed_module = elements_for_module_mark_overview(
+                module, highlight=False)
             for element in processed_module:
                 elements.append(element)
             elements.append(PageBreak())

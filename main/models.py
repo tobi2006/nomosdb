@@ -193,6 +193,7 @@ class Module(models.Model):
 
     class Meta:
         unique_together = ('code', 'year')
+        ordering = ['title', 'year']
 
     def save(self, *args, **kwargs):
         self.code = self.code.replace(' ', '')
@@ -714,6 +715,7 @@ class AssessmentResult(models.Model):
     assessment_group = models.IntegerField(blank=True, null=True)
     resit_assessment_group = models.IntegerField(blank=True, null=True)
     qld_resit = models.IntegerField(blank=True, null=True)
+    last_modified = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ['assessment']
@@ -881,13 +883,21 @@ class AssessmentResult(models.Model):
 
     def set_one_mark(self, attempt, mark):
         if attempt == 'first':
-            self.mark = mark
+            if mark != self.mark:
+                last_modified = datetime.datetime.now()
+                self.mark = mark
         elif attempt == 'resit':
-            self.resit_mark = mark
+            if mark != self.resit_mark:
+                last_modified = datetime.datetime.now()
+                self.resit_mark = mark
         elif attempt == 'second_resit':
-            self.second_resit_mark = mark
+            if mark != self.second_resit_mark:
+                last_modified = datetime.datetime.now()
+                self.second_resit_mark = mark
         elif attempt == 'qld_resit':
-            self.qld_resit = mark
+            if mark != self.qld_resit:
+                last_modified = datetime.datetime.now()
+                self.qld_resit = mark
         self.save()
 
     def get_marksheet_urls(self):
