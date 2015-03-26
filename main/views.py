@@ -7,7 +7,9 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from main.forms import *
-from main.functions import week_number, week_starting_date, formatted_date
+from main.functions import (
+    week_number, week_starting_date, formatted_date, academic_year_string
+)
 from main.messages import (
     new_staff_email, attendance_email, password_reset_email, new_student_email
 )
@@ -16,12 +18,13 @@ from main.unisettings import *
 from random import shuffle, choice
 from string import ascii_letters, digits
 from reportlab.platypus import (
-    Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle, Image
 )
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.platypus.flowables import PageBreak
+from reportlab.lib.units import inch
 
 
 # Authentication
@@ -211,6 +214,7 @@ def home(request):
 @user_passes_test(is_admin)
 def admin(request):
     """Opens the admin dashboard"""
+    current_year = Setting.objects.get(name="current_year").value
     if request.user.staff.main_admin:
         main_admin = True
         staff_subject_areas = SubjectArea.objects.all()
@@ -256,6 +260,7 @@ def admin(request):
             'subject_areas': subject_areas,
             'subject_areas_real_years': subject_areas_real_years,
             'all_years': all_years,
+            'current_year': current_year,
         }
     )
 
@@ -2459,6 +2464,18 @@ def elements_for_module_mark_overview(module):
     return elements
 
 
+def logo():
+    """Returns the university logo, unless it is not available"""
+    styles = getSampleStyleSheet()
+    url = "https://cccu.tobiaskliem.de/static/images/cccu.jpg"
+    try:
+        image = Image(url, 2.45*inch, 1*inch)
+    except IOError:
+        image = Paragraph(
+            "Canterbury Christ Church University", styles['Heading1'])
+    return image
+
+
 @login_required
 @user_passes_test(is_staff)
 def export_marks_for_module(request, code, year):
@@ -2516,28 +2533,31 @@ def export_exam_board_overview(request, subject_slug, year, level):
     subject_area = SubjectArea.objects.get(slug=subject_slug)
     titlestring = (
         'Exam Boards ' +
-        subject_area.title +
+        subject_area.name +
         ' (' +
         academic_year_string(year) +
         ')'
     )
-    tmp = '<para alignment = "' + alignment + '">' + titlestring + '</para>'
+    tmp = '<para alignment = "center">' + titlestring + '</para>'
     title = Paragraph(tmp, styles['Heading1'])
     elements.append(title)
     elements.append(Spacer(1, 40))
     levelstring = 'Level ' + levelstr
-    tmp = '<para alignment = "' + alignment + '">' + levelstring + '</para>'
+    tmp = '<para alignment = "center">' + levelstring + '</para>'
     subtitle = Paragraph(tmp, styles['Heading2'])
     elements.append(subtitle)
     elements.append(PageBreak())
     modules = Module.objects.filter(year=year)
     for module in modules:
         if (
-                year in module.eligible and
-                subject_area in module.subject.areas.all()
+                str(level) in module.eligible and
+                subject_area in module.subject_areas.all()
         ):
-            processed_module = module_mark_overview(module)
-            for element in processed_module[0]:
+            tmp = '<para alignment = "center">' + module.title + '</para>'
+            title = Paragraph(tmp, styles['Heading2'])
+            elements.append(title)
+            processed_module = elements_for_module_mark_overview(module)
+            for element in processed_module:
                 elements.append(element)
             elements.append(PageBreak())
     doc.build(elements)
