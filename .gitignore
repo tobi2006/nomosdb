@@ -7,3 +7,4 @@ migrations/
 *.sqlite3
 deploy.sh
 exclude.txt
+server.json

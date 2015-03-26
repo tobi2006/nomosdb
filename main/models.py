@@ -884,19 +884,19 @@ class AssessmentResult(models.Model):
     def set_one_mark(self, attempt, mark):
         if attempt == 'first':
             if mark != self.mark:
-                last_modified = datetime.datetime.now()
+                self.last_modified = datetime.datetime.now()
                 self.mark = mark
         elif attempt == 'resit':
             if mark != self.resit_mark:
-                last_modified = datetime.datetime.now()
+                self.last_modified = datetime.datetime.now()
                 self.resit_mark = mark
         elif attempt == 'second_resit':
             if mark != self.second_resit_mark:
-                last_modified = datetime.datetime.now()
+                self.last_modified = datetime.datetime.now()
                 self.second_resit_mark = mark
         elif attempt == 'qld_resit':
             if mark != self.qld_resit:
-                last_modified = datetime.datetime.now()
+                self.last_modified = datetime.datetime.now()
                 self.qld_resit = mark
         self.save()
 
