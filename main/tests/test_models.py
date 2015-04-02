@@ -3,6 +3,7 @@ from main.models import *
 from main.views import *
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
 from .base import *
 
 
@@ -1221,7 +1222,7 @@ class AssessmentResultTest(TeacherUnitTest):
             mark=30,
             resit_mark=40,
         )
-        time_of_saving = datetime.datetime.now()
+        time_of_saving = timezone.now()
         assessment_result.set_one_mark('first', 35)
         result_out = AssessmentResult.objects.first()
         self.assertEqual(result_out.mark, 35)

@@ -2,9 +2,9 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.text import slugify
+from django.utils import timezone
 from feedback.categories import AVAILABLE_MARKSHEETS
 from main.unisettings import TEACHING_WEEKS, PASSMARK
-import datetime
 
 ACADEMIC_YEARS = (
     [(i, str(i) + "/" + str(i+1)[-2:]) for i in range(2010, 2025)]
@@ -13,8 +13,8 @@ ACADEMIC_YEARS = (
 
 def this_year():
     """Checks which academic year we are in"""
-    year = datetime.datetime.now().year
-    month = datetime.datetime.now().month
+    year = timezone.now().year
+    month = timezone.now().month
     if month < 9:
         current_year = year - 1
     else:
@@ -886,19 +886,19 @@ class AssessmentResult(models.Model):
     def set_one_mark(self, attempt, mark):
         if attempt == 'first':
             if mark != self.mark:
-                self.last_modified = datetime.datetime.now()
+                self.last_modified = timezone.now()
                 self.mark = mark
         elif attempt == 'resit':
             if mark != self.resit_mark:
-                self.last_modified = datetime.datetime.now()
+                self.last_modified = timezone.now()
                 self.resit_mark = mark
         elif attempt == 'second_resit':
             if mark != self.second_resit_mark:
-                self.last_modified = datetime.datetime.now()
+                self.last_modified = timezone.now()
                 self.second_resit_mark = mark
         elif attempt == 'qld_resit':
             if mark != self.qld_resit:
-                self.last_modified = datetime.datetime.now()
+                self.last_modified = timezone.now()
                 self.qld_resit = mark
         self.save()
 

@@ -121,6 +121,16 @@ urlpatterns += patterns(
         name='tutee_meeting'
     ),
     url(
+        r'^export_all_marks/([-\w]+)/(\d{4})/(\d{1})/$',
+        'export_all_marks',
+        name='export_all_marks'
+    ),
+    url(
+        r'^export_changed_marks/([-\w]+)/(\d{4})/(\d{1})/(\d{4})/(\d+)/(\d+)/$',
+        'export_changed_marks',
+        name='export_changed_marks'
+    ),
+    url(
         r'^export_attendance_sheet/(\w+)/(\d{4})/$',
         'export_attendance_sheet',
         name='export_attendance_sheet'
@@ -130,7 +140,6 @@ urlpatterns += patterns(
         'export_exam_board_overview',
         name='export_exam_board_overview'
     ),
- 
     url(
         r'^export_marks/(\w+)/(\d{4})/$',
         'export_marks_for_module',
