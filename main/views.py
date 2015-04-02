@@ -2791,7 +2791,11 @@ def export_changed_marks(request, subject_slug, year, level, c_y, c_m, c_d):
                     if assessment in changed_results:
                         result = changed_results[assessment]
                         result_string = result.result_as_string()
-                        line.append(Paragraph(result_string, styles['Normal']))
+                        if result_string:
+                            line.append(
+                                Paragraph(result_string, styles['Normal']))
+                        else:
+                            line.append('')
                     else:
                         line.append('')
                 if len(all_assessments) > 1:
