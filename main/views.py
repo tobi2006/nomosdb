@@ -1309,10 +1309,17 @@ def delete_module(request, code, year):
 @user_passes_test(is_staff)
 def address_nines(request, code, year):
     module = Module.objects.get(code=code, year=year)
+    performances = []
+    for performance in module.performances.all():
+        if performance.student.active:
+            if performance.average:
+                avg_str = str(performance.average)
+                if avg_str[-1] == '9':
+                    performances.append(performance)
     return render(
         request,
         'address_nines.html',
-        {}
+        {'performances': performances}
     )
 
 

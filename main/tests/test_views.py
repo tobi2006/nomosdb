@@ -2384,7 +2384,87 @@ class AddressNinesTest(TeacherUnitTest):
         self.assertTemplateUsed(response, 'address_nines.html')
 
     def test_address_nines_shows_all_averages_ending_with_nine(self):
-        pass
+        stuff = set_up_stuff()
+        module = stuff[0]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Assessment 1',
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Assessment 2',
+            value=30
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title='Assessment 3',
+            value=50
+        )
+        # Student 1 with average of 49
+        student1 = stuff[1]
+        performance1 = Performance.objects.get(module=module, student=student1)
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=50
+        )
+        performance1.assessment_results.add(result1_1)
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=48
+        )
+        performance1.assessment_results.add(result1_2)
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=50
+        )
+        performance1.assessment_results.add(result1_3)
+        performance1.calculate_average()
+        # Student 2 with 59 Average
+        student2 = stuff[2]
+        performance2 = Performance.objects.get(module=module, student=student2)
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=62
+        )
+        performance2.assessment_results.add(result2_1)
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=58
+        )
+        performance2.assessment_results.add(result2_2)
+        result2_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=59
+        )
+        performance2.assessment_results.add(result2_3)
+        performance2.calculate_average()
+        # Student 3 with 60 Average
+        student3 = stuff[3]
+        performance3 = Performance.objects.get(module=module, student=student3)
+        result3_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60
+        )
+        performance3.assessment_results.add(result3_1)
+        result3_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=60
+        )
+        performance3.assessment_results.add(result3_2)
+        result3_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=60
+        )
+        performance3.assessment_results.add(result3_3)
+        performance3.calculate_average()
+        request = self.factory.get(module.get_address_nines_url())
+        request.user = self.user
+        response = address_nines(request, module.code, module.year)
+        self.assertContains(response, student1.short_name())
+        self.assertContains(response, student2.short_name())
+        self.assertNotContains(response, student3.short_name())
+
 
     def test_address_nines_shows_no_nines_found_message_when_no_nines(self):
         pass

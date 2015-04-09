@@ -790,15 +790,15 @@ class AssessmentResult(models.Model):
             eligible = True
         return eligible
 
-#    def eligible_for_qld_resit(self):
-#        eligible = False
-#        if self.assessment.module.foundational and self.student.qld:
-#            if self.mark and self.resit_mark:
-#                if self.mark < PASSMARK and self.resit_mark < PASSMARK:
-#                    eligible = True
-#            if self.concessions == self.GRANTED:
-#                eligible = True
-#        return eligible
+    #    def eligible_for_qld_resit(self):
+    #        eligible = False
+    #        if self.assessment.module.foundational and self.student.qld:
+    #            if self.mark and self.resit_mark:
+    #                if self.mark < PASSMARK and self.resit_mark < PASSMARK:
+    #                    eligible = True
+    #            if self.concessions == self.GRANTED:
+    #                eligible = True
+    #        return eligible
 
     def result_with_feedback(self):
         """Return dict of tpls: 0 - mark, 1 - edit url, 2 - marksheet url"""
