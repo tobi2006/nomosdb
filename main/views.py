@@ -1309,18 +1309,42 @@ def delete_module(request, code, year):
 @user_passes_test(is_staff)
 def address_nines(request, code, year):
     module = Module.objects.get(code=code, year=year)
-    performances = []
-    for performance in module.performances.all():
-        if performance.student.active:
-            if performance.average:
-                avg_str = str(performance.average)
-                if avg_str[-1] == '9':
-                    performances.append(performance)
-    return render(
-        request,
-        'address_nines.html',
-        {'performances': performances}
-    )
+    if request.method == 'POST':
+        for performance in Performance.objects.filter(module=module):
+            if performance.student.active:
+                for assessment in module.assessments.all():
+                    field_id = (
+                        'mark_' +
+                        assessment.slug +
+                        '_' +
+                        performance.student.student_id
+                    )
+                    if field_id in request.POST and request.POST[field_id]:
+                        raw = request.POST[field_id]
+                        try:
+                            mark = int(raw)
+                            if mark in range(0, 100):
+                                performance.set_assessment_result(
+                                    assessment.slug,
+                                    mark,
+                                    'first'
+                                )
+                        except ValueError:
+                            pass
+        return redirect(module.get_absolute_url())
+    else:
+        performances = []
+        for performance in module.performances.all():
+            if performance.student.active:
+                if performance.average:
+                    avg_str = str(performance.average)
+                    if avg_str[-1] == '9':
+                        performances.append(performance)
+        return render(
+            request,
+            'address_nines.html',
+            {'module': module, 'performances': performances}
+        )
 
 
 @login_required

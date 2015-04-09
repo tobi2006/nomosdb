@@ -2465,9 +2465,169 @@ class AddressNinesTest(TeacherUnitTest):
         self.assertContains(response, student2.short_name())
         self.assertNotContains(response, student3.short_name())
 
-
     def test_address_nines_shows_no_nines_found_message_when_no_nines(self):
-        pass
+        stuff = set_up_stuff()
+        module = stuff[0]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Assessment 1',
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Assessment 2',
+            value=30
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title='Assessment 3',
+            value=50
+        )
+        # Student 1 with 40 average
+        student1 = stuff[1]
+        performance1 = Performance.objects.get(module=module, student=student1)
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=40
+        )
+        performance1.assessment_results.add(result1_1)
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=40
+        )
+        performance1.assessment_results.add(result1_2)
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=40
+        )
+        performance1.assessment_results.add(result1_3)
+        performance1.calculate_average()
+        # Student 2 with 55 Average
+        student2 = stuff[2]
+        performance2 = Performance.objects.get(module=module, student=student2)
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=55
+        )
+        performance2.assessment_results.add(result2_1)
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=55
+        )
+        performance2.assessment_results.add(result2_2)
+        result2_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=55
+        )
+        performance2.assessment_results.add(result2_3)
+        performance2.calculate_average()
+        # Student 3 with 60 Average
+        student3 = stuff[3]
+        performance3 = Performance.objects.get(module=module, student=student3)
+        result3_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60
+        )
+        performance3.assessment_results.add(result3_1)
+        result3_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=60
+        )
+        performance3.assessment_results.add(result3_2)
+        result3_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=60
+        )
+        performance3.assessment_results.add(result3_3)
+        performance3.calculate_average()
+        request = self.factory.get(module.get_address_nines_url())
+        request.user = self.user
+        response = address_nines(request, module.code, module.year)
+        self.assertNotContains(response, student1.short_name())
+        self.assertNotContains(response, student2.short_name())
+        self.assertNotContains(response, student3.short_name())
+        self.assertContains(response, 'no averages ending with a 9')
 
     def test_address_nines_changes_marks(self):
-        pass
+        stuff = set_up_stuff()
+        module = stuff[0]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Assessment 1',
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Assessment 2',
+            value=30
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title='Assessment 3',
+            value=50
+        )
+        # Student 1 with average of 49
+        student1 = stuff[1]
+        performance1 = Performance.objects.get(module=module, student=student1)
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=50
+        )
+        r1_1_field = 'mark_' + assessment1.slug + '_' + student1.student_id
+        performance1.assessment_results.add(result1_1)
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=48
+        )
+        performance1.assessment_results.add(result1_2)
+        r1_2_field = 'mark_' + assessment2.slug + '_' + student1.student_id 
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=50
+        )
+        performance1.assessment_results.add(result1_3)
+        r1_3_field = 'mark_' + assessment3.slug + '_' + student1.student_id 
+        performance1.calculate_average()
+        # Student 2 with 59 Average
+        student2 = stuff[2]
+        performance2 = Performance.objects.get(module=module, student=student2)
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=62
+        )
+        performance2.assessment_results.add(result2_1)
+        r2_1_field = 'mark_' + assessment1.slug + '_' + student2.student_id 
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=58
+        )
+        performance2.assessment_results.add(result2_2)
+        r2_2_field = 'mark_' + assessment2.slug + '_' + student2.student_id 
+        result2_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=59
+        )
+        performance2.assessment_results.add(result2_3)
+        r2_3_field = 'mark_' + assessment3.slug + '_' + student2.student_id 
+        performance2.calculate_average()
+        request = self.factory.post(
+            module.get_address_nines_url(),
+            data={
+                r1_1_field: '50',
+                r1_2_field: '49',
+                r1_3_field: '50',
+                r2_1_field: '63',
+                r2_2_field: '58',
+                r2_3_field: '59'
+            }
+        )
+        request.user = self.user
+        response = address_nines(request, module.code, module.year)
+        performance_1_out = Performance.objects.get(
+            student=student1, module=module
+        )
+        performance_2_out = Performance.objects.get(
+            student=student2, module=module
+        )
+        self.assertEqual(performance_1_out.average, 50)
+        self.assertEqual(performance_2_out.average, 60)
