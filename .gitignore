@@ -1,5 +1,6 @@
 __pycache__/
 *.swp
+.*.swp
 *.pyc
 *.pyo
 server-data.json
@@ -7,3 +8,4 @@ migrations/
 *.sqlite3
 deploy.sh
 exclude.txt
+server.json

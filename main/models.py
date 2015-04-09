@@ -2,9 +2,9 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.text import slugify
+from django.utils import timezone
 from feedback.categories import AVAILABLE_MARKSHEETS
 from main.unisettings import TEACHING_WEEKS, PASSMARK
-import datetime
 
 ACADEMIC_YEARS = (
     [(i, str(i) + "/" + str(i+1)[-2:]) for i in range(2010, 2025)]
@@ -13,8 +13,8 @@ ACADEMIC_YEARS = (
 
 def this_year():
     """Checks which academic year we are in"""
-    year = datetime.datetime.now().year
-    month = datetime.datetime.now().month
+    year = timezone.now().year
+    month = timezone.now().month
     if month < 9:
         current_year = year - 1
     else:
@@ -193,11 +193,11 @@ class Module(models.Model):
 
     class Meta:
         unique_together = ('code', 'year')
+        ordering = ['title', 'year']
 
     def save(self, *args, **kwargs):
         self.code = self.code.replace(' ', '')
         super(Module, self).save(*args, **kwargs)
-
 
     def __str__(self):
         next_year = str(int(self.year) + 1)
@@ -245,6 +245,9 @@ class Module(models.Model):
 
     def get_assessment_url(self):
         return reverse('assessment', args=[self.code, self.year])
+
+    def get_export_all_marks_url(self):
+        return reverse('export_marks_for_module', args=[self.code, self.year])
 
     def get_remove_student_url(self, student_id):
         return reverse(
@@ -312,16 +315,33 @@ class Module(models.Model):
     def assessment_sub_menu(self):
         returnlist = []
         for assessment in self.assessments.all():
-            link = assessment.get_blank_marksheet_url()
-            link += 'all/first/'
             html = (
                 '<li><a href="' +
-                link +
-                '">All Marksheets for ' +
+                assessment.get_mark_all_url() +
+                '">Enter all marks for ' +
                 assessment.title +
                 '</a></li>'
             )
             returnlist.append(html)
+            html = (
+                '<li><a href="' +
+                assessment.get_mark_all_url(anonymous=True) +
+                '">Enter all marks for ' +
+                assessment.title +
+                ' anonymously</a></li>'
+            )
+            returnlist.append(html)
+            link = assessment.get_blank_marksheet_url()
+            link += 'all/first/'
+            if assessment.marksheet_type:
+                html = (
+                    '<li><a href="' +
+                    link +
+                    '">All Marksheets for ' +
+                    assessment.title +
+                    '</a></li>'
+                )
+                returnlist.append(html)
             if assessment.group_assessment:
                 html = (
                     '<li><a href="' +
@@ -333,28 +353,29 @@ class Module(models.Model):
                     assessment.get_assessment_group_overview_url() +
                     '">Assessment group overview for ' +
                     assessment.title +
-                    '</a></li>' 
+                    '</a></li>'
                 )
                 returnlist.append(html)
-            if assessment.available:
-                html = (
-                    '<li><a href="' +
-                    assessment.get_toggle_availability_url() +
-                    '">Hide ' +
-                    assessment.title +
-                    ' from students</a></li>' +
-                    '<li class="divider"></li>'
-                )
-            else:
-                html = (
-                    '<li><a href="' +
-                    assessment.get_toggle_availability_url() +
-                    '">Show ' +
-                    assessment.title +
-                    ' to students</a></li>' +
-                    '<li class="divider"></li>'
-                )
-            returnlist.append(html)
+            if assessment.marksheet_type:
+                if assessment.available:
+                    html = (
+                        '<li><a href="' +
+                        assessment.get_toggle_availability_url() +
+                        '">Hide ' +
+                        assessment.title +
+                        ' from students</a></li>' +
+                        '<li class="divider"></li>'
+                    )
+                else:
+                    html = (
+                        '<li><a href="' +
+                        assessment.get_toggle_availability_url() +
+                        '">Show ' +
+                        assessment.title +
+                        ' to students</a></li>' +
+                        '<li class="divider"></li>'
+                    )
+                returnlist.append(html)
         return returnlist
 
     def all_group_assessments(self):
@@ -436,6 +457,7 @@ class Assessment(models.Model):
     )
 
     class Meta:
+        unique_together = ('module', 'title')
         ordering = ['title']
 
     def save(self, *args, **kwargs):
@@ -521,6 +543,23 @@ class Assessment(models.Model):
             'toggle_assessment_availability',
             args=[self.module.code, self.module.year, self.slug, attempt]
         )
+
+    def get_mark_all_url(self, attempt='first', anonymous=False):
+        if anonymous:
+            return reverse(
+                'mark_all_anonymously',
+                args=[
+                    self.module.code,
+                    self.module.year,
+                    self.slug,
+                    attempt
+                ]
+            )
+        else:
+            return reverse(
+                'mark_all',
+                args=[self.module.code, self.module.year, self.slug, attempt]
+            )
 
 
 class Student(models.Model):
@@ -687,6 +726,7 @@ class AssessmentResult(models.Model):
     assessment_group = models.IntegerField(blank=True, null=True)
     resit_assessment_group = models.IntegerField(blank=True, null=True)
     qld_resit = models.IntegerField(blank=True, null=True)
+    last_modified = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ['assessment']
@@ -750,15 +790,15 @@ class AssessmentResult(models.Model):
             eligible = True
         return eligible
 
-    def eligible_for_qld_resit(self):
-        eligible = False
-        if self.assessment.module.foundational:
-            if self.mark and self.resit_mark:
-                if self.mark < PASSMARK and self.resit_mark < PASSMARK:
-                    eligible = True
-            if self.concessions == self.GRANTED:
-                eligible = True
-        return eligible
+#    def eligible_for_qld_resit(self):
+#        eligible = False
+#        if self.assessment.module.foundational and self.student.qld:
+#            if self.mark and self.resit_mark:
+#                if self.mark < PASSMARK and self.resit_mark < PASSMARK:
+#                    eligible = True
+#            if self.concessions == self.GRANTED:
+#                eligible = True
+#        return eligible
 
     def result_with_feedback(self):
         """Return dict of tpls: 0 - mark, 1 - edit url, 2 - marksheet url"""
@@ -819,6 +859,8 @@ class AssessmentResult(models.Model):
 
     def result(self):
         result = self.mark
+        if result is None:
+            result = 0
         if self.resit_mark:
             if self.resit_mark > result:
                 result = self.resit_mark
@@ -829,16 +871,16 @@ class AssessmentResult(models.Model):
 
     def no_qld_problems(self):
         if self.mark:
-            if self.mark > 40:
+            if self.mark > PASSMARK:
                 return True
-            elif self.resit_mark and self.resit_mark > 40:
+            elif self.resit_mark and self.resit_mark > PASSMARK:
                 return True
             else:
                 if self.second_resit_mark:
-                    if self.second_resit_mark > 40:
+                    if self.second_resit_mark > PASSMARK:
                         return True
                 elif self.qld_resit:
-                    if self.qld_resit > 40:
+                    if self.qld_resit > PASSMARK:
                         return True
         return False
 
@@ -854,13 +896,21 @@ class AssessmentResult(models.Model):
 
     def set_one_mark(self, attempt, mark):
         if attempt == 'first':
-            self.mark = mark
+            if mark != self.mark:
+                self.last_modified = timezone.now()
+                self.mark = mark
         elif attempt == 'resit':
-            self.resit_mark = mark
+            if mark != self.resit_mark:
+                self.last_modified = timezone.now()
+                self.resit_mark = mark
         elif attempt == 'second_resit':
-            self.second_resit_mark = mark
+            if mark != self.second_resit_mark:
+                self.last_modified = timezone.now()
+                self.second_resit_mark = mark
         elif attempt == 'qld_resit':
-            self.qld_resit = mark
+            if mark != self.qld_resit:
+                self.last_modified = timezone.now()
+                self.qld_resit = mark
         self.save()
 
     def get_marksheet_urls(self):
@@ -1040,8 +1090,9 @@ class Performance(models.Model):
             try:
                 assessment_result = AssessmentResult.objects.get(
                     assessment=assessment, part_of=self)
-                this = assessment_result.result() * assessment.value
-                sum_of_marks += this
+                if assessment_result.result():
+                    this = assessment_result.result() * assessment.value
+                    sum_of_marks += this
             except AssessmentResult.DoesNotExist:
                 pass
         average = sum_of_marks / 100
@@ -1054,23 +1105,19 @@ class Performance(models.Model):
             module=self.module,
             slug=assessment_slug
         )
-        if self.assessment_results.filter(assessment=assessment).exists():
-            assessment_result = self.assessment_results.get(
-                assessment=assessment)
-        else:
-            assessment_result = AssessmentResult.objects.create(
-                assessment=assessment)
-            self.assessment_results.add(assessment_result)
-        if attempt == 'first':
-            assessment_result.mark = int(mark)
-        elif attempt == 'resit':
-            assessment_result.resit_mark = int(mark)
-        elif attempt == 'second_resit':
-            assessment_result.second_resit_mark = int(mark)
-        elif attempt == 'qld_resit':
-            assessment_result.qld_resit = int(mark)
-        assessment_result.save()
-        self.calculate_average()
+        try:
+            mark = int(mark)
+            if self.assessment_results.filter(assessment=assessment).exists():
+                assessment_result = self.assessment_results.get(
+                    assessment=assessment)
+            else:
+                assessment_result = AssessmentResult.objects.create(
+                    assessment=assessment)
+                self.assessment_results.add(assessment_result)
+            assessment_result.set_one_mark(attempt, mark)
+            self.calculate_average()
+        except TypeError:
+            pass
 
     def get_assessment_result(self, assessment_slug, attempt='all'):
         assessment = Assessment.objects.get(
@@ -1095,6 +1142,69 @@ class Performance(models.Model):
         elif attempt == 'qld_resit':
             return assessment_result.qld_resit
 
+    def resit_required(self):
+        self.calculate_average()
+        returndict = {}
+        all_assessments = self.module.assessments.all()
+        if self.average < PASSMARK:
+            for assessment in all_assessments:
+                try:
+                    result = self.assessment_results.get(assessment=assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = AssessmentResult.objects.create(
+                        assessment=assessment
+                    )
+                    self.assessment_results.add(result)
+                if result.mark:
+                    mark = result.mark
+                else:
+                    mark = 0
+                if mark < PASSMARK:
+                    if result.resit_mark is None:
+                        returndict[result.assessment] = result.concessions
+        else:
+            for assessment in all_assessments:
+                try:
+                    result = self.assessment_results.get(assessment=assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = AssessmentResult.objects.create(
+                        assessment=assessment
+                    )
+                    self.assessment_results.add(result)
+                if result.concessions in ['G', 'P']:
+                    returndict[result.assessment] = result.concessions
+        if returndict:
+            return returndict
+        else:
+            return False
+
+    #    def second_resit_required(self):
+    #        self.calculate_average()
+    #        if self.average < PASSMARK:
+    #            returnlist = []
+    #            for result in self.assessment_results.all():
+    #                if result.mark < PASSMARK:
+    #                    if result.resit_mark is not None:
+    #                        returnlist.append(result.assessment)
+    #            return returnlist
+    #        else:
+    #            return False
+
+    def qld_resit_required(self):
+        returnlist = []
+        if self.module.foundational and self.student.qld:
+            for assessment in self.module.assessments.all():
+                try:
+                    result = self.assessment_results.get(assessment=assessment)
+                    if result.result() < PASSMARK:
+                        returnlist.append(assessment)
+                except AssessmentResult.DoesNotExist:
+                    returnlist.append(assessment)
+        if returnlist:
+            return returnlist
+        else:
+            return False
+            
     def attendance_as_dict(self):
         return_dict = {}
         if self.attendance:
@@ -1178,18 +1288,17 @@ class TuteeSession(models.Model):
 
     def get_absolute_url(self):
         tutee_url = reverse(
-            'edit_tutee_meeting',
+            'tutee_meeting',
             args=[self.tutee.student_id, self.id]
         )
-        tutee_url += "#" + str(self.id)
         return tutee_url
 
     def get_edit_url(self):
+        edit_part = str(self.id) + '-edit'
         this_url = reverse(
-            'edit_tutee_meeting',
-            args=[self.tutee.student_id, self.id]
+            'tutee_meeting',
+            args=[self.tutee.student_id, edit_part]
         )
-        this_url += "#" + 'edit'
         return this_url
 
     def get_delete_url(self):

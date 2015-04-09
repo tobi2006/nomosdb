@@ -6,69 +6,83 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from main.forms import *
-from main.functions import week_number, week_starting_date
+from main.functions import (
+    week_number, week_starting_date, formatted_date, academic_year_string
+)
 from main.messages import (
     new_staff_email, attendance_email, password_reset_email, new_student_email
 )
 from main.models import *
 from main.unisettings import *
+from pytz import utc
 from random import shuffle, choice
 from string import ascii_letters, digits
 from reportlab.platypus import (
-    Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle, Image
 )
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.platypus.flowables import PageBreak
+from reportlab.lib.units import inch
 
 
 # Authentication
 
 def is_teacher(user):
-    if hasattr(user, 'staff'):
+    try:
         if user.staff.role == 'teacher':
             return True
+    except:
+        pass
     return False
 
 
 def is_admin(user):
-    if hasattr(user, 'staff'):
+    try:
         if user.staff.role == 'admin':
             return True
         elif user.staff.programme_director:
             return True
+    except:
+        pass
     return False
 
 
 def is_pd(user):
-    if hasattr(user, 'staff'):
+    try:
         if user.staff.programme_director:
             return True
         elif user.staff.main_admin:
             return True
-    return False
+    except:
+        pass
 
 
 def is_main_admin(user):
-    if hasattr(user, 'staff'):
+    try:
         if user.staff.main_admin is True:
             return True
+    except:
+        pass
     return False
 
 
 def is_staff(user):
-    if hasattr(user, 'staff'):
+    try:
+        staff = user.staff
         return True
-    else:
+    except:
         return False
 
 
 def is_student(user):
-    if hasattr(user, 'student'):
+    try:
+        student = user.student
         return True
-    else:
+    except:
         return False
 
 
@@ -95,7 +109,7 @@ def reset_password(request, testing=False):
             new_password = User.objects.make_random_password()
             user.set_password(new_password)
             user.save()
-            if  reset_for_student:
+            if reset_for_student:
                 name = user.student.short_first_name()
             else:
                 name = user.first_name
@@ -202,6 +216,8 @@ def home(request):
 @user_passes_test(is_admin)
 def admin(request):
     """Opens the admin dashboard"""
+    current_year = Setting.objects.get(name="current_year").value
+    today = timezone.now().date()
     if request.user.staff.main_admin:
         main_admin = True
         staff_subject_areas = SubjectArea.objects.all()
@@ -210,6 +226,7 @@ def admin(request):
         staff_subject_areas = request.user.staff.subject_areas.all()
     subject_areas = {}
     subject_areas_real_years = {}
+    all_years = []
     for subject_area in staff_subject_areas:
         if subject_area.courses.exists():
             for course in subject_area.courses.all():
@@ -233,15 +250,24 @@ def admin(request):
             if subject_area in module.subject_areas.all():
                 if module.year not in real_years:
                     real_years.append(module.year)
+                if module.year not in all_years:
+                    all_years.append(module.year)
         real_years.sort()
         subject_areas_real_years[subject_area] = real_years
+    all_years.sort()
     return render(
         request,
         'admin.html',
         {
             'main_admin': main_admin,
             'subject_areas': subject_areas,
-            'subject_areas_real_years': subject_areas_real_years
+            'subject_areas_real_years': subject_areas_real_years,
+            'all_years': all_years,
+            'current_year': current_year,
+            'today': today,
+            't_year': str(today.year),
+            't_month': str(today.month),
+            't_day': str(today.day),
         }
     )
 
@@ -308,7 +334,7 @@ def main_settings(request):
     try:
         current_year = Setting.objects.get(name="current_year").value
     except Setting.DoesNotExist:
-        current_year = str(datetime.date.today().year)
+        current_year = str(timezone.now().date().year)
     try:
         uni_name = Setting.objects.get(name="uni_name").value
     except Setting.DoesNotExist:
@@ -622,12 +648,18 @@ def student_view(request, student_id, meeting_id=None):
     form = None
     meetings = None
     edit = False
+    to_meetings = False
     if student in request.user.staff.tutees.all():
         tutor = True
         allowed_to_see_notes = True
         if meeting_id:
-            tutee_session = TuteeSession.objects.get(id=meeting_id)
-            edit = meeting_id
+            if '-edit' in meeting_id:
+                edit = meeting_id.strip('-edit')
+                tutee_session = TuteeSession.objects.get(id=edit)
+            else:
+                tutee_session = TuteeSession(
+                    tutee=student, tutor=request.user.staff)
+            to_meetings = True
         else:
             tutee_session = TuteeSession(
                 tutee=student, tutor=request.user.staff)
@@ -662,6 +694,7 @@ def student_view(request, student_id, meeting_id=None):
             'form': form,
             'tutor': tutor,
             'meetings': meetings,
+            'to_meetings': to_meetings,
             'allowed_to_see_notes': allowed_to_see_notes,
             'performances': performances,
             'staff_pk': request.user.staff.pk
@@ -1594,14 +1627,18 @@ def attendance(request, code, year, group):
     module = Module.objects.get(code=code, year=year)
     group = str(group)
     if group == 'all':
-        performances = Performance.objects.filter(module=module)
+        all_performances = Performance.objects.filter(module=module)
         seminar_group = False
     else:
-        performances = Performance.objects.filter(
+        all_performances = Performance.objects.filter(
             module=module,
             seminar_group=group
         )
         seminar_group = group
+    performances = []
+    for performance in all_performances:
+        if performance.student.active:
+            performances.append(performance)
     if request.method == 'POST':
         save = request.POST['save']
         save_li = save.split()
@@ -1787,6 +1824,172 @@ def assessment_group_overview(request, code, year, slug, attempt):
         }
     )
 
+
+@user_passes_test(is_staff)
+def mark_all(request, code, year, slug, attempt):
+    """Allows to enter all marks for an assessment"""
+    module = Module.objects.get(code=code, year=year)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    if request.method == 'POST':
+        for performance in Performance.objects.filter(module=module):
+            if performance.student.active:
+                field_id = 'mark_' + performance.student.student_id
+                if field_id in request.POST and request.POST[field_id]:
+                    raw = request.POST[field_id]
+                    try:
+                        mark = int(raw)
+                        if mark in range(0, 100):
+                            performance.set_assessment_result(
+                                assessment.slug,
+                                mark,
+                                attempt
+                            )
+                    except ValueError:
+                        pass
+        return redirect(module.get_absolute_url())
+    else:
+        slugs = []
+        for a in module.assessments.all():
+            tpl = (a.slug, a.value)
+            slugs.append(tpl)
+        rows = []
+        for performance in Performance.objects.filter(module=module):
+            if performance.student.active:
+                row = [performance.student.name(), ]
+                for this_assessment in module.all_assessments():
+                    try:
+                        result = performance.assessment_results.get(
+                            assessment=this_assessment)
+                    except AssessmentResult.DoesNotExist:
+                        result = AssessmentResult.objects.create(
+                            assessment=this_assessment)
+                        performance.assessment_results.add(result)
+                    mark = result.get_one_mark(attempt)
+                    if this_assessment == assessment:
+                        form_string = (
+                            '<input class="form-control assessment_mark" ' +
+                            'type="number" min="0" max="100" id="' +
+                            this_assessment.slug +
+                            '_' +
+                            performance.student.student_id +
+                            '" name="mark_' +
+                            performance.student.student_id +
+                            '" type="number" '
+                        )
+                        if mark:
+                            form_string += (
+                                'value="' +
+                                str(mark) +
+                                '" '
+                            )
+                        form_string += '/>'
+                        if mark:
+                            form_string += (
+                                '<small>Previously: ' +
+                                str(mark) +
+                                '</small>'
+                            )
+                    else:
+                        form_string = (
+                            '<div id="' +
+                            this_assessment.slug +
+                            '_' +
+                            performance.student.student_id +
+                            '">' +
+                            str(result.get_one_mark(attempt)) +
+                            '</div>'
+                        )
+                    row.append(form_string)
+                avg = (
+                    '<div id="average_' +
+                    performance.student.student_id +
+                    '">' +
+                    str(performance.average) +
+                    '</div>'
+                )
+                row.append(avg)
+                rows.append(row)
+        return render(
+            request,
+            'mark_all.html',
+            {
+                'rows': rows,
+                'module': module,
+                'assessment': assessment,
+                'slugs': slugs
+            }
+        )
+
+
+@login_required
+@user_passes_test(is_staff)
+def mark_all_anonymously(request, code, year, slug, attempt):
+    """Allows to enter all marks for an assessment"""
+    module = Module.objects.get(code=code, year=year)
+    assessment = Assessment.objects.get(module=module, slug=slug)
+    if request.method == 'POST':
+        for performance in Performance.objects.filter(module=module):
+            if performance.student.active and performance.student.exam_id:
+                field_id = 'mark_' + performance.student.exam_id
+                if field_id in request.POST and request.POST[field_id]:
+                    raw = request.POST[field_id]
+                    try:
+                        mark = int(raw)
+                        if mark in range(0, 100):
+                            performance.set_assessment_result(
+                                assessment.slug,
+                                mark,
+                                attempt
+                            )
+                    except ValueError:
+                        pass
+        return redirect(module.get_absolute_url())
+    rows = []
+    students_without_id = []
+    admin_email = Setting.objects.get(name='admin_email').value
+    for performance in Performance.objects.filter(module=module):
+        if performance.student.active:
+            if performance.student.exam_id:
+                row = [performance.student.exam_id, ]
+                try:
+                    result = performance.assessment_results.get(
+                        assessment=assessment)
+                except AssessmentResult.DoesNotExist:
+                    result = AssessmentResult.objects.create(
+                        assessment=assessment)
+                    performance.assessment_results.add(result)
+                mark = result.get_one_mark(attempt)
+                form_string = (
+                    '<input class="form-control" ' +
+                    'type="number" min="0" max="100" ' +
+                    'id="id_mark_' +
+                    performance.student.exam_id +
+                    '" name="mark_' +
+                    performance.student.exam_id +
+                    '" type="number" '
+                )
+                if mark:
+                    form_string += (
+                        'value="' +
+                        str(mark) +
+                        '" '
+                    )
+                form_string += '/>'
+                row.append(form_string)
+                rows.append(row)
+            else:
+                students_without_id.append(performance.student)
+    return render(
+        request,
+        'mark_all_anonymously.html',
+        {
+            'students_without_id': students_without_id,
+            'rows': rows,
+            'assessment': assessment,
+            'module': module,
+            'admin_email': admin_email
+        }
+    )
 
 # Data import / export
 
@@ -1974,17 +2177,18 @@ def export_attendance_sheet(request, code, year):
     module = Module.objects.get(code=code, year=year)
     styles = getSampleStyleSheet()
     heading = module.__str__()
-    performances = Performance.objects.filter(module=module)
+    all_performances = Performance.objects.filter(module=module)
+    performances = []
+    for performance in all_performances:
+        if performance.student.active:
+            performances.append(performance)
     no_of_seminar_groups = 0
     for performance in performances:
-        if performance.seminar_group > no_of_seminar_groups:
-            no_of_seminar_groups = performance.seminar_group
-    counter = 0
-    while counter < no_of_seminar_groups:
-        counter += 1
-        subheading = "Seminar Group " + str(counter)
+        if performance.seminar_group:
+            if performance.seminar_group > no_of_seminar_groups:
+                no_of_seminar_groups = performance.seminar_group
+    if no_of_seminar_groups == 0:
         elements.append(Paragraph(heading, styles['Heading1']))
-        elements.append(Paragraph(subheading, styles['Heading2']))
         elements.append(Spacer(1, 20))
         data = []
         header = ['Name']
@@ -2001,8 +2205,7 @@ def export_attendance_sheet(request, code, year):
                 header.append(strweek)
                 weeklist.append(strweek)
         data.append(header)
-        performances = Performance.objects.filter(
-            module=module, seminar_group=counter)
+        performances = Performance.objects.filter(module=module)
         for performance in performances:
             attendance = performance.attendance_as_dict()
             row = [performance.student]
@@ -2027,7 +2230,56 @@ def export_attendance_sheet(request, code, year):
             )
         )
         elements.append(table)
-        elements.append(PageBreak())
+    else:
+        counter = 0
+        while counter < no_of_seminar_groups:
+            counter += 1
+            subheading = "Seminar Group " + str(counter)
+            elements.append(Paragraph(heading, styles['Heading1']))
+            elements.append(Paragraph(subheading, styles['Heading2']))
+            elements.append(Spacer(1, 20))
+            data = []
+            header = ['Name']
+            column = 0
+            last_week = module.last_session + 1
+            if module.no_teaching_in:
+                no_teaching = module.no_teaching_in.split(",")
+            else:
+                no_teaching = []
+            weeklist = []
+            for week in range(module.first_session, last_week):
+                strweek = str(week)
+                if strweek not in no_teaching:
+                    header.append(strweek)
+                    weeklist.append(strweek)
+            data.append(header)
+            performances = Performance.objects.filter(
+                module=module, seminar_group=counter)
+            for performance in performances:
+                attendance = performance.attendance_as_dict()
+                row = [performance.student]
+                for week in weeklist:
+                    if week in attendance:
+                        if attendance[week] == 'p':
+                            row.append(u'\u2713')
+                        elif attendance[week] == 'e':
+                            row.append('e')
+                        elif attendance[week] == 'a':
+                            row.append('-')
+                    else:
+                        row.append(' ')
+                data.append(row)
+            table = Table(data)
+            table.setStyle(
+                TableStyle([
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black)]
+                )
+            )
+            elements.append(table)
+            elements.append(PageBreak())
     document.build(elements)
     return response
 
@@ -2121,3 +2373,454 @@ def export_tier_4_attendance(request, slug, year):
         elements.append(table)
     document.build(elements)
     return response
+
+
+def elements_for_module_mark_overview(
+        module, highlight=False, give_comments=False):
+    """Creates the elements necessary to create a mark overview of a module"""
+    elements = []
+    styles = getSampleStyleSheet()
+    all_assessments = module.all_assessments()
+    #    resit_marks_required = []
+    #    second_resit_marks_required = []
+    #    qld_resit_marks_required = []
+    header = [
+        Paragraph('<b>Name</b>', styles['Normal']),
+        Paragraph('<b>ID</b>', styles['Normal']),
+        Paragraph('<b>Course</b>', styles['Normal'])
+    ]
+    for assessment in all_assessments:
+        headerstr = (
+            '<b>' +
+            assessment.title +
+            ' (' +
+            str(assessment.value) +
+            '%)</b>'
+        )
+        header.append(Paragraph(headerstr, styles['Normal']))
+    #        resit_1 = False
+    #        resit_2 = False
+    #        resit_q = False
+    #        for result in assessment.assessmentresult_set.all():
+    #          if result.resit_mark and assessment not in resit_marks_required:
+    #                    resit_marks_required.append(assessment)
+    #            if result.second_resit_mark:
+    #                if assessment not in second_resit_marks_required:
+    #                    second_resit_marks_required.append(assessment)
+    #            if result.qld_resit:
+    #                if assessment not in qld_resit_marks_required:
+    #                    qld_resit_marks_required.append(assessment)
+    #        if assessment in resit_marks_required:
+    #            header.append(assessment.title + ', Resit')
+    #        if assessment in second_resit_marks_required:
+    #            header.append(assessment.title + ', Second Resit')
+    #        if assessment in qld_resit_marks_required:
+    #            header.append(assessment.title + ', QLD Resit')
+    if len(all_assessments) > 1:
+        header.append(Paragraph('<b>Average</b>', styles['Normal']))
+    if give_comments:
+        header.append(Paragraph('<b>Comments</b>', styles['Normal']))
+    data = [header]
+    linecounter = 0
+    highlight_yellow = []
+    highlight_red = []
+    for performance in module.performances.all():
+        linecounter += 1
+        line = [
+            Paragraph(performance.student.name(), styles['Normal']),
+            performance.student.student_id,
+            performance.student.course.short_title
+        ]
+        for assessment in all_assessments:
+            result = performance.get_assessment_result(
+                assessment.slug, 'first'
+            )
+            if result:
+                line.append(str(result))
+            else:
+                line.append('0')
+        if performance.average is None:
+            performance.calculate_average()
+        if len(all_assessments) > 1:
+            line.append(performance.average)
+        if highlight:
+            if performance.average < PASSMARK:
+                highlight_yellow.append(linecounter)
+            else:
+                if performance.qld_resit_required():
+                    highlight_red.append(linecounter)
+        if give_comments:
+            resits = performance.resit_required()
+            comments = []
+            if resits:
+                for assessment in resits:
+                    if resits[assessment] == 'G':
+                        if assessment.title == 'Exam':
+                            comments.append('Sit Exam')
+                        else:
+                            commentstr = 'Submit ' + assessment.title
+                            comments.append(commentstr)
+                    elif resits[assessment] == 'P':
+                        commentstr = (
+                            'Concessions for ' +
+                            assessment.title +
+                            ' pending'
+                        )
+                        comments.append(commentstr)
+                    else:
+                        if assessment.title == 'Exam':
+                            comments.append('Resit Exam')
+                        else:
+                            commentstr = 'Resubmit ' + assessment.title
+                            comments.append(commentstr)
+            else:
+                resits = []
+            qld_resits = performance.qld_resit_required()
+            if qld_resits:
+                for assessment in qld_resits:
+                    if assessment not in resits:
+                        if assessment.title == 'Exam':
+                            comments.append('Resit Exam (QLD)')
+                        else:
+                            commentstr = (
+                                'Resubmit ' +
+                                assessment.title +
+                                ' (QLD)'
+                            )
+                            comments.append(commentstr)
+            allcomments = ', '.join(comments)
+            line.append(Paragraph(allcomments, styles['Normal']))
+        data.append(line)
+    table = Table(data, repeatRows=1)
+    tablestyle = [
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
+    ]
+    if highlight:
+        for line_number in highlight_yellow:
+            tablestyle.append(
+                (
+                    'BACKGROUND',
+                    (0, line_number),
+                    (-1, line_number),
+                    colors.yellow
+                )
+            )
+        for line_number in highlight_red:
+            tablestyle.append(
+                ('BACKGROUND', (0, line_number), (-1, line_number), colors.red)
+            )
+    table.setStyle(TableStyle(tablestyle))
+    elements.append(table)
+    return elements
+
+
+def logo():
+    """Returns the university logo, unless it is not available"""
+    styles = getSampleStyleSheet()
+    url = "https://cccu.tobiaskliem.de/static/images/cccu.jpg"
+    try:
+        image = Image(url, 2.45*inch, 1*inch)
+    except IOError:
+        image = Paragraph(
+            "Canterbury Christ Church University", styles['Heading1'])
+    return image
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_marks_for_module(request, code, year):
+    """Gives a useful sheet of all marks for the module.
+
+    Students will be highlighted if they failed the module, or if a QLD
+    student failed a component in a Foundational module
+    """
+    module = Module.objects.get(code=code, year=year)
+    response = HttpResponse(content_type='application/pdf')
+    filename = module.title.replace(" ", "_")
+    filename += "_Marks_" + str(module.year) + ".pdf"
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    doc.pagesize = landscape(A4)
+    story = []
+    elements = elements_for_module_mark_overview(module)
+    for element in elements:
+        story.append(element)
+    styles = getSampleStyleSheet()
+    d = formatted_date(timezone.now().date())
+    datenow = "Exported from MySDS, the CCCU Law DB on " + d
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(datenow, styles['Normal']))
+    story.append(PageBreak())
+    doc.build(story)
+    return response
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_exam_board_overview(request, subject_slug, year, level):
+    """Exports all marks for all modules in a given year for exam boards"""
+    response = HttpResponse(content_type='application/pdf')
+    levelstr = str(int(level) + 3)
+    now = timezone.now()
+    today = formatted_date(now)
+    minute = str(now.minute)
+    if len(minute) == 1:
+        minute = '0'+ minute
+    today = (
+        today +
+        ', ' +
+        str(now.hour) +
+        ':' +
+        minute
+    )
+    filename = (
+        'Exam_Board_Module_Overview_Year_' +
+        academic_year_string(year) +
+        '_Level_' +
+        levelstr +
+        '.pdf'
+    )
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    doc.pagesize = landscape(A4)
+    elements = []
+    styles = getSampleStyleSheet()
+    problem_performances = []
+    # Title Page
+    elements.append(Spacer(1, 60))
+    elements.append(logo())
+    elements.append(Spacer(1, 60))
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    titlestring = (
+        'Exam Boards ' +
+        subject_area.name +
+        ' (' +
+        academic_year_string(year) +
+        ')'
+    )
+    tmp = '<para alignment = "center">' + titlestring + '</para>'
+    title = Paragraph(tmp, styles['Heading1'])
+    elements.append(title)
+    elements.append(Spacer(1, 40))
+    levelstring = 'Level ' + levelstr
+    tmp = '<para alignment = "center">' + levelstring + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading2'])
+    elements.append(subtitle)
+    elements.append(Spacer(1, 40))
+    tmp = '<para alignment = "center">Exported ' + today + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading3'])
+    elements.append(subtitle)
+    elements.append(PageBreak())
+    modules = Module.objects.filter(year=year)
+    for module in modules:
+        if (
+                str(level) in module.eligible and
+                subject_area in module.subject_areas.all()
+        ):
+            tmp = '<para alignment = "center">' + module.title + '</para>'
+            title = Paragraph(tmp, styles['Heading2'])
+            elements.append(title)
+            processed_module = elements_for_module_mark_overview(
+                module, highlight=True, give_comments=True)
+            for element in processed_module:
+                elements.append(element)
+            elements.append(PageBreak())
+    doc.build(elements)
+    return response
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_all_marks(request, subject_slug, year, level):
+    """Exports all marks for all modules in a given year without highlight"""
+    response = HttpResponse(content_type='application/pdf')
+    levelstr = str(int(level) + 3)
+    now = timezone.now()
+    today = formatted_date(now)
+    minute = str(now.minute)
+    if len(minute) == 1:
+        minute = '0'+ minute
+    today = (
+        today +
+        ', ' +
+        str(now.hour) +
+        ':' +
+        minute
+    )
+    filename = (
+        'All_Module_Marks_' +
+        academic_year_string(year) +
+        '_Level_' +
+        levelstr +
+        '.pdf'
+    )
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+    problem_performances = []
+    # Title Page
+    elements.append(Spacer(1, 60))
+    elements.append(logo())
+    elements.append(Spacer(1, 60))
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    titlestring = (
+        'All Marks for ' +
+        subject_area.name +
+        ' (' +
+        academic_year_string(year) +
+        ')'
+    )
+    tmp = '<para alignment = "center">' + titlestring + '</para>'
+    title = Paragraph(tmp, styles['Heading1'])
+    elements.append(title)
+    elements.append(Spacer(1, 40))
+    levelstring = 'Level ' + levelstr
+    tmp = '<para alignment = "center">' + levelstring + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading2'])
+    elements.append(subtitle)
+    elements.append(Spacer(1, 40))
+    tmp = '<para alignment = "center">Exported ' + today + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading3'])
+    elements.append(subtitle)
+    elements.append(PageBreak())
+    modules = Module.objects.filter(year=year)
+    for module in modules:
+        if (
+                str(level) in module.eligible and
+                subject_area in module.subject_areas.all()
+        ):
+            tmp = '<para alignment = "center">' + module.title + '</para>'
+            title = Paragraph(tmp, styles['Heading2'])
+            elements.append(title)
+            processed_module = elements_for_module_mark_overview(module)
+            for element in processed_module:
+                elements.append(element)
+            elements.append(PageBreak())
+    doc.build(elements)
+    return response
+
+
+@login_required
+@user_passes_test(is_admin)
+def export_changed_marks(request, subject_slug, year, level, c_y, c_m, c_d):
+    """Give an overview of all marks changed after the date specified"""
+    response = HttpResponse(content_type='application/pdf')
+    change_date = timezone.datetime(
+        year=int(c_y),
+        month=int(c_m),
+        day=int(c_d),
+        hour=0,
+        minute=0,
+        tzinfo=utc
+    )
+    date_string = formatted_date(change_date)
+    now = timezone.now()
+    today = formatted_date(now)
+    levelstr = str(int(level) + 3)
+    filename = (
+        'Mark_Changes_from_' +
+        date_string.replace('/', '-') +
+        '_for_' +
+        academic_year_string(year) +
+        '_Level_' +
+        levelstr +
+        '.pdf'
+    )
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+    problem_performances = []
+    elements.append(logo())
+    elements.append(Spacer(1, 10))
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    titlestring = (
+        'Mark Changes for ' +
+        subject_area.name +
+        ' (' +
+        academic_year_string(year) +
+        ')'
+    )
+    tmp = '<para alignment = "center">' + titlestring + '</para>'
+    title = Paragraph(tmp, styles['Heading1'])
+    elements.append(title)
+    elements.append(Spacer(1, 10))
+    levelstring = 'Level ' + levelstr
+    tmp = '<para alignment = "center">' + levelstring + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading2'])
+    elements.append(subtitle)
+    elements.append(Spacer(1, 10))
+    tmp = '<para alignment = "center">Exported ' + today + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading3'])
+    elements.append(subtitle)
+    tablestyle = [
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black)
+    ]
+    for module in Module.objects.filter(year=year):
+        all_assessments = module.all_assessments()
+        header = [
+            Paragraph('<b>Name</b>', styles['Normal']),
+            Paragraph('<b>ID</b>', styles['Normal']),
+            Paragraph('<b>Course</b>', styles['Normal'])
+        ]
+        for assessment in all_assessments:
+            headerstr = (
+                '<b>' +
+                assessment.title +
+                ' (' +
+                str(assessment.value) +
+                '%)</b>'
+            )
+            header.append(Paragraph(headerstr, styles['Normal']))
+        if len(all_assessments) > 1:
+            header.append(Paragraph('<b>Average</b>', styles['Normal']))
+        data = [header]
+        for performance in module.performances.all():
+            changed_results = {}
+            for assessment in all_assessments:
+                result = performance.assessment_results.get(
+                    assessment=assessment)
+                if result.last_modified:
+                    if result.last_modified >= change_date:
+                        changed_results[assessment] = result
+            if changed_results:
+                line = [
+                    Paragraph(performance.student.name(), styles['Normal']),
+                    performance.student.student_id,
+                    performance.student.course.short_title
+                ]
+                for assessment in all_assessments:
+                    if assessment in changed_results:
+                        result = changed_results[assessment]
+                        result_string = result.result_as_string()
+                        if result_string:
+                            line.append(
+                                Paragraph(result_string, styles['Normal']))
+                        else:
+                            line.append('')
+                    else:
+                        line.append('')
+                if len(all_assessments) > 1:
+                    line.append(performance.average)
+                data.append(line)
+        if len(data) > 1:
+            elements.append(Spacer(1, 20))
+            elements.append(Paragraph(module.__str__(), styles['Heading2']))
+            elements.append(Spacer(1, 10))
+            table = Table(data, repeatRows=1)
+            table.setStyle(TableStyle(tablestyle))
+            elements.append(table)
+    doc.build(elements)
+    return response
+
+def cause_error(request):
+    a = 5/0

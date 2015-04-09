@@ -1,6 +1,6 @@
-from datetime import datetime
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from feedback.forms import *
 from feedback.models import *
 from main.models import *
@@ -42,7 +42,7 @@ def individual_feedback(
         feedback = IndividualFeedback.objects.create(
             assessment_result=assessment_result,
             attempt=attempt,
-            marking_date=datetime.date.today(),
+            marking_date=timezone.now().date(),
         )
         if assessment.co_marking:
             for staff in module.teachers.all():
@@ -60,7 +60,8 @@ def individual_feedback(
         if form.is_valid():
             form.save()
             mark = form.cleaned_data['mark']
-            assessment_result.set_one_mark(attempt, int(mark))
+            performance.set_assessment_result(
+                assessment.slug, int(mark), attempt)
             feedback.completed = True
             feedback.save()
             return redirect(module.get_absolute_url())
@@ -105,7 +106,7 @@ def group_feedback(
             assessment=assessment,
             group_number=group_number,
             attempt=attempt,
-            marking_date=datetime.date.today(),
+            marking_date=timezone.now().date(),
         )
         if assessment.co_marking:
             for staff in module.teachers.all():

@@ -86,6 +86,7 @@ urlpatterns += patterns(
         name='assign_tutors'
     ),
     url(r'^attendance/(\w+)/(\d{4})/(\w+)/$', 'attendance', name='attendance'),
+    url(r'^cause_error/', 'cause_error', name='cause_error'),
     url(r'^course_overview/$', 'course_overview', name='course_overview'),
     url(
         r'^delete_assessment/(\w+)/(\d{4})/([-\w]+)/$',
@@ -121,14 +122,34 @@ urlpatterns += patterns(
     url(r'^edit_staff/(\w+)/$', 'add_or_edit_staff', name='edit_staff'),
     url(r'^edit_student/(\w+)/$', 'add_or_edit_student', name='edit_student'),
     url(
-        r'^edit_tutee_meeting/(\w+)/(\w+)/$',
+        r'^tutee_meeting/(\w+)/([-\w]+)/$',
         'student_view',
-        name='edit_tutee_meeting'
+        name='tutee_meeting'
+    ),
+    url(
+        r'^export_all_marks/([-\w]+)/(\d{4})/(\d{1})/$',
+        'export_all_marks',
+        name='export_all_marks'
+    ),
+    url(
+        r'^export_changed_marks/([-\w]+)/(\d{4})/(\d{1})/(\d{4})/(\d+)/(\d+)/$',
+        'export_changed_marks',
+        name='export_changed_marks'
     ),
     url(
         r'^export_attendance_sheet/(\w+)/(\d{4})/$',
         'export_attendance_sheet',
         name='export_attendance_sheet'
+    ),
+    url(
+        r'^export_exam_board_overview/([-\w]+)/(\d{4})/(\d{1})/$',
+        'export_exam_board_overview',
+        name='export_exam_board_overview'
+    ),
+    url(
+        r'^export_marks/(\w+)/(\d{4})/$',
+        'export_marks_for_module',
+        name='export_marks_for_module'
     ),
     url(
         r'^export_tier_4_attendance/([-\w]+)/(\d{4})/$',
@@ -141,6 +162,16 @@ urlpatterns += patterns(
         name='invite_students'
     ),
     url(r'^main_settings/$', 'main_settings', name='main_settings'),
+    url(
+        r'^mark_all/([-\w]+)/(\d{4})/([-\w]+)/(\w+)/',
+        'mark_all',
+        name='mark_all'
+    ),
+    url(
+        r'^mark_all_anonymously/([-\w]+)/(\d{4})/([-\w]+)/(\w+)/',
+        'mark_all_anonymously',
+        name='mark_all_anonymously'
+    ),
     url(r'^my_tutees/$', 'my_tutees', name='my_tutees'),
     url(r'^module/(\w+)/(\d{4})/$', 'module_view', name='module_view'),
     url(r'^parse_csv/(\w+)/$', 'parse_csv', name='parse_csv'),

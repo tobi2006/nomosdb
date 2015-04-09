@@ -186,6 +186,72 @@ class IndividualFeedbackTest(TeacherUnitTest):
             76
         )
 
+    def test_submitting_form_saves_mark_and_calculates_avg(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student = stuff[1]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Essay 1',
+            value=50,
+            marksheet_type='ESSAY'
+        )
+        assessment_1_result = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=40
+        )
+        performance = Performance.objects.get(
+            student=student,
+            module=module
+        )
+        performance.assessment_results.add(assessment_1_result)
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Essay 2',
+            value=50,
+            marksheet_type='ESSAY'
+        )
+        url = (
+            assessment2.get_blank_feedback_url() +
+            student.student_id +
+            '/first/'
+        )
+        request = self.factory.post(
+            url,
+            data={
+                'marking_date': '1/2/1900',
+                'submission_date': '1/1/1900',
+                'category_mark_1': 29,
+                'category_mark_2': 39,
+                'category_mark_3': 49,
+                'category_mark_4': 59,
+                'comments': 'Well done!',
+                'mark': 60,
+            }
+        )
+        request.user = self.user
+        response = individual_feedback(
+            request,
+            module.code,
+            module.year,
+            assessment2.slug,
+            student.student_id,
+            'first'
+        )
+        performance = Performance.objects.get(student=student, module=module)
+        self.assertEqual(
+            performance.get_assessment_result(assessment1.slug, 'first'),
+            40
+        )
+        self.assertEqual(
+            performance.get_assessment_result(assessment2.slug, 'first'),
+            60
+        )
+        self.assertEqual(
+            performance.average,
+            50
+        )
+
     def test_submitting_form_saves_feedback_and_mark_for_presentation(self):
         stuff = set_up_stuff()
         module = stuff[0]

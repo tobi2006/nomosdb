@@ -57,3 +57,37 @@ def week_starting_date(number, year='current'):
         week_starting_date = None
     return week_starting_date
 
+
+def formatted_date(raw_date):
+    """Returns a proper date string
+
+    This returns a string of the date in British Format.
+    If the date field was left blank, an empty string is returned.
+    """
+    if raw_date is None:
+        result = ''
+    else:
+        result = (
+            str(raw_date.day) + '/' + str(raw_date.month) + '/' +
+            str(raw_date.year))
+    return result
+
+
+def academic_year_string(year):
+    """Returns the academic year starting with the given year
+
+    academic_year_string(2013) will return '2013/14'"""
+    year = int(year)
+    second = str(year + 1)
+    year = str(year)
+    if len(year) == 1:
+        year = '0' + year
+    if len(second) == 1:
+        second = '0' + second
+    returnstr = (
+        year +
+        '/' +
+        second[-2] +
+        second[-1]
+    )
+    return returnstr

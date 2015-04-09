@@ -62,7 +62,67 @@
 </div>
 
 
-<h3>Assign Tutors</h3>
+<h3>Assessment</h3>
+
+<h4>Overview of All Module Marks So Far</h4>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+            <li><a href="{% url "export_all_marks" subject_area.slug current_year year.0 %}">{{ year.1 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
+<h4>Overview of All Changes from...</h4>
+
+<div class="col-xs-2"><input class="datepicker dateinput form-control" id="changes_date" type="text" value="{{ today.day }}/{{ today.month }}/{{ today.year }}" /></div><br><br>
+
+{% for subject_area, years in subject_areas.items %}
+<div class="btn-group">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        {{ subject_area.name }} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu">
+        {% for year in years %}
+        <li><a class="marks_from_date" href="{% url "export_changed_marks" subject_area.slug current_year year.0 today.year today.month today.day %}">{{ year.1 }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endfor %}
+
+<br><br>
+<h4>Exam Board Overview</h4>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+            <li><a href="{% url "export_exam_board_overview" subject_area.slug current_year year.0 %}">{{ year.1 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
+{% comment %}
+<h4>Anonymous marking</h4>
+{% endcomment %}
+
+<h3>Tutors</h3>
+
+<h4>Assign Tutors</h4>
 
 <div class="btn-group">
     {% for subject_area, years in subject_areas.items %}
@@ -79,7 +139,7 @@
     {% endfor %}
 </div>
 
-<h3>All Tutor Meetings</h3>
+<h4>All Tutor Meetings</h4>
 
 <div class="btn-group">
     {% for subject_area, years in subject_areas.items %}
@@ -111,4 +171,43 @@
         <a href="{% url "invite_students" subject_area.slug %}" class="btn btn-default">{{ subject_area.name }}</a>
     {% endfor %}
 </div>
+
+<br><br>
+
+<a href="{% url "cause_error" %}">Cause an Error</a>
+
+{% endblock %}
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/bootstrap-datepicker.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+
+    $(document).ready(function() {
+
+        var current_date_url = '{{ today.year }}/{{ today.month }}/{{ today.day }}';
+
+        $(".datepicker").datepicker({
+            format: "dd/mm/yyyy",
+            weekstart: 1
+        });
+
+        $("#changes_date").change(function() {
+            var new_date = $(this).val();
+            var day_str = new_date.substring(0, 2);
+            var month_str = new_date.substring(3, 5);
+            var year_str = new_date.substring(6, 10);
+            var new_date_url = year_str + '/' + month_str + '/' + day_str;
+            console.log(new_date_url);
+            $(".marks_from_date").each(function() {
+                url = $(this).attr("href");
+                new_url = url.replace(current_date_url, new_date_url);
+                $(this).attr("href", new_url);
+            });
+        });
+    });
+
+</script>
 {% endblock %}
