@@ -171,6 +171,11 @@
         <a href="{% url "invite_students" subject_area.slug %}" class="btn btn-default">{{ subject_area.name }}</a>
     {% endfor %}
 </div>
+
+<br><br>
+
+<a href="{% url "cause_error" %}">Cause an Error</a>
+
 {% endblock %}
 
 {% block loadscripts %}

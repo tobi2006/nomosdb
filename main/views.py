@@ -2810,3 +2810,6 @@ def export_changed_marks(request, subject_slug, year, level, c_y, c_m, c_d):
             elements.append(table)
     doc.build(elements)
     return response
+
+def cause_error(request):
+    a = 5/0
