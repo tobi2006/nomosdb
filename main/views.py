@@ -1333,6 +1333,10 @@ def address_nines(request, code, year):
                             pass
         return redirect(module.get_absolute_url())
     else:
+        slugs = []
+        for a in module.assessments.all():
+            tpl = (a.slug, a.value)
+            slugs.append(tpl)
         performances = []
         for performance in module.performances.all():
             if performance.student.active:
@@ -1343,7 +1347,7 @@ def address_nines(request, code, year):
         return render(
             request,
             'address_nines.html',
-            {'module': module, 'performances': performances}
+            {'module': module, 'performances': performances, 'slugs': slugs}
         )
 
 

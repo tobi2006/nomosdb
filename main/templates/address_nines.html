@@ -53,18 +53,18 @@
             <td>
                 <div class="input-group">
                     <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-minus-sign" id="{{ performance.student.student_id }}_minus_{{ result.0 }}"></span>
+                        <span class="glyphicon glyphicon-minus-sign modifier" id="minus_{{ result.0 }}_{{ performance.student.student_id }}"></span>
                     </span>
-                    <input class="form-control mark_field {{ performance.student.student_id }}_input" id="{{ performance.student.student_id }}_1" name="{{ performance.student.student_id }}_{{ result.0 }}" value="{{ result.1 }}">
+                    <input class="form-control mark_field" id= "mark_{{ result.0 }}_{{ performance.student.student_id }}" name="mark_{{ result.0 }}_{{ performance.student.student_id }}" value="{{ result.1 }}">
                     <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-plus-sign" id="{{ performance.student.student_id }}_plus_{{ result.0 }}"></span>
+                        <span class="glyphicon glyphicon-plus-sign modifier" id="plus_{{ result.0 }}_{{ performance.student.student_id }}"></span>
                     </span>
                 </div>
                 (original: {{ result.1 }})
-                <span class="help-block" id="{{ performance.student.student_id }}_error_{{ result.0 }}"></span>
+                <span class="help-block" id="help_{{ result.0 }}_{{ performance.student.student_id }}"></span>
             </td>
             {% endfor %}
-            <td id="average">
+            <td id="average_{{ performance.student.student_id }}">
                 {{ performance.average }}
             </td>
         </tr>
@@ -96,15 +96,39 @@
 
 $(document).ready(function () {
 
+    var prefixes = [];
+    {% for slug in slugs %}
+        var tpl = ["{{ slug.0 }}", {{ slug.1 }}];
+        prefixes[prefixes.length] = tpl;
+    {% endfor %}
 
-    {% comment %}
-    $('.glyphicon').click(function() {
+    function calculate_average(student_id) {
+        var sum = 0;
+        var txt = ''
+        for (i=0; i < prefixes.length; i++) {
+            var prefix = prefixes[i]
+            var identifier = '#mark_' + prefix[0] + "_" + student_id;
+            var value = parseInt($(identifier).text());
+            if (isNaN(value)) {
+                value = parseInt($(identifier).val());
+            };
+            var weighting = parseInt(prefix[1]);
+            var part_mark = value * weighting;
+            sum = sum + part_mark;
+        };
+        var average = sum / 100;
+        var show_average = Math.round(average);
+        var field_id = '#average_' + student_id;
+        $(field_id).text(show_average);
+    };
+
+    $('.modifier').click(function() {
         var this_id = $(this).attr("id");
         var this_list = this_id.split("_");
-        var student_id = this_list[0];
-        element_to_change = '#' + student_id + '_' + this_list[2];
+        var student_id = this_list[2];
+        element_to_change = '#mark_'+ this_list[1] + '_' + student_id;
         current = parseInt($(element_to_change).val());
-        if (this_list[1] == 'plus') {
+        if (this_list[0] == 'plus') {
             new_value = current + 1;
             if (new_value > 100) {
                 new_value = 100;
@@ -120,13 +144,12 @@ $(document).ready(function () {
         calculate_average(student_id);
     });
 
-    $('.form-control').change(function () {
-        var student_id = $(this).attr('id').split('_').shift()
-        if (validate(student_id)) {
-            calculate_average(student_id);
-        };
+    $('.mark_field').change(function() {
+        var this_id = $(this).attr("id");
+        var this_list = this_id.split("_");
+        var student_id = this_list[2];
+        calculate_average(student_id);
     });
-    {% endcomment %}
 
 }); 
 </script>
