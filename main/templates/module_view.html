@@ -54,9 +54,14 @@
                 <li><a href="{{ assessment.get_assessment_group_overview_url }}">Assessment group overview for {{ assessment.title }}</a></li>
             {% endfor %}
             {% endcomment %}
-
-            <li><a href="{{ module.get_export_all_marks_url }}">Export all marks as PDF</a></li>
             <li><a href="{{ module.get_assessment_url }}">Set/Edit assessments for the module</a></li>
+        </ul>
+    </div>
+    <div class="btn-group dropdown">
+        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown">Exam Boards <span class="caret"></span></a>
+        <ul class="dropdown-menu" role="menu">
+            <li><a href="{{ module.get_address_nines_url }}">Correct Averages Ending With 9</a></li>
+            <li><a href="{{ module.get_export_all_marks_url }}">Export all marks as PDF</a></li>
         </ul>
     </div>
     <a class="btn btn-default" id="add_students_to_module" href="{{ module.get_add_students_url }}">
@@ -91,7 +96,11 @@
             </th>
             {% for assessment in module.all_assessment_titles %}
                 <th>
-                    {% if assessment.2 %}<span class="glyphicon glyphicon-eye-open">{% else %}<span class="glyphicon glyphicon-eye-close">{% endif %}</span> {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
+                    {% if assessment.0 == 'Exam' %}
+                        Exam{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
+                    {% else %}
+                        {% if assessment.2 %}<span class="glyphicon glyphicon-eye-open">{% else %}<span class="glyphicon glyphicon-eye-close">{% endif %}</span> {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
+                    {% endif %}
                 </th>
             {% endfor %}
             <th>
