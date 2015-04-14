@@ -1081,6 +1081,22 @@ class Performance(models.Model):
             return_list.append(('<strong>Result</strong>', self.average))
         return return_list
 
+    def results_eligible_for_resit(self):
+        eligible_results = []
+        for result in self.assessment_results.all():
+            if self.average < PASSMARK:
+                if result.mark < PASSMARK:
+                    eligible_results.append(result)
+            if result.concessions in ['G', 'P']:
+                if result not in eligible_results:
+                    eligible_results.append(result)
+            if self.module.foundational and self.student.qld:
+                if result.mark < PASSMARK:
+                    eligible_results.append(result)
+        return eligible_results
+
+
+
     def all_results_as_slug_tpls(self):
         return self.all_assessment_results_as_tpls(only_result=True, slug=True)
 
