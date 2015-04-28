@@ -783,12 +783,17 @@ class AssessmentResult(models.Model):
 
     def eligible_for_resit(self):
         eligible = False
-        if self.mark:
-            if self.mark < PASSMARK:
-                eligible = True
-        if self.concessions == self.GRANTED:
-            eligible = True
-        return eligible
+        performance = self.part_of.first()
+        if self in performance.results_eligible_for_resit():
+            return True
+        else:
+            return False
+        #        if self.mark:
+        #            if self.mark < PASSMARK:
+        #                eligible = True
+        #        if self.concessions == self.GRANTED:
+        #            eligible = True
+        #        return eligible
 
     #    def eligible_for_qld_resit(self):
     #        eligible = False
@@ -1083,19 +1088,24 @@ class Performance(models.Model):
 
     def results_eligible_for_resit(self):
         eligible_results = []
+        average = self.average_from_first_attempt()
         for result in self.assessment_results.all():
-            if self.average < PASSMARK:
-                if result.mark < PASSMARK:
-                    eligible_results.append(result)
+            try:
+                if average < PASSMARK:
+                    if result.mark < PASSMARK:
+                        eligible_results.append(result)
+            except TypeError:
+                pass
             if result.concessions in ['G', 'P']:
                 if result not in eligible_results:
                     eligible_results.append(result)
             if self.module.foundational and self.student.qld:
-                if result.mark < PASSMARK:
-                    eligible_results.append(result)
+                try:
+                    if result.mark < PASSMARK:
+                        eligible_results.append(result)
+                except TypeError:
+                    pass
         return eligible_results
-
-
 
     def all_results_as_slug_tpls(self):
         return self.all_assessment_results_as_tpls(only_result=True, slug=True)
@@ -1115,6 +1125,20 @@ class Performance(models.Model):
         self.real_average = average
         self.average = round(average)
         self.save()
+
+    def average_from_first_attempt(self):
+        sum_of_marks = 0
+        for assessment in self.module.assessments.all():
+            try:
+                assessment_result = AssessmentResult.objects.get(
+                    assessment=assessment, part_of=self)
+                if assessment_result.mark:
+                    this = assessment_result.mark * assessment.value
+                    sum_of_marks += this
+            except AssessmentResult.DoesNotExist:
+                pass
+        average = sum_of_marks / 100
+        return int(average)
 
     def set_assessment_result(self, assessment_slug, mark, attempt='first'):
         assessment = Assessment.objects.get(

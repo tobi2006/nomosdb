@@ -692,6 +692,52 @@ class PerformanceTest(TeacherUnitTest):
         performance.set_assessment_result('essay', None)
         self.assertEqual(performance.average, None)
 
+    def test_average_from_first_mark_is_returned_properly(self):
+        module = create_module()
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Essay",
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Presentation",
+            value=30
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title="Exam",
+            value=50
+        )
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23"
+        )
+        student.modules.add(module)
+        performance = Performance.objects.create(
+            module=module, student=student)
+        result_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=40,
+            resit_mark=99
+        )
+        result_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=30,
+            resit_mark=99
+        )
+        result_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=20,
+            resit_mark=99
+        )
+        performance.assessment_results.add(result_1)
+        performance.assessment_results.add(result_2)
+        performance.assessment_results.add(result_3)
+        performance.save()
+        self.assertEqual(performance.average_from_first_attempt(), 27)
+
     def test_set_and_get_marks_over_performance_functions(self):
         module = Module.objects.create(code="ML3", year=2014, title="ML")
         module.teachers.add(self.user.staff)
@@ -755,7 +801,7 @@ class PerformanceTest(TeacherUnitTest):
             module=module, student=student)
         assessment_result_1 = AssessmentResult.objects.create(
             assessment=assessment_1,
-            mark=50,
+            mark=40,
         )
         performance.assessment_results.add(assessment_result_1)
         assessment_result_2 = AssessmentResult.objects.create(
@@ -772,7 +818,7 @@ class PerformanceTest(TeacherUnitTest):
         all_results = performance.all_assessment_results_with_feedback()
         expected_1 = {
             'first': (
-                50,
+                40,
                 '/individual_feedback/ML3/2014/essay/bb23/first/',
                 None
             )
@@ -1190,8 +1236,99 @@ class AssessmentResultTest(TeacherUnitTest):
         self.assertEqual(assessment_result_3.no_qld_problems(), False)
         self.assertEqual(assessment_result_4.no_qld_problems(), True)
 
+    def test_eligible_for_resit_function(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        module.foundational = True
+        module.save()
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Assessment 1',
+            value=25
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Assessment 2',
+            value=25
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title='Assessment 3',
+            value=50
+        )
+        student1 = stuff[1]
+        student1.qld = True
+        student1.save()
+        performance1 = Performance.objects.get(module=module, student=student1)
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=25
+        )
+        performance1.assessment_results.add(result1_1)
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=50
+        )
+        performance1.assessment_results.add(result1_2)
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=50
+        )
+        performance1.assessment_results.add(result1_3)
+        self.assertTrue(result1_1.eligible_for_resit())
+        self.assertFalse(result1_2.eligible_for_resit())
+        self.assertFalse(result1_3.eligible_for_resit())
+        student2 = stuff[2]
+        student2.qld = False
+        student2.save()
+        performance2 = Performance.objects.get(module=module, student=student2)
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=25
+        )
+        performance2.assessment_results.add(result2_1)
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=50
+        )
+        performance2.assessment_results.add(result2_2)
+        result2_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=50
+        )
+        performance2.assessment_results.add(result2_3)
+        self.assertFalse(result2_1.eligible_for_resit())
+        self.assertFalse(result2_2.eligible_for_resit())
+        self.assertFalse(result2_3.eligible_for_resit())
+        student3 = stuff[3]
+        student3.qld = False
+        student3.save()
+        performance3 = Performance.objects.get(module=module, student=student3)
+        result3_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=25
+        )
+        performance3.assessment_results.add(result3_1)
+        result3_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=40
+        )
+        performance3.assessment_results.add(result3_2)
+        result3_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=30
+        )
+        performance3.assessment_results.add(result3_3)
+        self.assertTrue(result3_1.eligible_for_resit())
+        self.assertFalse(result3_2.eligible_for_resit())
+        self.assertTrue(result3_3.eligible_for_resit())
+
     def test_result_with_feedback_function(self):
-        module = Module.objects.create(code="ML3", year=2014, title="ML")
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
         module.teachers.add(self.user.staff)
         assessment = Assessment.objects.create(
             module=module,
@@ -1200,65 +1337,75 @@ class AssessmentResultTest(TeacherUnitTest):
             marksheet_type='ESSAY',
             marksheet_type_resit='ESSAY'
         )
-        student = Student.objects.create(
-            first_name="Bugs",
-            last_name="Bunny",
-            student_id="bb23"
-        )
-        student.modules.add(module)
-        performance = Performance.objects.create(
-            module=module, student=student)
+        performance1 = Performance.objects.get(
+            module=module, student=student1)
+        performance2 = Performance.objects.get(
+            module=module, student=student2)
+        performance3 = Performance.objects.get(
+            module=module, student=student3)
         assessment_result_1 = AssessmentResult.objects.create(
             assessment=assessment,
             mark=50,
         )
-        performance.assessment_results.add(assessment_result_1)
+        performance1.assessment_results.add(assessment_result_1)
         assessment_result_2 = AssessmentResult.objects.create(
             assessment=assessment,
             mark=38,
         )
-        performance.assessment_results.add(assessment_result_2)
+        performance2.assessment_results.add(assessment_result_2)
         assessment_result_3 = AssessmentResult.objects.create(
             assessment=assessment,
             mark=38,
             resit_mark=41
         )
-        performance.assessment_results.add(assessment_result_3)
+        performance3.assessment_results.add(assessment_result_3)
         result_1 = assessment_result_1.result_with_feedback()
+        base_url = (
+            '/individual_feedback/' +
+            module.code +
+            '/' +
+            str(module.year) +
+            '/' +
+            assessment.slug +
+            '/'
+        )
+        url_1 = base_url + student1.student_id + '/first/'
         expected_1 = {
             'first': (
                 50,
-                '/individual_feedback/ML3/2014/essay/bb23/first/',
+                url_1,
                 None
             )
         }
         self.assertEqual(result_1, expected_1)
-        self.assertFalse(assessment_result_1.eligible_for_resit())
         result_2 = assessment_result_2.result_with_feedback()
-        self.assertTrue(assessment_result_2.eligible_for_resit())
+        url_2_first = base_url + student2.student_id + '/first/'
+        url_2_resit = base_url + student2.student_id + '/resit/'
         expected_2 = {
             'first': (
                 38,
-                '/individual_feedback/ML3/2014/essay/bb23/first/',
+                url_2_first,
                 None
             ),
             'resit': (
                 None,
-                '/individual_feedback/ML3/2014/essay/bb23/resit/',
+                url_2_resit,
                 None
             )
         }
         self.assertEqual(result_2, expected_2)
         result_3 = assessment_result_3.result_with_feedback()
+        url_3_first = base_url + student3.student_id + '/first/'
+        url_3_resit = base_url + student3.student_id + '/resit/'
         expected_3 = {
             'first': (
                 38,
-                '/individual_feedback/ML3/2014/essay/bb23/first/',
+                url_3_first,
                 None
             ),
             'resit': (
                 41,
-                '/individual_feedback/ML3/2014/essay/bb23/resit/',
+                url_3_resit,
                 None
             )
         }
