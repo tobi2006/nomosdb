@@ -843,13 +843,18 @@ class AssessmentResult(models.Model):
                 edit = None
             marksheet = None
             try:
-                feedback = self.feedback.objects.get(attempt='resit')
+                feedback = self.feedback.get(attempt='resit')
                 if feedback.completed:
-                    marksheet = 'na'
+                    marksheet = (
+                        self.assessment.get_blank_marksheet_url() +
+                        student_id +
+                        '/resit/'
+                    )
             except:
                 pass
             resit = (self.resit_mark, edit, marksheet)
-            returndict['resit'] = resit
+            if edit or self.resit_mark:
+                returndict['resit'] = resit
         return returndict
 
     def module_needs_to_be_capped(self):

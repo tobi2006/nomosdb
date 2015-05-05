@@ -86,6 +86,7 @@ class AssessmentForm(forms.ModelForm):
         ),
         Field('max_word_count', placeholder='Leave blank if not applicable'),
         'marksheet_type',
+        'marksheet_type_resit',
         'co_marking',
         'group_assessment',
         FormActions(
@@ -104,6 +105,7 @@ class AssessmentForm(forms.ModelForm):
             'submission_date',
             'max_word_count',
             'marksheet_type',
+            'marksheet_type_resit',
             'co_marking',
             'group_assessment'
         ]

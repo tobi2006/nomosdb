@@ -53,7 +53,7 @@ def individual_feedback(
     if attempt == 'first':
         marksheet_type = assessment.marksheet_type
     else:
-        marksheet_type = assessment.resit_marksheet_type
+        marksheet_type = assessment.marksheet_type_resit
     IndividualFeedbackForm = get_individual_feedback_form(marksheet_type)
     if request.method == 'POST':
         form = IndividualFeedbackForm(instance=feedback, data=request.POST)
@@ -141,7 +141,7 @@ def group_feedback(
     if attempt == 'first':
         marksheet_type = assessment.marksheet_type
     else:
-        marksheet_type = assessment.resit_marksheet_type
+        marksheet_type = assessment.marksheet_type_resit
     IndividualFeedbackForm = get_individual_feedback_form_for_group(
         marksheet_type)
     GroupFeedbackForm = get_group_feedback_form(marksheet_type)
@@ -354,10 +354,18 @@ def individual_marksheet(assessment, student, attempt):
         Spacer(1, 3),
         bold_paragraph(tmp)
     ]
+    if attempt == 'resit':
+        a_t = assessment.title + ' - Resubmission'
+    elif attempt == 'second_resit':
+        a_t = assessment.title + ' - Second Resubmission'
+    elif attempt == 'qld_resit':
+        a_t = assessment.title + ' - Resubmission for QLD'
+    else:
+        a_t = assessment.title
     assessment_title = [
         paragraph('Assessment Title'),
         Spacer(1, 3),
-        bold_paragraph(assessment.title)
+        bold_paragraph(a_t)
     ]
     if assessment.max_word_count:
         tmp = (
