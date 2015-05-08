@@ -2372,7 +2372,6 @@ class MyTuteesTests(TeacherUnitTest):
         self.assertContains(response, '2 Jan 1900')
 
 
-
 class AddressNinesTest(TeacherUnitTest):
     """Tests the function that allows to change averages ending with 9"""
 
@@ -2696,3 +2695,154 @@ class AddressNinesTest(TeacherUnitTest):
         self.assertContains(response, r1_1_field)
         self.assertContains(response, r1_2_field)
         self.assertContains(response, r1_3_field)
+
+
+class EditExamIDsTest(AdminUnitTest):
+    """Testing the function to manually edit Exam IDs"""
+
+    def test_right_template_used(self):
+        subject_area = SubjectArea.objects.create(name="Cartoon Studies")
+        url = (
+            '/edit_exam_ids/' +
+            subject_area.slug +
+            '/1/'
+        )
+        request = self.factory.get(url)
+        request.user = self.user
+        response = edit_exam_ids(request, subject_area.slug, '1')
+        self.assertTemplateUsed(response, 'edit_exam_ids.html')
+    
+    def test_only_active_students_with_right_SA_and_year_appear_in_form(self):
+        subject_area1 = SubjectArea.objects.create(name="Cartoon Studies")
+        subject_area2 = SubjectArea.objects.create(name="Evil Plotting")
+        course1 = Course.objects.create(
+            title="MA in Cartoon Studies",
+            short_title="Cartoon Studies"
+        )
+        course1.subject_areas.add(subject_area1)
+        course2 = Course.objects.create(
+            title="MSc in Evil Plotting",
+            short_title="Evil Plotting"
+        )
+        course2.subject_areas.add(subject_area2)
+        course3 = Course.objects.create(
+            title="MA in Cartoon Studies and Evil Plotting",
+            short_title="Cartoon Studies/Evil Plotting"
+        )
+        course3.subject_areas.add(subject_area1)
+        course3.subject_areas.add(subject_area2)
+        stuff = set_up_stuff()
+        student1 = stuff[1]
+        student1.active = True
+        student1.course = course1
+        student1.year = 1
+        student1.save()
+        student2 = stuff[2]
+        student2.active = False
+        student2.course = course1
+        student2.year = 1
+        student2.save()
+        student3 = stuff[3]
+        student3.active = True
+        student3.course = course2
+        student3.year = 1
+        student3.save()
+        student4 = stuff[4]
+        student4.active = True
+        student4.course = course3
+        student4.year = 1
+        student4.save()
+        student5 = stuff[5]
+        student5.active = True
+        student5.course = course3
+        student5.year = 2
+        student5.save()
+        url = (
+            '/edit_exam_ids/' +
+            subject_area1.slug +
+            '/1/'
+        )
+        request = self.factory.get(url)
+        request.user = self.user
+        response = edit_exam_ids(request, subject_area1.slug, '1')
+        self.assertContains(response, student1.student_id)
+        self.assertNotContains(response, student2.student_id)
+        self.assertNotContains(response, student3.student_id)
+        self.assertContains(response, student4.student_id)
+        self.assertNotContains(response, student5.student_id)
+
+    def test_existing_exam_ids_are_shown(self):
+        subject_area = SubjectArea.objects.create(name="Cartoon Studies")
+        course = Course.objects.create(
+            title="MA in Cartoon Studies",
+            short_title="Cartoon Studies"
+        )
+        course.subject_areas.add(subject_area)
+        stuff = set_up_stuff()
+        student1 = stuff[1]
+        student1.active = True
+        student1.course = course
+        student1.year = 1
+        student1.exam_id = '1234'
+        student1.save()
+        student2 = stuff[2]
+        student2.active = True
+        student2.course = course
+        student2.year = 1
+        student2.exam_id = '56789ABC'
+        student2.save()
+        url = (
+            '/edit_exam_ids/' +
+            subject_area.slug +
+            '/1/'
+        )
+        request = self.factory.get(url)
+        request.user = self.user
+        response = edit_exam_ids(request, subject_area.slug, '1')
+        self.assertContains(response, '1234')
+        self.assertContains(response, '56789ABC')
+
+    def test_exam_ids_get_saved_properly(self):
+        subject_area = SubjectArea.objects.create(name="Cartoon Studies")
+        course = Course.objects.create(
+            title="MA in Cartoon Studies",
+            short_title="Cartoon Studies"
+        )
+        course.subject_areas.add(subject_area)
+        stuff = set_up_stuff()
+        student1 = stuff[1]
+        student1.active = True
+        student1.course = course
+        student1.year = 1
+        student1.save()
+        student2 = stuff[2]
+        student2.active = True
+        student2.course = course
+        student2.year = 1
+        student2.save()
+        student3 = stuff[3]
+        student3.active = True
+        student3.course = course
+        student3.year = 1
+        student3.save()
+        url = (
+            '/edit_exam_ids/' +
+            subject_area.slug +
+            '/1/'
+        )
+        request = self.factory.post(
+            url,
+            data={
+                student1.student_id: '1234',
+                student2.student_id: '56789E',
+                student3.student_id: ''
+            }
+        )
+        request.user = self.user
+        response = edit_exam_ids(request, subject_area.slug, '1')
+        student1_out = Student.objects.get(student_id=student1.student_id)
+        student2_out = Student.objects.get(student_id=student2.student_id)
+        student3_out = Student.objects.get(student_id=student3.student_id)
+        self.assertEqual(student1_out.exam_id, '1234')
+        self.assertEqual(student2_out.exam_id, '56789E')
+        self.assertEqual(student3_out.exam_id, None)

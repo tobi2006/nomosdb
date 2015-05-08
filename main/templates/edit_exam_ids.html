@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block formstart %}
+    <form id="EditExamIDsForm" method="post"> 
+    {% csrf_token %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Edit Exam IDs</h1>
+
+{% if students %}
+
+<table id ="sortable_table" class="table table-striped table-sortable">
+    <thead>
+        <tr>
+            <td>Student</td>
+            <td>Student ID</td>
+            <td>Course</td>
+            <td>Exam ID</td>
+        </tr>
+    </thead>
+    <tbody>
+{% for student in students %}
+        <tr>
+            <td>{{ student.get_link|safe }}</td>
+            <td>{{ student.student_id }}</td>
+            <td>{{ student.course }}</td>
+            <td><input class="form-control" id="id_{{ student.student_id }}" name="{{ student.student_id }}"{% if student.exam_id %} value="{{ student.exam_id }}"{%endif %}/></td>
+        </tr>
+{% endfor %}
+    </tbody>
+</table>
+
+<a href="/admin/" class="btn btn-primary">Cancel</a>
+
+<input type="submit" name="save" value="Save IDs" id="save" class="btn btn-primary" data-loading-text="Please wait">
+
+{% else %}
+
+There are no students in this category. <a href="/admin/">Go back to the admin page</a>
+
+{% endif %}
+
+{% endblock %}
+
+{% block formend %}
+</form>
+{% endblock %}

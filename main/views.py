@@ -2026,6 +2026,39 @@ def mark_all_anonymously(request, code, year, slug, attempt):
         }
     )
 
+
+@login_required
+@user_passes_test(is_admin)
+def edit_exam_ids(request, subject_slug, year):
+    """Allows manual editing of anonymous IDs"""
+    all_students = Student.objects.filter(active=True, year=year)
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    students = []
+    for student in all_students:
+        if (
+                student.course and
+                subject_area in student.course.subject_areas.all()
+        ):
+            students.append(student)
+    if request.method == 'POST':
+        for student in students:
+            if (
+                    student.student_id in request.POST and
+                    request.POST[student.student_id]
+            ):
+                student.exam_id = request.POST[student.student_id]
+                student.save()
+        return redirect(reverse('admin'))
+
+    return render(
+        request,
+        'edit_exam_ids.html',
+        {
+            'students': students,
+        }
+    )
+
+
 # Data import / export
 
 
@@ -2858,4 +2891,5 @@ def export_changed_marks(request, subject_slug, year, level, c_y, c_m, c_d):
     return response
 
 def cause_error(request):
+    """Can be called to test whether the sysadmin gets the error mail"""
     a = 5/0

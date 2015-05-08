@@ -119,6 +119,11 @@ urlpatterns += patterns(
         'add_or_edit_module',
         name='edit_module'
     ),
+    url(
+        r'^edit_exam_ids/([-\w]+)/(\d{1})/$',
+        'edit_exam_ids',
+        name='edit_exam_ids'
+    ),
     url(r'^edit_staff/(\w+)/$', 'add_or_edit_staff', name='edit_staff'),
     url(r'^edit_student/(\w+)/$', 'add_or_edit_student', name='edit_student'),
     url(
