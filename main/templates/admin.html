@@ -116,9 +116,26 @@
     {% endfor %}
 </div>
 
-{% comment %}
+<br><br>
 <h4>Anonymous marking</h4>
-{% endcomment %}
+
+<h5>Manually edit Exam IDs</h5>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+            <li><a href="{% url "edit_exam_ids" subject_area.slug year.0 %}">{{ year.1 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
 
 <h3>Tutors</h3>
 
