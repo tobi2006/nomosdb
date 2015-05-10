@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %} Import Anonymous Exam IDs from CVS{% endblock %}
+
+{% block content %}
+
+<p>
+The easiest way to enter the anonymous IDs is to upload a csv file. To generate that, simply edit the Spreadsheet you have for the exam IDs in a way that there are only two columns left: the student IDs in column A and the corresponding anonymous IDs in column B. And remove the header row.
+</p>
+
+<p>
+You then will need to save the file as a .csv file ("Comma Separated Values"), which Microsoft Excel, LibreOffice Calc and most other spreadsheet programmes can do - either in the "Save As" dialogue or under a menu point like "Export". If the programme asked you which separator to use, select the comma (which should be the default value).
+</p>
+
+<p>
+In case you entered anonymous IDs before (either manually or by uploading), this upload will overwrite the IDs for students that already have got a different one.
+</p>
+
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>{{ form }}</p>
+    <input type = "submit" value="Upload" class="btn btn-default" align="right">
+</form>
+
+{% endblock %}

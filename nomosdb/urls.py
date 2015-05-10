@@ -200,6 +200,7 @@ urlpatterns += patterns(
         'toggle_assessment_availability',
         name='toggle_assessment_availability'
     ),
+    url(r'^upload_exam_ids/$', 'upload_exam_ids', name='upload_exam_ids'),
     url(r'^upload_csv_file/$', 'upload_csv', name='upload_csv'),
     url(
         r'^view_staff_by_name/$',

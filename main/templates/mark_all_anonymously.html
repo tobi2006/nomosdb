@@ -27,7 +27,7 @@
                 ID
             </th>
             <th>
-                {{ assessment.title }}
+                Mark
             </th>
         </tr>
     </thead>
@@ -35,8 +35,10 @@
         {% for row in rows %}
             <tr>
                 {% for entry in row %}
-                <td>
+                <td> 
+                    <div class="col-sm-3">
                     {{ entry|safe }}
+                    </div>
                 </td>
                 {% endfor %}
             </tr>
@@ -53,4 +55,18 @@
 
 {% block formend %}
     </form>
+{% endblock %}
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('#sortable_table').tablesorter();
+    });
+</script>
+
 {% endblock %}

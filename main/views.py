@@ -16,6 +16,7 @@ from main.messages import (
 )
 from main.models import *
 from main.unisettings import *
+from operator import itemgetter
 from pytz import utc
 from random import shuffle, choice
 from string import ascii_letters, digits
@@ -2014,6 +2015,7 @@ def mark_all_anonymously(request, code, year, slug, attempt):
                 rows.append(row)
             else:
                 students_without_id.append(performance.student)
+            rows.sort(key=itemgetter(0))
     return render(
         request,
         'mark_all_anonymously.html',
@@ -2057,6 +2059,62 @@ def edit_exam_ids(request, subject_slug, year):
             'students': students,
         }
     )
+
+
+@login_required
+@user_passes_test(is_admin)
+def upload_exam_ids(request):
+    """Allows uploading of a CSV with anonymous IDs
+
+    Requires a csv file with student IDs on the left and anonymous
+    IDs on the right. Very straight forward and simple, but helpful"""
+    if request.method == 'POST':
+        form = CSVUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            f = request.FILES['csvfile']
+            f.read()
+            counter = 0
+            problems = []
+            for line in f:
+                row = line.split(',')
+                student_id = row[0]
+                anon_id = row[1]
+                anon_id = anon_id.rstrip()
+                if anon_id == '':
+                    anon_id = None
+                try:
+                    student = Student.objects.get(student_id=student_id)
+                    student.exam_id = anon_id
+                    try:
+                        student.save()
+                        counter += 1
+                    except IntegrityError:
+                        problems.append(student)
+                except Student.DoesNotExist:
+                    pass
+            if problems:
+                printstring = '''%s exam IDs imported.<br><br>
+                The exam IDs for the following student(s) were already\
+ assigned to a different student:<br>
+                <ul>
+                ''' % (counter)
+                for problem in problems:
+                    printstring += (
+                        '<li>' +
+                        problem.first_name +
+                        ' ' +
+                        problem.last_name +
+                        ' (' +
+                        problem.student_id +
+                        ')</li>\n'
+                        )
+                printstring += '</ul>'
+            else:
+                printstring = '%s exam IDs imported' % (counter)
+            return render(request, 'blank.html', {'printstring': printstring})
+    else:
+        form = CSVUploadForm()
+    return render(request, 'upload_exam_ids.html', {'form': form})
 
 
 # Data import / export
