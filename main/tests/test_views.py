@@ -2846,3 +2846,14 @@ class EditExamIDsTest(AdminUnitTest):
         self.assertEqual(student1_out.exam_id, '1234')
         self.assertEqual(student2_out.exam_id, '56789E')
         self.assertEqual(student3_out.exam_id, None)
+
+
+class ConcessionsTest(AdminUnitTest):
+    """Testing the concessions form"""
+
+    def test_concessions_form_uses_right_template(self):
+        module = create_module()
+        request = self.factory.get(module.get_concessions_url())
+        request.user = self.user
+        response = concessions(request, module.code, module.year)
+        self.assertTemplateUsed(response, 'concessions.html')

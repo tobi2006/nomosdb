@@ -2117,6 +2117,17 @@ def upload_exam_ids(request):
     return render(request, 'upload_exam_ids.html', {'form': form})
 
 
+@login_required
+@user_passes_test(is_staff)
+def concessions(request, code, year, attempt):
+    return render(
+        request,
+        'concessions.html',
+        {
+        }
+    )
+
+
 # Data import / export
 
 

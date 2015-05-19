@@ -227,6 +227,9 @@ class Module(models.Model):
         group = str(group)
         return reverse('attendance', args=[self.code, self.year, group])
 
+    def get_concessions_url(self, attempt):
+        return reverse('concessions', args=[self.code, self.year, attempt])
+
     def get_export_attendance_sheet_url(self):
         return reverse('export_attendance_sheet', args=[self.code, self.year])
 
@@ -1076,7 +1079,7 @@ class Performance(models.Model):
                 else:
                     exam = None
         if there_is_an_exam:
-            return_list.append(('Exam', exam))
+            return_list.append(('exam', exam))
         if not only_result:
             return_list.append(('<strong>Result</strong>', self.average))
         return return_list
