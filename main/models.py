@@ -1079,7 +1079,10 @@ class Performance(models.Model):
                 else:
                     exam = None
         if there_is_an_exam:
-            return_list.append(('exam', exam))
+            if slug:
+                return_list.append(('exam', exam))
+            else:
+                return_list.append(('Exam', exam))
         if not only_result:
             return_list.append(('<strong>Result</strong>', self.average))
         return return_list

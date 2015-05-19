@@ -2853,7 +2853,7 @@ class ConcessionsTest(AdminUnitTest):
 
     def test_concessions_form_uses_right_template(self):
         module = create_module()
-        request = self.factory.get(module.get_concessions_url())
+        request = self.factory.get(module.get_concessions_url('first'))
         request.user = self.user
-        response = concessions(request, module.code, module.year)
+        response = concessions(request, module.code, module.year, 'first')
         self.assertTemplateUsed(response, 'concessions.html')
