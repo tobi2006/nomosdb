@@ -456,8 +456,10 @@ class InviteStudentTest(AdminUnitTest):
         url = '/invite_students/' + subject_area.slug + '/'
         request = self.factory.post(
             url,
-            data={'selected_student_id': [
-                student1.student_id, student2.student_id
+            data={
+                'selected_student_id': [
+                    student1.student_id,
+                    student2.student_id
                 ]
             }
         )
@@ -2857,3 +2859,217 @@ class ConcessionsTest(AdminUnitTest):
         request.user = self.user
         response = concessions(request, module.code, module.year, 'first')
         self.assertTemplateUsed(response, 'concessions.html')
+
+    def test_all_active_students_appear_in_template(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student3.active = False
+        student3.save()
+        request = self.factory.get(module.get_concessions_url('first'))
+        request.user = self.user
+        response = concessions(request, module.code, module.year, 'first')
+        self.assertContains(response, student1.short_name())
+        self.assertContains(response, student2.short_name())
+        self.assertNotContains(response, student3.short_name())
+
+    def test_correct_names_for_values_in_template(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Assessment 1"
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Assessment 2"
+        )
+        performance1 = Performance.objects.get(module=module, student=student1)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+            concessions='N'
+        )
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=38,
+            concessions='G'
+        )
+        performance1.assessment_results.add(assessment_result_1)
+        performance1.assessment_results.add(assessment_result_2)
+        request = self.factory.get(module.get_concessions_url('first'))
+        request.user = self.user
+        response = concessions(request, module.code, module.year, 'first')
+        tag_name_1_1 = (
+            'name="' +
+            student1.student_id +
+            '_' +
+            assessment1.slug +
+            '"'
+        )
+        tag_name_1_2 = (
+            'name="' +
+            student1.student_id +
+            '_' +
+            assessment2.slug +
+            '"'
+        )
+        self.assertContains(response, tag_name_1_1)
+        self.assertContains(response, tag_name_1_2)
+        tag_name_2_1 = (
+            'name="' +
+            student2.student_id +
+            '_' +
+            assessment1.slug +
+            '"'
+        )
+        tag_name_2_2 = (
+            'name="' +
+            student2.student_id +
+            '_' +
+            assessment2.slug +
+            '"'
+        )
+        self.assertContains(response, tag_name_2_1)
+        self.assertContains(response, tag_name_2_2)
+
+    def test_existing_concessions_are_displayed(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Assessment 1"
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Assessment 2"
+        )
+        performance1 = Performance.objects.get(module=module, student=student1)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+            concessions='N'
+        )
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=38,
+            concessions='G'
+        )
+        performance1.assessment_results.add(assessment_result_1)
+        performance1.assessment_results.add(assessment_result_2)
+        request = self.factory.get(module.get_concessions_url('first'))
+        request.user = self.user
+        response = concessions(request, module.code, module.year, 'first')
+        soup = BeautifulSoup(response.content)
+        tag_name_1_1 = (
+            '#' +
+            student1.student_id +
+            '_' +
+            assessment1.slug
+        )
+        select1 = str(soup.select(tag_name_1_1)[0])
+        options1 = select1.split('<option')
+        for part in options1:
+            if 'value="N"' in part:
+                option1 = part
+        self.assertIn('selected', option1)
+        tag_name_1_2 = (
+            '#' +
+            student1.student_id +
+            '_' +
+            assessment2.slug
+        )
+        select2 = str(soup.select(tag_name_1_2)[0])
+        options2 = select2.split('<option')
+        for part in options2:
+            if 'value="N"' in part:
+                option2 = part
+        self.assertNotIn('selected', option2)
+        for part in options2:
+            if 'value="G"' in part:
+                option2 = part
+        self.assertIn('selected', option2)
+
+    def test_submitting_the_form_saves_concessions(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Assessment 1"
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Assessment 2"
+        )
+        performance1 = Performance.objects.get(module=module, student=student1)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+            concessions='N'
+        )
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=38,
+            concessions='G'
+        )
+        performance1.assessment_results.add(assessment_result_1)
+        performance1.assessment_results.add(assessment_result_2)
+        tag_name_1_1 = (
+            student1.student_id +
+            '_' +
+            assessment1.slug
+        )
+        tag_name_1_2 = (
+            student1.student_id +
+            '_' +
+            assessment2.slug
+        )
+        tag_name_2_1 = (
+            student2.student_id +
+            '_' +
+            assessment1.slug
+        )
+        tag_name_2_2 = (
+            student2.student_id +
+            '_' +
+            assessment2.slug
+        )
+        request = self.factory.post(
+            module.get_concessions_url('first'),
+            data={
+                tag_name_1_1: 'G',
+                tag_name_1_2: 'P',
+                tag_name_2_1: 'N',
+                tag_name_2_2: 'G',
+            }
+        )
+        request.user = self.user
+        response = concessions(request, module.code, module.year, 'first')
+        assessment_result_1_1_out = AssessmentResult.objects.get(
+            assessment = assessment1,
+            part_of = performance1
+        )
+        assessment_result_1_2_out = AssessmentResult.objects.get(
+            assessment = assessment2,
+            part_of = performance1
+        )
+        performance2 = Performance.objects.get(module=module, student=student2)
+        assessment_result_2_1_out = AssessmentResult.objects.get(
+            assessment = assessment1,
+            part_of = performance2
+        )
+        assessment_result_2_2_out = AssessmentResult.objects.get(
+            assessment = assessment2,
+            part_of = performance2
+        )
+        self.assertEqual(assessment_result_1_1_out.concessions, 'G')
+        self.assertEqual(assessment_result_1_2_out.concessions, 'P')
+        self.assertEqual(assessment_result_2_1_out.concessions, 'N')
+        self.assertEqual(assessment_result_2_2_out.concessions, 'G')

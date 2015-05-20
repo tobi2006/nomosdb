@@ -996,53 +996,84 @@ class PerformanceTest(TeacherUnitTest):
         self.assertEqual(performance1.qld_resit_required(), False)
         self.assertEqual(performance2.qld_resit_required(), False)
 
-#    def test_second_resit_required_gets_shown(self):
-#        stuff = set_up_stuff()
-#        module = stuff[0]
-#        student1 = stuff[1]
-#        student2 = stuff[2]
-#        performance1 = Performance.objects.get(
-#            module=module, student=student1
-#        )
-#        performance2 = Performance.objects.get(
-#            module=module, student=student2
-#        )
-#        assessment1 = Assessment.objects.create(
-#            module=module,
-#            title='Essay',
-#            value=20
-#        )
-#        assessment2 = Assessment.objects.create(
-#            module=module,
-#            title='Presentation',
-#            value=30
-#        )
-#        assessment3 = Assessment.objects.create(
-#            module=module,
-#            title='Exam',
-#            value=50
-#        )
-#        result1_1 = AssessmentResult.objects.create(
-#            assessment=assessment1,
-#            mark=38,
-#            resit_mark=40
-#        )
-#        result1_2 = AssessmentResult.objects.create(
-#            assessment=assessment2,
-#            mark=42
-#        )
-#        result1_3 = AssessmentResult.objects.create(
-#            assessment=assessment3,
-#            mark=36,
-#            resit_mark=36
-#        )
-#        performance1.assessment_results.add(result1_1)
-#        performance1.assessment_results.add(result1_2)
-#        performance1.assessment_results.add(result1_3)
-#        self.assertEqual(
-#            performance1.second_resit_required(),
-#            [assessment3]
-#        )
+    #    def test_second_resit_required_gets_shown(self):
+    #        stuff = set_up_stuff()
+    #        module = stuff[0]
+    #        student1 = stuff[1]
+    #        student2 = stuff[2]
+    #        performance1 = Performance.objects.get(
+    #            module=module, student=student1
+    #        )
+    #        performance2 = Performance.objects.get(
+    #            module=module, student=student2
+    #        )
+    #        assessment1 = Assessment.objects.create(
+    #            module=module,
+    #            title='Essay',
+    #            value=20
+    #        )
+    #        assessment2 = Assessment.objects.create(
+    #            module=module,
+    #            title='Presentation',
+    #            value=30
+    #        )
+    #        assessment3 = Assessment.objects.create(
+    #            module=module,
+    #            title='Exam',
+    #            value=50
+    #        )
+    #        result1_1 = AssessmentResult.objects.create(
+    #            assessment=assessment1,
+    #            mark=38,
+    #            resit_mark=40
+    #        )
+    #        result1_2 = AssessmentResult.objects.create(
+    #            assessment=assessment2,
+    #            mark=42
+    #        )
+    #        result1_3 = AssessmentResult.objects.create(
+    #            assessment=assessment3,
+    #            mark=36,
+    #            resit_mark=36
+    #        )
+    #        performance1.assessment_results.add(result1_1)
+    #        performance1.assessment_results.add(result1_2)
+    #        performance1.assessment_results.add(result1_3)
+    #        self.assertEqual(
+    #            performance1.second_resit_required(),
+    #            [assessment3]
+    #        )
+
+    def test_get_all_concessions_shows_all_concessions(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Assessment 1"
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Assessment 2"
+        )
+        student1 = stuff[1]
+        performance = Performance.objects.get(module=module, student=student1)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+            concessions='N'
+        )
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=38,
+            concessions='G'
+        )
+        performance.assessment_results.add(assessment_result_1)
+        performance.assessment_results.add(assessment_result_2)
+        expected = [
+            (assessment1.slug, 'N'),
+            (assessment2.slug, 'G'),
+        ]
+        self.assertEqual(performance.all_concessions('first'), expected)
 
 
 class AssessmentResultTest(TeacherUnitTest):
@@ -1276,6 +1307,69 @@ class AssessmentResultTest(TeacherUnitTest):
         saved_time = result_out.last_modified
         difference = saved_time - time_of_saving
         self.assertTrue(difference.seconds<1)
+
+    def test_get_concessions_shows_correct_concessions(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title="Assessment 1"
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title="Assessment 2"
+        )
+        student1 = stuff[1]
+        performance1 = Performance.objects.get(module=module, student=student1)
+        assessment_result_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+            concessions='N',
+            second_concessions = 'G'
+        )
+        assessment_result_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=38,
+            concessions='G',
+            second_concessions = 'P'
+        )
+        self.assertEqual(
+            assessment_result_1.get_concessions('first'),
+            'N'
+        )
+        self.assertEqual(
+            assessment_result_1.get_concessions('resit'),
+            'G'
+        )
+        self.assertEqual(
+            assessment_result_2.get_concessions('first'),
+            'G'
+        )
+        self.assertEqual(
+            assessment_result_2.get_concessions('resit'),
+            'P'
+        )
+
+    def test_get_concessions_can_be_set(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Assessment 1"
+        )
+        student1 = stuff[1]
+        performance1 = Performance.objects.get(module=module, student=student1)
+        assessment_result = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=38,
+            concessions='N',
+            second_concessions = 'G'
+        )
+        assessment_result.set_concessions('first', 'G')
+        assessment_result.set_concessions('resit', 'P')
+        assessment_result_out = AssessmentResult.objects.first()
+        self.assertEqual(assessment_result_out.concessions, 'G')
+        self.assertEqual(assessment_result_out.second_concessions, 'P')
 
 
 class ConsistencyTest(TeacherUnitTest):

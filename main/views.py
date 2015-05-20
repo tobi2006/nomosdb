@@ -2120,11 +2120,39 @@ def upload_exam_ids(request):
 @login_required
 @user_passes_test(is_staff)
 def concessions(request, code, year, attempt):
+    module = Module.objects.get(code=code, year=year)
+    performances = Performance.objects.filter(
+        module=module, student__active=True
+    )
+    if request.method == 'POST':
+        for performance in performances:
+            for assessment in module.assessments.all():
+                tag_name = (
+                    performance.student.student_id +
+                    '_' +
+                    assessment.slug
+                )
+                if tag_name in request.POST:
+                    try:
+                        result = AssessmentResult.objects.get(
+                            assessment=assessment,
+                            part_of=performance
+                        )
+                    except AssessmentResult.DoesNotExist:
+                        result = AssessmentResult.objects.create(
+                            assessment=assessment
+                        )
+                        performance.assessment_results.add(result)
+                    if attempt == 'first':
+                        result.concessions = request.POST[tag_name]
+                    else:
+                        result.second_concessions = request.POST[tag_name]
+                    result.save()
+        return redirect(module.get_absolute_url())
     return render(
         request,
         'concessions.html',
-        {
-        }
+        {'module': module, 'performances': performances, 'attempt': attempt}
     )
 
 

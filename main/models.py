@@ -230,6 +230,12 @@ class Module(models.Model):
     def get_concessions_url(self, attempt):
         return reverse('concessions', args=[self.code, self.year, attempt])
 
+    def get_first_concessions_url(self):
+        return reverse('concessions', args=[self.code, self.year, 'first'])
+
+    def get_second_concessions_url(self):
+        return reverse('concessions', args=[self.code, self.year, 'second'])
+
     def get_export_attendance_sheet_url(self):
         return reverse('export_attendance_sheet', args=[self.code, self.year])
 
@@ -951,6 +957,19 @@ class AssessmentResult(models.Model):
             pass
         return all_urls
 
+    def get_concessions(self, attempt):
+        if attempt == 'first':
+            return self.concessions
+        else:
+            return self.second_concessions
+
+    def set_concessions(self, attempt, concessions):
+        if attempt == 'first':
+            self.concessions = concessions
+        else:
+            self.second_concessions = concessions
+        self.save()
+
 
 class Performance(models.Model):
     """The Performance class connects a student with a module"""
@@ -1280,6 +1299,41 @@ class Performance(models.Model):
                 if attendancelist[-2] == 'a':
                     return True
         return False
+
+    def all_concessions(self, attempt):
+        return_list = []
+        there_is_an_exam = False
+        all_results = {}
+        for result in self.assessment_results.all():
+            all_results[result.assessment] = result
+        for assessment in self.module.all_assessments():
+            if assessment.title != 'Exam':
+                title = slugify(assessment.title)
+                if assessment in all_results:
+                    result = all_results[assessment]
+                    if attempt == 'first':
+                        concessions = result.concessions
+                    else:
+                        concessions = result.second_concessions
+                else:
+                    concessions = 'N'
+                return_list.append((title, concessions))
+            else:
+                there_is_an_exam = True
+                if assessment in all_results:
+                    result = all_results[assessment]
+                    exam = result.concessions
+                else:
+                    exam = 'N'
+        if there_is_an_exam:
+            return_list.append(('exam', exam))
+        return return_list
+
+    def all_first_concessions(self):
+        return self.all_concessions('first')
+
+    def all_second_concessions(self):
+        return self.all_concessions('second')
 
 
 class TuteeSession(models.Model):
