@@ -239,6 +239,9 @@ class Module(models.Model):
     def get_export_attendance_sheet_url(self):
         return reverse('export_attendance_sheet', args=[self.code, self.year])
 
+    def get_export_examiner_pack_url(self):
+        return reverse('export_examiner_pack', args=[self.code, self.year])
+
     def get_delete_self_url(self):
         return reverse('delete_module', args=[self.code, self.year])
 

@@ -157,6 +157,11 @@ urlpatterns += patterns(
         name='export_exam_board_overview'
     ),
     url(
+        r'^export_examiner_pack/(\w+)/(\d{4})/$',
+        'export_examiner_pack',
+        name='export_examiner_pack'
+    ),
+    url(
         r'^export_marks/(\w+)/(\d{4})/$',
         'export_marks_for_module',
         name='export_marks_for_module'

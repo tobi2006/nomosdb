@@ -4,7 +4,6 @@ from django.utils import timezone
 from feedback.forms import *
 from feedback.models import *
 from main.models import *
-from main.views import is_staff, is_student
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
@@ -15,6 +14,20 @@ from reportlab.platypus.flowables import PageBreak
 
 # Forms for entering feedback
 
+def is_staff(user):
+    try:
+        staff = user.staff
+        return True
+    except:
+        return False
+
+
+def is_student(user):
+    try:
+        student = user.student
+        return True
+    except:
+        return False
 
 def na(request):
     return render(request, 'na.html', {})

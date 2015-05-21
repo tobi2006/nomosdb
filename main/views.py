@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from feedback.views import group_presentation_marksheet, individual_marksheet
 from main.forms import *
 from main.functions import (
     week_number, week_starting_date, formatted_date, academic_year_string
@@ -21,7 +22,14 @@ from pytz import utc
 from random import shuffle, choice
 from string import ascii_letters, digits
 from reportlab.platypus import (
-    Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle, Image
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+    Image,
+    ListFlowable,
+    ListItem
 )
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
@@ -2589,7 +2597,11 @@ def elements_for_module_mark_overview(
     linecounter = 0
     highlight_yellow = []
     highlight_red = []
+    all_performances = []
     for performance in module.performances.all():
+        if performance.student.active:
+            all_performances.append(performance)
+    for performance in all_performances:
         linecounter += 1
         line = [
             Paragraph(performance.student.name(), styles['Normal']),
@@ -2693,6 +2705,24 @@ def logo():
     return image
 
 
+def paragraph(text, bold=False):
+    """Makes a platypus Paragraph out of a string"""
+    if bold:
+        string = '<b>' + text + '</b>'
+    else:
+        string = text
+    styles = getSampleStyleSheet()
+    return Paragraph(string, styles['Normal'])
+
+
+def make_headline(string, headingstyle='Heading2', alignment='center'):
+    """Returns a proper paragraph for the header line"""
+    styles = getSampleStyleSheet()
+    tmp = '<para alignment = "' + alignment + '">' + string + '</para>'
+    result = Paragraph(tmp, styles[headingstyle])
+    return result
+
+
 @login_required
 @user_passes_test(is_staff)
 def export_marks_for_module(request, code, year):
@@ -2710,7 +2740,7 @@ def export_marks_for_module(request, code, year):
     doc = SimpleDocTemplate(response)
     doc.pagesize = landscape(A4)
     story = []
-    elements = elements_for_module_mark_overview(module)
+    elements = elements_for_module_mark_overview(module, highlight=True)
     for element in elements:
         story.append(element)
     styles = getSampleStyleSheet()
@@ -2987,6 +3017,295 @@ def export_changed_marks(request, subject_slug, year, level, c_y, c_m, c_d):
     doc.build(elements)
     return response
 
+
+@login_required
+@user_passes_test(is_staff)
+def export_examiner_pack(request, code, year):
+    """Prepares a sample pack for the external examiner"""
+    module = Module.objects.get(code=code, year=year)
+    response = HttpResponse(content_type='application/pdf')
+    filename = module.title.replace(" ", "_")
+    filename += "_Sample_Pack_" + str(module.year) + ".pdf"
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+    performances = list(
+        Performance.objects.filter(
+            module=module, student__active=True
+        )
+    )
+    if len(performances) < 25:
+        sample_size = 5
+    else:
+        sample_size = 10
+    per_range = round(sample_size / 5)  # Fail, 40, 50, 60, 70+
+    sample = {}
+    for assessment in module.assessments.all():
+        shuffle(performances)
+        first = []
+        two_one = []
+        two_two = []
+        third = []
+        fail = []
+        leftover = []
+        complete = False
+        for performance in performances:
+            assessment_result = AssessmentResult.objects.get(
+                part_of=performance,
+                assessment=assessment
+            )
+            mark = assessment_result.mark
+            if mark:
+                if mark > 69:
+                    if len(first) < per_range:
+                        first.append(assessment_result)
+                    else:
+                        leftover.append(assessment_result)
+                elif mark > 59:
+                    if len(two_one) < per_range:
+                        two_one.append(assessment_result)
+                    else:
+                        leftover.append(assessment_result)
+                elif mark > 49:
+                    if len(two_two) < per_range:
+                        two_two.append(assessment_result)
+                    else:
+                        leftover.append(assessment_result)
+                elif mark > 39:
+                    if len(third) < per_range:
+                        third.append(assessment_result)
+                    else:
+                        leftover.append(assessment_result)
+                else:
+                    if len(fail) < per_range:
+                        fail.append(assessment_result)
+                    else:
+                        leftover.append(assessment_result)
+        this_sample = first + two_one + two_two + third + fail
+        while len(this_sample) < sample_size:
+            if leftover:
+                this_sample.append(leftover.pop())
+        this_sample.sort(
+            key=lambda x: x.mark,
+            reverse=True
+        )
+        sample[assessment] = this_sample
+    title = make_headline('Checklist, not part of the pack')
+    elements.append(title)
+    assessment_string = (
+        'Assessments (at the end, together with the marksheets included in ' +
+        'this bundle)')
+    data = [
+        [
+            paragraph('Make sure to add the following to this pack', True),
+            '', '', ''
+        ],
+        [paragraph('The module handbook (after the title page)'), '', '', ''],
+        [paragraph('The module evaluation forms (at the end)'), '', '', ''],
+        [paragraph(assessment_string, bold=True), '', '', '']
+    ]
+    headline = [0, 2]
+    only_one = [1]
+    counter = 2
+    for assessment in module.assessments.all():
+        if assessment.title == 'Exam':
+            blind = True
+        else:
+            blind = False
+        newline = True
+        counter += 1
+        title = paragraph(assessment.title, bold=True)
+        headline.append(counter)
+        data.append([title, '', '', ''])
+        counter += 1
+        title = paragraph('Instructions for ' + assessment.title)
+        data.append([title, '', '', ''])
+        only_one.append(counter)
+        this_sample = sample[assessment]
+        for result in this_sample:
+            student = result.part_of.first().student
+            if newline:
+                counter += 1
+                if blind:
+                    first_column = student.exam_id
+                else:
+                    first_column = student.short_name()
+                newline = False
+            else:
+                if blind:
+                    data.append(
+                        [
+                            first_column,
+                            '',
+                            student.exam_id,
+                            ''
+                        ]
+                    )
+                else:
+                    data.append(
+                        [
+                            first_column,
+                            '',
+                            student.short_name(),
+                            ''
+                        ]
+                    )
+                newline = True
+    t = Table(data, colWidths=(200, 20, 200, 20))
+    style = [
+        ('BOX', (0, 1), (-1, -1), 0.25, colors.black),
+        ('INNERGRID', (0, 1), (-1, -1), 0.25, colors.black),
+        ]
+    for line in headline:
+        style.append(('SPAN', (0, line), (-1, line)))
+    for line in only_one:
+        style.append(('SPAN', (0, line), (-2, line)))
+    t.setStyle(TableStyle(style))
+    elements.append(t)
+    elements.append(Spacer(1, 20))
+    comment = (
+        'The pieces of coursework chosen here are a sample across ' +
+        'the marking bands. Feel free to replace them if you ' +
+        'think others are better suited for the external examiners, but ' +
+        'in that case make sure to replace them with papers in the ' +
+        'same band and manually replace the marksheet.'
+    )
+    elements.append(paragraph(comment))
+
+    # Title page
+    elements.append(PageBreak())
+    elements.append(Spacer(1, 10))
+    elements.append(logo())
+    elements.append(Spacer(1, 20))
+    title = make_headline(module.__str__(), 'Heading1')
+    elements.append(title)
+    elements.append(Spacer(1, 20))
+    if len(module.eligible) == 1:
+        tmp = 'Year ' + module.eligible
+    elif len(module.eligible) == 2:
+        tmp = 'Years ' + module.eligible[0] + ' and ' + module.eligible[1]
+    else:
+        tmp = (
+            'Years ' +
+            module.eligible[0] +
+            ', ' +
+            module.eligible[1] +
+            ' and ' +
+            module.eligible[2]
+            )
+    level = make_headline(tmp)
+    elements.append(level)
+    elements.append(Spacer(1, 20))
+    subtitle = make_headline('External Examiners Pack')
+    elements.append(subtitle)
+    elements.append(Spacer(1, 40))
+    elements.append(make_headline('Content', 'Heading3', alignment="left"))
+    elements.append(Spacer(1, 20))
+    samplestring = (
+        'A representative sample (a range of mark allocations in all ' +
+        'bands of ' +
+        str(sample_size) +
+        ' with relevant feedback sheets'
+    )
+    elements.append(
+        ListFlowable(
+            [
+                paragraph('Module Outline'),
+                paragraph('Overview of Mark Allocation'),
+                paragraph('A list of all marks in the module'),
+                paragraph(samplestring),
+                paragraph('The Module Evaluation forms')
+            ],
+            bulletType='1'
+        )
+    )
+    elements.append(PageBreak())
+    title = make_headline('Mark Allocation')
+    elements.append(title)
+    elements.append(Spacer(1, 20))
+    no_of_first = 0
+    no_of_two_one = 0
+    no_of_two_two = 0
+    no_of_third = 0
+    no_of_fail = 0
+    for performance in performances:
+        result = performance.average
+        if result:
+            if result > 69:
+                no_of_first += 1
+            elif result > 59:
+                no_of_two_one += 1
+            elif result > 49:
+                no_of_two_two += 1
+            elif result > 39:
+                no_of_third += 1
+            else:
+                no_of_fail += 1
+    first_f = float(no_of_first)
+    two_one_f = float(no_of_two_one)
+    two_two_f = float(no_of_two_two)
+    third_f = float(no_of_third)
+    fail_f = float(no_of_fail)
+    first_percent = round(((first_f / len(performances)) * 100), 1)
+    two_one_percent = round(((two_one_f / len(performances)) * 100), 1)
+    two_two_percent = round(((two_two_f / len(performances)) * 100), 1)
+    third_percent = round(((third_f / len(performances)) * 100), 1)
+    fail_percent = round(((fail_f / len(performances)) * 100), 1)
+    data = []
+    data.append(['Range', 'Amount', 'Percentage'])
+    data.append(['70 +', no_of_first, first_percent])
+    data.append(['60-69', no_of_two_one, two_one_percent])
+    data.append(['50-59', no_of_two_two, two_two_percent])
+    data.append(['40-49', no_of_third, third_percent])
+    data.append(['Fail', no_of_fail, fail_percent])
+    t = Table(data)
+    style = [
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+    ]
+    t.setStyle(TableStyle(style))
+    elements.append(t)
+    #elements.append(PageBreak())
+    elements.append(Spacer(1, 20))
+    title = make_headline('Module Marks')
+    elements.append(title)
+    elements.append(Spacer(1, 20))
+    all_marks = elements_for_module_mark_overview(module, highlight=True)
+    for element in all_marks:
+        elements.append(element)
+    elements.append(Spacer(1, 10))
+    legend = (
+        '<em>Yellow highlighting indicates a resit / resubmission ' +
+        'is necessary, ' +
+        'Red highlighting indicates that a resit is necessary for QLD ' +
+        'purposes only.</em>'
+    )
+    elements.append(paragraph(legend))
+    elements.append(PageBreak())
+    for assessment in sample:
+        if assessment.marksheet_type:
+            for result in sample[assessment]:
+                marksheet = []
+                performance = result.part_of.first()
+                student = performance.student
+                if assessment.group_assessment:
+                    marksheet = group_presentation_marksheet(
+                        assessment, student, 'first')
+                else:
+                    marksheet = individual_marksheet(
+                        assessment, student, 'first')
+                if marksheet:
+                    for element in marksheet:
+                        elements.append(element)
+                    elements.append(PageBreak())
+
+    doc.build(elements)
+    return response
+
+        
 def cause_error(request):
     """Can be called to test whether the sysadmin gets the error mail"""
     a = 5/0
