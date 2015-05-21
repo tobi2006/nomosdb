@@ -3094,74 +3094,110 @@ def export_examiner_pack(request, code, year):
         sample[assessment] = this_sample
     title = make_headline('Checklist, not part of the pack')
     elements.append(title)
+    elements.append(Spacer(1, 20))
+    elements.append(paragraph(
+        'Make sure to add the following to this pack', bold=True)
+    )
+    elements.append(Spacer(1, 10))
     assessment_string = (
-        'Assessments (at the end, together with the marksheets included in ' +
-        'this bundle)')
+      'Assessments (at the end, together with the marksheets included in ' +
+      'this bundle)'
+    )
     data = [
-        [
-            paragraph('Make sure to add the following to this pack', True),
-            '', '', ''
-        ],
-        [paragraph('The module handbook (after the title page)'), '', '', ''],
-        [paragraph('The module evaluation forms (at the end)'), '', '', ''],
-        [paragraph(assessment_string, bold=True), '', '', '']
+        [paragraph('The module handbook (after the title page)'), ''],
+        [paragraph('The module evaluation forms (at the end)'), ''],
+        [paragraph(assessment_string, bold=True), '']
     ]
-    headline = [0, 2]
-    only_one = [1]
+    single_line = [2]
     counter = 2
-    for assessment in module.assessments.all():
-        if assessment.title == 'Exam':
-            blind = True
-        else:
-            blind = False
-        newline = True
+    for assessment in sample:
         counter += 1
-        title = paragraph(assessment.title, bold=True)
-        headline.append(counter)
-        data.append([title, '', '', ''])
+        data.append([paragraph(assessment.title, bold=True), ''])
+        single_line.append(counter)
         counter += 1
-        title = paragraph('Instructions for ' + assessment.title)
-        data.append([title, '', '', ''])
-        only_one.append(counter)
-        this_sample = sample[assessment]
-        for result in this_sample:
+        data.append([paragraph('Instructions for ' + assessment.title), ''])
+        for result in sample[assessment]:
+            counter += 1
             student = result.part_of.first().student
-            if newline:
-                counter += 1
-                if blind:
-                    first_column = student.exam_id
-                else:
-                    first_column = student.short_name()
-                newline = False
+            if assessment.title == 'Exam':
+                data.append([student.exam_id, ''])
             else:
-                if blind:
-                    data.append(
-                        [
-                            first_column,
-                            '',
-                            student.exam_id,
-                            ''
-                        ]
-                    )
-                else:
-                    data.append(
-                        [
-                            first_column,
-                            '',
-                            student.short_name(),
-                            ''
-                        ]
-                    )
-                newline = True
-    t = Table(data, colWidths=(200, 20, 200, 20))
+                data.append([paragraph(student.short_name()), ''])
+    t = Table(data, colWidths=(400, 20))
     style = [
-        ('BOX', (0, 1), (-1, -1), 0.25, colors.black),
-        ('INNERGRID', (0, 1), (-1, -1), 0.25, colors.black),
-        ]
-    for line in headline:
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+    ]
+    for line in single_line:
         style.append(('SPAN', (0, line), (-1, line)))
-    for line in only_one:
-        style.append(('SPAN', (0, line), (-2, line)))
+    #   assessment_string = (
+    #        'Assessments (at the end, together with the marksheets included in ' +
+    #        'this bundle)')
+    #    data = [
+    #        [
+    #            paragraph('Make sure to add the following to this pack', True),
+    #            '', '', ''
+    #        ],
+    #        [paragraph('The module handbook (after the title page)'), '', '', ''],
+    #        [paragraph('The module evaluation forms (at the end)'), '', '', ''],
+    #        [paragraph(assessment_string, bold=True), '', '', '']
+    #    ]
+    #    headline = [0, 2]
+    #    only_one = [1]
+    #    counter = 2
+    #    for assessment in module.assessments.all():
+    #        if assessment.title == 'Exam':
+    #            blind = True
+    #        else:
+    #            blind = False
+    #        newline = True
+    #        counter += 1
+    #        title = paragraph(assessment.title, bold=True)
+    #        headline.append(counter)
+    #        data.append([title, '', '', ''])
+    #        counter += 1
+    #        title = paragraph('Instructions for ' + assessment.title)
+    #        data.append([title, '', '', ''])
+    #        only_one.append(counter)
+    #        this_sample = sample[assessment]
+    #        for result in this_sample:
+    #            student = result.part_of.first().student
+    #            if newline:
+    #                counter += 1
+    #                if blind:
+    #                    first_column = student.exam_id
+    #                else:
+    #                    first_column = student.short_name()
+    #                newline = False
+    #            else:
+    #                if blind:
+    #                    data.append(
+    #                        [
+    #                            first_column,
+    #                            '',
+    #                            student.exam_id,
+    #                            ''
+    #                        ]
+    #                    )
+    #                else:
+    #                    data.append(
+    #                        [
+    #                            first_column,
+    #                            '',
+    #                            student.short_name(),
+    #                            ''
+    #                        ]
+    #                    )
+    #                newline = True
+    #    t = Table(data, colWidths=(200, 20, 200, 20))
+    #    style = [
+    #        ('BOX', (0, 1), (-1, -1), 0.25, colors.black),
+    #        ('INNERGRID', (0, 1), (-1, -1), 0.25, colors.black),
+    #        ]
+    #    for line in headline:
+    #        style.append(('SPAN', (0, line), (-1, line)))
+    #    for line in only_one:
+    #        style.append(('SPAN', (0, line), (-2, line)))
     t.setStyle(TableStyle(style))
     elements.append(t)
     elements.append(Spacer(1, 20))
