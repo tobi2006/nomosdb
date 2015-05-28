@@ -3309,6 +3309,60 @@ def export_nors(request, subject_slug, year, level):
         'Details of Examinations to be taken (sit/resit) and / or ' +
         'Coursework to be submitted / resubmitted'
     )
+    notes_str = (
+        'The above includes details of all the modules you have failed and ' +
+        'what you are required to do to redeem these failures. Re-sits ' +
+        'will result in the module mark being capped at 40%.'
+    )
+    note_1 = (
+        'Where appropriate, and when extenuating circumstances have ' +
+        'been accepted, the above also includes details of any assignments ' +
+        "for which you have been given the opportunity to 'sit' (i.e. a " +
+        'further opportunity to attempt an assignment that will not result ' +
+        'in the module mark being capped at 40%).'
+    )
+    note_2 = (
+        'All coursework must be handed in on or before Monday ' +
+        '1 September, 2014 @ 4:00 p.m.'
+    )
+    note_3 = (
+        'The re-sit examination period is Monday 1 September to ' +
+        'Friday 5 September, 2014.'
+    )
+    note_4 = (
+        '<b>' +
+        'Details of the work you are required to do will appear ' +
+        'on the relevant programme Blackboard.' +
+        '</b>'
+    )
+    note_5 = (
+        'At <b>Level 4 / Level 5</b> you must pass all modules. You may be ' +
+        'compensated for a failure in a 10 or 20-credit module if ' +
+        'you have achieved at least 35% in that module and gained ' +
+        'an overall average of 40% for the year.'
+    )
+    note_6 = (
+        'At <b>Level 6</b> you have to pass modules to the value of 100 ' +
+        'credits before you can progress / gain an award; the minimum ' +
+        'mark for any failed module is 35%.'
+    )
+    last_sentence = (
+        'If you have any queries ' +
+        'or concerns in relation to the information given above, you ' +
+        'should contact your Programme Director or Department Office ' +
+        'as soon as possible.'
+    )
+
+    note_list = [
+                paragraph(note_1),
+                paragraph(note_2),
+                paragraph(note_3),
+                paragraph(note_4),
+                paragraph(note_5),
+                paragraph(note_6),
+    ]
+
+        
     for student in students:
         problem_performances = []
         for performance in student.performances.all():
@@ -3386,7 +3440,12 @@ def export_nors(request, subject_slug, year, level):
                 )
             )
             elements.append(table)
-
+            elements.append(Spacer(1, 20))
+            elements.append(make_headline('Notes:', 'Heading4', 'left'))
+            elements.append(Spacer(1, 10))
+            elements.append(ListFlowable(note_list, bulletType='1'))
+            elements.append(Spacer(1, 10))
+            elements.append(paragraph(last_sentence))
             elements.append(PageBreak())
     doc.build(elements)
     return response
