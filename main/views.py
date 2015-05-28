@@ -3130,74 +3130,6 @@ def export_examiner_pack(request, code, year):
     ]
     for line in single_line:
         style.append(('SPAN', (0, line), (-1, line)))
-    #   assessment_string = (
-    #        'Assessments (at the end, together with the marksheets included in ' +
-    #        'this bundle)')
-    #    data = [
-    #        [
-    #            paragraph('Make sure to add the following to this pack', True),
-    #            '', '', ''
-    #        ],
-    #        [paragraph('The module handbook (after the title page)'), '', '', ''],
-    #        [paragraph('The module evaluation forms (at the end)'), '', '', ''],
-    #        [paragraph(assessment_string, bold=True), '', '', '']
-    #    ]
-    #    headline = [0, 2]
-    #    only_one = [1]
-    #    counter = 2
-    #    for assessment in module.assessments.all():
-    #        if assessment.title == 'Exam':
-    #            blind = True
-    #        else:
-    #            blind = False
-    #        newline = True
-    #        counter += 1
-    #        title = paragraph(assessment.title, bold=True)
-    #        headline.append(counter)
-    #        data.append([title, '', '', ''])
-    #        counter += 1
-    #        title = paragraph('Instructions for ' + assessment.title)
-    #        data.append([title, '', '', ''])
-    #        only_one.append(counter)
-    #        this_sample = sample[assessment]
-    #        for result in this_sample:
-    #            student = result.part_of.first().student
-    #            if newline:
-    #                counter += 1
-    #                if blind:
-    #                    first_column = student.exam_id
-    #                else:
-    #                    first_column = student.short_name()
-    #                newline = False
-    #            else:
-    #                if blind:
-    #                    data.append(
-    #                        [
-    #                            first_column,
-    #                            '',
-    #                            student.exam_id,
-    #                            ''
-    #                        ]
-    #                    )
-    #                else:
-    #                    data.append(
-    #                        [
-    #                            first_column,
-    #                            '',
-    #                            student.short_name(),
-    #                            ''
-    #                        ]
-    #                    )
-    #                newline = True
-    #    t = Table(data, colWidths=(200, 20, 200, 20))
-    #    style = [
-    #        ('BOX', (0, 1), (-1, -1), 0.25, colors.black),
-    #        ('INNERGRID', (0, 1), (-1, -1), 0.25, colors.black),
-    #        ]
-    #    for line in headline:
-    #        style.append(('SPAN', (0, line), (-1, line)))
-    #    for line in only_one:
-    #        style.append(('SPAN', (0, line), (-2, line)))
     t.setStyle(TableStyle(style))
     elements.append(t)
     elements.append(Spacer(1, 20))
@@ -3341,6 +3273,125 @@ def export_examiner_pack(request, code, year):
     doc.build(elements)
     return response
 
+
+@login_required
+@user_passes_test(is_admin)
+def export_nors(request, subject_slug, year, level):
+    """Exports letters to notify students of their results"""
+    levelstr = str(int(level) + 3)
+    response = HttpResponse(content_type='application/pdf')
+    filename = (
+        'NORs_Year_' +
+        levelstr +
+        '_(' +
+        academic_year_string(year) +
+        ').pdf'
+    )
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+    all_students = Student.objects.filter(active=True, year=level)
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    students = []
+    for student in all_students:
+        if (
+                student.course and
+                subject_area in student.course.subject_areas.all()
+        ):
+            students.append(student)
+    headline = (
+        'NOTIFICATION OF RE-SITS / SITS FORM ' +
+        academic_year_string(year)
+    )
+    details_str = (
+        'Details of Examinations to be taken (sit/resit) and / or ' +
+        'Coursework to be submitted / resubmitted'
+    )
+    for student in students:
+        problem_performances = []
+        for performance in student.performances.all():
+            if performance.module.year == int(year):
+                print('Huhu')
+                if performance.resit_required():
+                    problem_performances.append(performance)
+                elif performance.qld_resit_required():
+                    problem_performances.append(performance)
+        if problem_performances:
+            elements.append(Spacer(1, 10))
+            elements.append(logo())
+            elements.append(Spacer(1, 20))
+            elements.append(make_headline(headline))
+            data = [
+                [
+                    paragraph('STUDENT NAME', bold=True),
+                    paragraph(student.name())
+                ],
+                [
+                    paragraph('STUDENT ID', bold=True),
+                    paragraph(student.student_id)
+                ],
+                [
+                    paragraph('PROGRAMME NAME', bold=True),
+                    paragraph(student.course.title)
+                ],
+                [
+                    paragraph('LEVEL OF STUDY', bold=True),
+                    paragraph(levelstr)
+                ],
+                [
+                    paragraph('SCHOOL', bold=True),
+                    paragraph('Law, Criminal Justice and Computing')
+                ],
+                [
+                    paragraph('PROGRAMME DIRECTOR', bold=True),
+                    paragraph('Ben Waters')
+                ],
+                [
+                    paragraph('DATE', bold=True),
+                    paragraph('1 July 2015')
+                ]
+            ]
+            table = Table(data)
+            table.setStyle(
+                TableStyle([
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black)]
+                )
+            )
+            elements.append(table)
+            elements.append(Spacer(1, 10))
+            data = [
+                [
+                    paragraph('MODULE CODE', bold=True),
+                    paragraph('MODULE TITLE', bold=True),
+                    paragraph(details_str, bold=True)
+                ]
+            ]
+            for performance in problem_performances:
+                resit_string = 'Buhu'
+                data.append(
+                    [
+                        performance.module.code,
+                        performance.module.title,
+                        resit_string
+                    ]
+                )
+            table = Table(data)
+            table.setStyle(
+                TableStyle([
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black)]
+                )
+            )
+            elements.append(table)
+
+            elements.append(PageBreak())
+    doc.build(elements)
+    return response
+
+    
         
 def cause_error(request):
     """Can be called to test whether the sysadmin gets the error mail"""
