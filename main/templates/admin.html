@@ -221,7 +221,6 @@
             var month_str = new_date.substring(3, 5);
             var year_str = new_date.substring(6, 10);
             var new_date_url = year_str + '/' + month_str + '/' + day_str;
-            console.log(new_date_url);
             $(".marks_from_date").each(function() {
                 url = $(this).attr("href");
                 new_url = url.replace(current_date_url, new_date_url);
