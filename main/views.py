@@ -2745,7 +2745,7 @@ def export_marks_for_module(request, code, year):
         story.append(element)
     styles = getSampleStyleSheet()
     d = formatted_date(timezone.now().date())
-    datenow = "Exported from MySDS, the CCCU Law DB on " + d
+    datenow = "Exported from NomosDB, the CCCU Law DB on " + d
     story.append(Spacer(1, 20))
     story.append(Paragraph(datenow, styles['Normal']))
     story.append(PageBreak())
@@ -2824,6 +2824,130 @@ def export_exam_board_overview(request, subject_slug, year, level):
             for element in processed_module:
                 elements.append(element)
             elements.append(PageBreak())
+    doc.build(elements)
+    return response
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_problem_students(request, subject_slug, year, level):
+    """Gives an overview of all problematic students
+    
+    This includes everyone with a failed module, a concession or a QLD fail.
+    """
+    response = HttpResponse(content_type='application/pdf')
+    levelstr = str(int(level) + 3)
+    filename = (
+        'Problem_Results' +
+        academic_year_string(year) +
+        '_Level_' +
+        levelstr +
+        '.pdf'
+    )
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    elements = []
+    problem_performances = {}
+    current_year = int(Setting.objects.get(name="current_year").value)
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    students = []
+    if int(year) < current_year:
+        difference = current_year - int(year)
+        level = int(level) - difference
+    else:
+        level = int(level)
+    all_students = Student.objects.filter(active=True, year=level)
+    for student in all_students:
+        if (
+                student.course and
+                subject_area in student.course.subject_areas.all()
+        ):
+            students.append(student)
+    problem_students = []
+    for student in students:
+        for performance in student.performances.all():
+            if performance.module.year == int(year):
+                resit_required = performance.results_eligible_for_resit()
+                if resit_required:
+                    if student in problem_performances:
+                        problem_performances[student].append(performance)
+                    else:
+                        problem_performances[student] = [performance,]
+                    if student not in problem_students:
+                        problem_students.append(student)
+    if problem_students:
+        headerstr = 'Problematic Results Level ' + levelstr
+        elements.append(make_headline(headerstr))
+        now = timezone.now()
+        today = formatted_date(now)
+        datestring = 'Exported on ' + today
+        elements.append(make_headline(datestring, 'Heading4'))
+    problem_students.sort(key=lambda x: x.last_name)
+    for student in problem_students:
+        header = student.short_name() + ' (' + student.student_id + ')'
+        elements.append(make_headline(header, 'Heading3'))
+        for performance in problem_performances[student]:
+            header = performance.module.__str__()
+            elements.append(make_headline(header, 'Heading4'))
+            data = []
+            for result in performance.assessment_results.all():
+                assessment = result.assessment
+                if result in performance.results_eligible_for_resit():
+                    if assessment.title == 'Exam':
+                        if result.concessions == 'G':
+                            data.append(['Exam', result.mark, 'Sit'])
+                        if result.concessions == 'P':
+                            data.append(
+                                ['Exam', result.mark, 'Concessions Pending']
+                            )
+                        else:
+                            if performance.average < PASSMARK:
+                                data.append(['Exam', result.mark, 'Resit'])
+                            else:
+                                data.append(
+                                    ['Exam', result.mark, 'Resit (QLD)']
+                                )
+
+                    else:
+                        if result.concessions == 'G':
+                            data.append(
+                                [assessment.title, result.mark, 'Submit']
+                            )
+                        if result.concessions == 'P':
+                            data.append([
+                                assessment.title,
+                                result.mark,
+                                'Concessions Pending'
+                            ])
+                        else:
+                            if performance.average < PASSMARK:
+                                data.append(
+                                    [assessment.title, result.mark, 'Resubmit']
+                                )
+                            else:
+                                data.append(
+                                    [
+                                        assessment.title,
+                                        result.mark,
+                                        'Resubmit (QLD)'
+                                    ]
+                                )
+                else:
+                    data.append([assessment.title, result.mark, ''])
+            avg_h = paragraph('Average', bold=True)
+            avg = paragraph(str(performance.average), bold=True)
+            data.append([avg_h, avg, ''])
+            data.append(['Attendance', performance.count_attendance(), ''])
+            t = Table(data)
+            t.setStyle(TableStyle(
+                [
+                    ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                    ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+                ]
+            ))
+            elements.append(t)
+            elements.append(Spacer(1, 25))
     doc.build(elements)
     return response
 
@@ -3450,7 +3574,6 @@ def export_nors(request, subject_slug, year, level):
     doc.build(elements)
     return response
 
-    
         
 def cause_error(request):
     """Can be called to test whether the sysadmin gets the error mail"""

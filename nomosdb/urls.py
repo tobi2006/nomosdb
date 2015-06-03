@@ -172,6 +172,11 @@ urlpatterns += patterns(
         name='export_nors'
     ),
     url(
+        r'^export_problem_students/([-\w]+)/(\d{4})/(\w+)/$',
+        'export_problem_students',
+        name='export_problem_students'
+    ),
+    url(
         r'^export_tier_4_attendance/([-\w]+)/(\d{4})/$',
         'export_tier_4_attendance',
         name='export_tier_4_attendance'
