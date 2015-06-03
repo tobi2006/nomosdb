@@ -1134,8 +1134,9 @@ class Performance(models.Model):
                     eligible_results.append(result)
             if self.module.foundational and self.student.qld:
                 try:
-                    if result.mark < PASSMARK:
-                        eligible_results.append(result)
+                    if result not in eligible_results:
+                        if result.mark < PASSMARK:
+                            eligible_results.append(result)
                 except TypeError:
                     pass
         return eligible_results

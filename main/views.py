@@ -2897,7 +2897,7 @@ def export_problem_students(request, subject_slug, year, level):
                     if assessment.title == 'Exam':
                         if result.concessions == 'G':
                             data.append(['Exam', result.mark, 'Sit'])
-                        if result.concessions == 'P':
+                        elif result.concessions == 'P':
                             data.append(
                                 ['Exam', result.mark, 'Concessions Pending']
                             )
@@ -2914,7 +2914,7 @@ def export_problem_students(request, subject_slug, year, level):
                             data.append(
                                 [assessment.title, result.mark, 'Submit']
                             )
-                        if result.concessions == 'P':
+                        elif result.concessions == 'P':
                             data.append([
                                 assessment.title,
                                 result.mark,
@@ -3491,7 +3491,6 @@ def export_nors(request, subject_slug, year, level):
         problem_performances = []
         for performance in student.performances.all():
             if performance.module.year == int(year):
-                print('Huhu')
                 if performance.resit_required():
                     problem_performances.append(performance)
                 elif performance.qld_resit_required():
@@ -3548,14 +3547,44 @@ def export_nors(request, subject_slug, year, level):
                 ]
             ]
             for performance in problem_performances:
-                resit_string = 'Buhu'
-                data.append(
-                    [
-                        performance.module.code,
-                        performance.module.title,
-                        resit_string
-                    ]
-                )
+                for result in performance.results_eligible_for_resit():
+                    assessment = result.assessment
+                    if assessment.title == 'Exam':
+                        if result.concessions == 'G':
+                            resit_string = 'Sit Exam'
+                        elif result.concessions == 'P':
+                            resit_string = 'Concession for Exam Pending'
+                        else:
+                            if performance.average < PASSMARK:
+                                resit_string = 'Resit Exam'
+                            else:
+                                resit_string = 'Resit Exam for QLD Purposes'
+                    else:
+                        if result.concessions == 'G':
+                            print(performance.student.short_name())
+                            resit_string = 'Submit ' + assessment.title
+                        elif result.concessions == 'P':
+                            resit_string = (
+                                'Concessions for ' +
+                                assessment.title +
+                                ' Pending'
+                            )
+                        else:
+                            if performance.average < PASSMARK:
+                                resit_string = 'Resubmit ' + assessment.title
+                            else:
+                                resit_string = (
+                                    'Resubmit ' +
+                                    assessment.title +
+                                    ' for QLD Purposes'
+                                )
+                    data.append(
+                        [
+                            performance.module.code,
+                            performance.module.title,
+                            resit_string
+                        ]
+                    )
             table = Table(data)
             table.setStyle(
                 TableStyle([
