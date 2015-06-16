@@ -1920,14 +1920,14 @@ def mark_all(request, code, year, slug, attempt):
                             performance.student.student_id +
                             '" type="number" '
                         )
-                        if mark:
+                        if mark or mark == 0:
                             form_string += (
                                 'value="' +
                                 str(mark) +
                                 '" '
                             )
                         form_string += '/>'
-                        if mark:
+                        if mark or mark == 0:
                             form_string += (
                                 '<small>Previously: ' +
                                 str(mark) +
@@ -2012,7 +2012,7 @@ def mark_all_anonymously(request, code, year, slug, attempt):
                     performance.student.exam_id +
                     '" type="number" '
                 )
-                if mark:
+                if mark or mark == 0:
                     form_string += (
                         'value="' +
                         str(mark) +
@@ -3160,7 +3160,9 @@ def export_examiner_pack(request, code, year):
             module=module, student__active=True
         )
     )
-    if len(performances) < 25:
+    if len(performances) < 5:
+        sample_size = len(performances)
+    elif len(performances) < 25:
         sample_size = 5
     else:
         sample_size = 10
@@ -3456,8 +3458,8 @@ def export_nors(request, subject_slug, year, level):
     note_4 = (
         '<b>' +
         'Details of the work you are required to do will appear ' +
-        'on the relevant programme Blackboard.' +
-        '</b>'
+        'on the relevant programme Blackboard. It is your responsibility ' +
+        'to check what you need to do.</b>'
     )
     note_5 = (
         'At <b>Level 4 / Level 5</b> you must pass all modules. You may be ' +
@@ -3482,8 +3484,8 @@ def export_nors(request, subject_slug, year, level):
                 paragraph(note_2),
                 paragraph(note_3),
                 paragraph(note_4),
-                paragraph(note_5),
-                paragraph(note_6),
+                # paragraph(note_5),
+                # paragraph(note_6),
     ]
 
         
