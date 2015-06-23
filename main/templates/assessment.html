@@ -100,6 +100,39 @@ $(document).ready(function() {
         format: "dd/mm/yyyy",
         weekstart: 1
     });
+
+{% if not edit %}
+
+    $("#id_max_word_count").on('keyup change', function() {
+        var value = $(this).val();
+        $("#id_resit_max_word_count").val(value);
+    });
+
+    $("#id_marksheet_type").change(function() {
+        var value = $(this).val();
+        $("#id_resit_marksheet_type").val(value);
+    });
+
+    $("#id_co_marking").click(function() {
+        if ($(this).is(':checked')) {
+            $("#id_resit_co_marking").prop('checked', true);
+        }
+        else {
+            $("#id_resit_co_marking").prop('checked', false);
+        };
+    });
+
+    $("#id_group_assessment").click(function() {
+        if ($(this).is(':checked')) {
+            $("#id_resit_group_assessment").prop('checked', true);
+        }
+        else {
+            $("#id_resit_group_assessment").prop('checked', false);
+        };
+    });
+    
+
+{% endif %}
 });
 
 {% if assessments %}
@@ -114,6 +147,7 @@ $(document).ready(function() {
         });
     {% endfor %}
 {% endif %}
+
 
 </script>
 

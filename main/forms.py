@@ -79,6 +79,7 @@ class AssessmentForm(forms.ModelForm):
         'title',
         'value',
         HTML('<div id="error" class="has-error"></div>'),
+        HTML('<h4>First Attempt</h4>'),
         Field(
             'submission_date',
             placeholder='Leave blank if not applicable',
@@ -86,9 +87,22 @@ class AssessmentForm(forms.ModelForm):
         ),
         Field('max_word_count', placeholder='Leave blank if not applicable'),
         'marksheet_type',
-        'marksheet_type_resit',
         'co_marking',
         'group_assessment',
+        HTML('<h4>Resits</h4>'),
+        Field(
+            'resit_submission_date',
+            placeholder='Leave blank if not applicable',
+            css_class="datepicker",
+        ),
+        Field(
+            'resit_max_word_count',
+            placeholder='Leave blank if not applicable'
+        ),
+        'resit_marksheet_type',
+        'resit_co_marking',
+        'resit_group_assessment',
+
         FormActions(
             Submit('save', 'Save Assessment', css_class="btn btn-primary")
         )
@@ -103,11 +117,15 @@ class AssessmentForm(forms.ModelForm):
             'title',
             'value',
             'submission_date',
+            'resit_submission_date',
             'max_word_count',
+            'resit_max_word_count',
             'marksheet_type',
-            'marksheet_type_resit',
+            'resit_marksheet_type',
             'co_marking',
-            'group_assessment'
+            'resit_co_marking',
+            'group_assessment',
+            'resit_group_assessment'
         ]
 
 

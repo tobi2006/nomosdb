@@ -426,12 +426,23 @@ class Assessment(models.Model):
         blank=True,
         null=True
     )
+    resit_submission_date = models.DateField(
+        verbose_name="Submission Date for Resit",
+        blank=True,
+        null=True
+    )
     max_word_count = models.IntegerField(
         verbose_name="Word Count",
         blank=True,
         null=True
     )
+    resit_max_word_count = models.IntegerField(
+        verbose_name="Word Count for Resit",
+        blank=True,
+        null=True
+    )
     group_assessment = models.BooleanField(default=False)
+    resit_group_assessment = models.BooleanField(default=False)
     marksheet_type = models.CharField(
         max_length=50,
         verbose_name="Marksheet Type",
@@ -439,9 +450,9 @@ class Assessment(models.Model):
         null=True,
         choices=AVAILABLE_MARKSHEETS
     )
-    marksheet_type_resit = models.CharField(
+    resit_marksheet_type = models.CharField(
         max_length=50,
-        verbose_name="Marksheet Type for Resits",
+        verbose_name="Marksheet Type for Resit",
         blank=True,
         null=True,
         choices=AVAILABLE_MARKSHEETS
@@ -450,6 +461,11 @@ class Assessment(models.Model):
         default=False,
         verbose_name=(
             "Co-Marking (all teachers on this module appear on the marksheet)")
+    )
+    resit_co_marking = models.BooleanField(
+        default=False,
+        verbose_name=(
+            "Co-Marking for Resit")
     )
     available = models.BooleanField(
         verbose_name="Students can see the mark/feedback",
@@ -844,7 +860,7 @@ class AssessmentResult(models.Model):
         first = (self.mark, edit, marksheet)
         returndict['first'] = first
         if self.eligible_for_resit():
-            ms = self.assessment.marksheet_type_resit
+            ms = self.assessment.resit_marksheet_type
             if any(ms in x for x in AVAILABLE_MARKSHEETS):
                 edit = (
                     self.assessment.get_blank_feedback_url() +
