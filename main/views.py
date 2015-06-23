@@ -3441,54 +3441,240 @@ def export_nors(request, subject_slug, year, level):
         'will result in the module mark being capped at 40%.'
     )
     note_1 = (
-        'Where appropriate, and when extenuating circumstances have ' +
-        'been accepted, the above also includes details of any assignments ' +
-        "for which you have been given the opportunity to 'sit' (i.e. a " +
-        'further opportunity to attempt an assignment that will not result ' +
-        'in the module mark being capped at 40%).'
+        'The above specifies which elements of assessment (examinations ' +
+        'and/or coursework) a) you are required to resit in order to ' +
+        'progress. (Resits will result in the module mark being capped at ' +
+        '40%) OR b) where extenuating circumstances have been accepted, ' +
+        'you have been given the opportunity to "sit". (Where you are ' +
+        'undertaking a "sit" the module mark will not be capped at 40%).'
     )
     note_2 = (
-        'All coursework must be handed in on or before Monday ' +
-        '1 September, 2014 @ 4:00 p.m.'
+        'If you undertake a resit and score a lower mark, you will be ' +
+        'awarded the highest mark from your attempts (eg if your mark ' +
+        'for an examination re-sit is 30% but your original mark was ' +
+        '35% then we shall use the 35% to inform any subsequent decision)'
     )
     note_3 = (
-        'The re-sit examination period is Monday 1 September to ' +
-        'Friday 5 September, 2014.'
+        'All coursework must be handed in on or before Tuesday 1 September ' +
+        '2015 at 4:00 pm in the usual way for your programme.'
     )
     note_4 = (
-        '<b>' +
-        'Details of the work you are required to do will appear ' +
-        'on the relevant programme Blackboard. It is your responsibility ' +
-        'to check what you need to do.</b>'
+        'The resit examination period is Tuesday 1 September to Friday 4 ' +
+        'September 2015; the examination timetable will be published via ' +
+        'CLIC (link "Exam Timetable") from the beginning of August. Please ' +
+        'ensure you are available on campus during the exam period. ' +
+        'Note: Pre-booked holidays are not a valid reason for an ' +
+        'Extenuating Circumstances request.'
     )
     note_5 = (
-        'At <b>Level 4 / Level 5</b> you must pass all modules. You may be ' +
-        'compensated for a failure in a 10 or 20-credit module if ' +
-        'you have achieved at least 35% in that module and gained ' +
-        'an overall average of 40% for the year.'
+        '<b>' +
+        'The details concerning the coursework activities will appear on ' +
+        'the relevant programme Blackboard. It is your responsibility to ' +
+        'check what you need to do.</b>'
     )
     note_6 = (
-        'At <b>Level 6</b> you have to pass modules to the value of 100 ' +
-        'credits before you can progress / gain an award; the minimum ' +
-        'mark for any failed module is 35%.'
+        'See overleaf for important information about the ' +
+        'implications of sits/resits and support for this activity.'
     )
     last_sentence = (
         'If you have any queries ' +
         'or concerns in relation to the information given above, you ' +
-        'should contact your Programme Director or Department Office ' +
+        'should contact your Programme Director or Programme Office ' +
         'as soon as possible.'
     )
-
     note_list = [
                 paragraph(note_1),
                 paragraph(note_2),
                 paragraph(note_3),
                 paragraph(note_4),
-                # paragraph(note_5),
-                # paragraph(note_6),
+                paragraph(note_5),
+                paragraph(note_6),
     ]
 
-        
+    backpage = []
+    backpage.append(make_headline('INFORMATION REGARDING SITS and RESITS'))
+    # backpage.append(Spacer(1, 10))
+    backpage.append(make_headline(
+        'Support for Resit/Sit Activity',
+        'Heading4',
+        'left'
+    ))
+    #    backpage.append(Spacer(1, 10))
+    b_bp_1_1 = (
+         'The University is providing enhanced support and guidance ' +
+         'for all students; you should receive a phone call (after results ' +
+         'are released, between 6-17 July) to answer general questions you ' +
+         'may have and to make you aware of support available.'
+    )
+    b_bp_1_2 = (
+        'The University will be running a special series of resit support ' +
+        'sessions in Canterbury during 20-24 July 2015, including access ' +
+        'to academic learning development, programmes, the library and ' +
+        'Student Support, Health and Wellbeing. You will receive more ' +
+        'information by email about how to book for these sessions.'
+    )
+    b_bp_1_3 = (
+        'You can email direct with any general queries relating to your ' +
+        'resit(s) to resitsupport@canterbury.ac.uk. For questions for ' +
+        'the Academic Learning Development team e-mail ' +
+        'learner@canterbury.ac.uk.'
+    )
+    backpage.append(ListFlowable(
+        [
+            paragraph(b_bp_1_1),
+            paragraph(b_bp_1_2),
+            paragraph(b_bp_1_3),
+        ],
+        bulletType='bullet',
+        start='-'
+    ))
+    backpage.append(make_headline(
+        'Guidance on funding and/or financial support',
+        'Heading4',
+        'left'
+    ))
+    b_bp_2_1 = (
+        'If you required any advice regarding funding, or have any ' +
+        'questions regarding financial support, please contact Student ' +
+        'Support, Health and Wellbeing via the i-zone.'
+    )
+    backpage.append(ListFlowable(
+        [
+            paragraph(b_bp_2_1),
+        ],
+        bulletType = 'bullet',
+        start='-'
+    ))
+    backpage.append(make_headline(
+        'Accommodation during Resits',
+        'Heading4',
+        'left'
+    ))
+    b_bp_3_1 = (
+        'University accommodation in Canterbury may be available to ' +
+        'you during the resit examination period. If you are interested ' +
+        'please contact the Conferencing & Events Team via ' +
+        'canterbury.conferences@canterbury.ac.uk.'
+    )
+    backpage.append(ListFlowable(
+        [
+            paragraph(b_bp_3_1),
+        ],
+        bulletType = 'bullet',
+        start='-'
+    ))
+    backpage.append(make_headline(
+        'Publishing Resit/Sit Results',
+        'Heading4',
+        'left'
+    ))
+    b_bp_4_1 = (
+        'Details of your sit/resit results will be published on the ' +
+        'student portal at noon on Friday 18 September 2015.'
+    )
+    backpage.append(ListFlowable(
+        [
+            paragraph(b_bp_4_1),
+        ],
+        bulletType = 'bullet',
+        start='-'
+    ))
+    backpage.append(make_headline(
+        'Rules for progressing and for graduating',
+        'Heading4',
+        'left'
+    ))
+    b_bp_5_1 = (
+        'For further information on the conventions for progressing, ' +
+        'or graduating, then please consult your programme handbooks ' +
+        'on the relevant Blackboard.  A summary is ' + 
+        'given below.'
+    )
+    b_bp_5_2 = (
+        'You are required to pass modules to the value of at least 100 ' +
+        'credits.  We will compensate for a failure in a module to a ' +
+        'maximum of 20-credits if you achieve at least 35% in that module ' +
+        'and have an overall module average of 40% or greater for that level.' 
+    )
+    b_bp_5_3 = (
+        'Level 6 students: Please note that you will not be able to ' +
+        'attend a September Graduation Ceremony if you have work to sit ' +
+        'or resit; you will be invited to a later ceremony, if you ' +
+        'successfully complete your studies.'
+    )
+    b_bp_5_4 = (
+        'Students taking Legal Studies or Law have different conventions ' +
+        'for some modules and you should consult your programme director ' +
+        'if you are in any doubt.'
+    )
+    backpage.append(ListFlowable(
+        [
+            paragraph(b_bp_5_1),
+            # paragraph(b_bp_5_2),
+            paragraph(b_bp_5_3),
+            # paragraph(b_bp_5_4),
+        ],
+        bulletType = 'bullet',
+        start='-'
+    ))
+    backpage.append(make_headline(
+        'Keeping us up to date',
+        'Heading4',
+        'left'
+    ))
+    b_bp_6_1 = (
+        'It is essential that you keep the University informed of any ' +
+        'address change.  All letters will be sent to the permanent home ' +
+        'address on the student database.  You can check your address ' +
+        'via CLIC.'
+    )
+    b_bp_6_2 = (
+        'It is also essential that you check your University e-mail ' +
+        'account at regular intervals.'
+    )
+    backpage.append(ListFlowable(
+        [
+            paragraph(b_bp_6_1),
+            paragraph(b_bp_6_2),
+        ],
+        bulletType = 'bullet',
+        start='-'
+    ))
+    backpage.append(make_headline(
+        'Appeals',
+        'Heading4',
+        'left'
+    ))
+    b_bp_7_1 = (
+        'For information on Academic Appeals, please refer to ' +
+        'https://cccu.canterbury.ac.uk/registry/information-for-students/' +
+        'examinations/initiating-an-academic-appeal.aspx.'
+    )
+    backpage.append(ListFlowable(
+        [
+            paragraph(b_bp_7_1)
+        ],
+        bulletType = 'bullet',
+        start='-'
+    ))
+    backpage.append(make_headline(
+        'What you should do now',
+        'Heading4',
+        'left'
+    ))
+    backpage.append(paragraph(
+        'You should check your programme blackboard for further details ' +
+        'about your assessment. If you have any concerns about undertaking ' +
+        'your resits, please contact your programme director as soon as ' +
+        'possible. You do not need to take any action at this stage to ' +
+        'confirm your attendance at the examinations.' +
+        'You will be allocated ' +
+        'a place in the examination hall and the dates of the examination ' +
+        'will be released at the start of August. You will be contacted by ' +
+        'the university to discuss any questions you have about the resit ' +
+        'process and support available.'
+    ))
+
     for student in students:
         problem_performances = []
         for performance in student.performances.all():
@@ -3498,9 +3684,9 @@ def export_nors(request, subject_slug, year, level):
                 elif performance.qld_resit_required():
                     problem_performances.append(performance)
         if problem_performances:
-            elements.append(Spacer(1, 10))
+            # elements.append(Spacer(1, 10))
             elements.append(logo())
-            elements.append(Spacer(1, 20))
+            elements.append(Spacer(1, 10))
             elements.append(make_headline(headline))
             data = [
                 [
@@ -3540,7 +3726,7 @@ def export_nors(request, subject_slug, year, level):
                 )
             )
             elements.append(table)
-            elements.append(Spacer(1, 10))
+            elements.append(Spacer(1, 5))
             data = [
                 [
                     paragraph('MODULE CODE', bold=True),
@@ -3549,28 +3735,31 @@ def export_nors(request, subject_slug, year, level):
                 ]
             ]
             for performance in problem_performances:
+                all_strings = []
                 for result in performance.results_eligible_for_resit():
                     assessment = result.assessment
                     if assessment.title == 'Exam':
                         if result.concessions == 'G':
-                            resit_string = 'Sit Exam'
+                            all_strings.append('Sit Exam')
                         elif result.concessions == 'P':
-                            resit_string = 'Concession for Exam Pending'
+                            all_strings.append('Concession for Exam Pending')
                         else:
                             if performance.average < PASSMARK:
-                                resit_string = 'Resit Exam'
+                                all_strings.append('Resit Exam')
                             else:
-                                resit_string = 'Resit Exam for QLD Purposes'
+                                all_strings.append(
+                                    'Resit Exam for QLD Purposes')
                     else:
                         if result.concessions == 'G':
-                            print(performance.student.short_name())
                             resit_string = 'Submit ' + assessment.title
+                            all_strings.append(resit_string)
                         elif result.concessions == 'P':
                             resit_string = (
                                 'Concessions for ' +
                                 assessment.title +
                                 ' Pending'
                             )
+                            all_strings.append(resit_string)
                         else:
                             if performance.average < PASSMARK:
                                 resit_string = 'Resubmit ' + assessment.title
@@ -3580,13 +3769,18 @@ def export_nors(request, subject_slug, year, level):
                                     assessment.title +
                                     ' for QLD Purposes'
                                 )
-                    data.append(
-                        [
-                            performance.module.code,
-                            performance.module.title,
-                            resit_string
-                        ]
-                    )
+                            all_strings.append(resit_string)
+                if len(all_strings) > 1:
+                    resit_string = ', '.join(all_strings)
+                else:
+                    resit_string = all_strings[0]
+                data.append(
+                    [
+                        performance.module.code,
+                        performance.module.title,
+                        paragraph(resit_string)
+                    ]
+                )
             table = Table(data)
             table.setStyle(
                 TableStyle([
@@ -3595,12 +3789,15 @@ def export_nors(request, subject_slug, year, level):
                 )
             )
             elements.append(table)
-            elements.append(Spacer(1, 20))
+            elements.append(Spacer(1, 5))
             elements.append(make_headline('Notes:', 'Heading4', 'left'))
-            elements.append(Spacer(1, 10))
+            #elements.append(Spacer(1, 5))
             elements.append(ListFlowable(note_list, bulletType='1'))
-            elements.append(Spacer(1, 10))
+            #elements.append(Spacer(1, 5))
             elements.append(paragraph(last_sentence))
+            elements.append(PageBreak())
+            for element in backpage:
+                elements.append(element)
             elements.append(PageBreak())
     doc.build(elements)
     return response
