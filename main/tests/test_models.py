@@ -777,14 +777,14 @@ class PerformanceTest(TeacherUnitTest):
             title="Essay",
             value=20,
             marksheet_type='ESSAY',
-            marksheet_type_resit='ESSAY'
+            resit_marksheet_type='ESSAY'
         )
         assessment_2 = Assessment.objects.create(
             module=module,
             title="Presentation",
             value=30,
             marksheet_type='PRESENTATION',
-            marksheet_type_resit='ESSAY'
+            resit_marksheet_type='ESSAY'
         )
         assessment_3 = Assessment.objects.create(
             module=module,
@@ -1414,7 +1414,7 @@ class AssessmentResultTest(TeacherUnitTest):
             title="Essay",
             value=100,
             marksheet_type='ESSAY',
-            marksheet_type_resit='ESSAY'
+            resit_marksheet_type='ESSAY'
         )
         performance1 = Performance.objects.get(
             module=module, student=student1)

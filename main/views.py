@@ -35,7 +35,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.platypus.flowables import PageBreak
-from reportlab.lib.units import inch
+from reportlab.lib.units import inch, cm
 
 
 # Authentication
@@ -3686,7 +3686,7 @@ def export_nors(request, subject_slug, year, level):
         if problem_performances:
             # elements.append(Spacer(1, 10))
             elements.append(logo())
-            elements.append(Spacer(1, 10))
+            elements.append(Spacer(1, 5))
             elements.append(make_headline(headline))
             data = [
                 [
@@ -3781,7 +3781,7 @@ def export_nors(request, subject_slug, year, level):
                         paragraph(resit_string)
                     ]
                 )
-            table = Table(data)
+            table = Table(data, colWidths=[3.3*cm, 6.2*cm, 7.5*cm])
             table.setStyle(
                 TableStyle([
                     ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
@@ -3789,11 +3789,8 @@ def export_nors(request, subject_slug, year, level):
                 )
             )
             elements.append(table)
-            elements.append(Spacer(1, 5))
             elements.append(make_headline('Notes:', 'Heading4', 'left'))
-            #elements.append(Spacer(1, 5))
             elements.append(ListFlowable(note_list, bulletType='1'))
-            #elements.append(Spacer(1, 5))
             elements.append(paragraph(last_sentence))
             elements.append(PageBreak())
             for element in backpage:
