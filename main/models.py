@@ -375,8 +375,7 @@ class Module(models.Model):
                         assessment.get_toggle_availability_url() +
                         '">Hide ' +
                         assessment.title +
-                        ' from students</a></li>' +
-                        '<li class="divider"></li>'
+                        ' from students</a></li>'
                     )
                 else:
                     html = (
@@ -384,10 +383,30 @@ class Module(models.Model):
                         assessment.get_toggle_availability_url() +
                         '">Show ' +
                         assessment.title +
-                        ' to students</a></li>' +
-                        '<li class="divider"></li>'
+                        ' to students</a></li>'
                     )
                 returnlist.append(html)
+            if assessment.resit_marksheet_type:
+                if assessment.resit_available:
+                    print("available")
+                    html = (
+                        '<li><a href="' +
+                        assessment.get_toggle_availability_url('resit') +
+                        '">Hide ' +
+                        assessment.title +
+                        ' Resit from students</a></li>'
+                    )
+                else:
+                    print("not available")
+                    html = (
+                        '<li><a href="' +
+                        assessment.get_toggle_availability_url('resit') +
+                        '">Show ' +
+                        assessment.title +
+                        ' Resit to students</a></li>'
+                    )
+                returnlist.append(html)
+            returnlist.append('<li class="divider"></li>')
         return returnlist
 
     def all_group_assessments(self):

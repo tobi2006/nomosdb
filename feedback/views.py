@@ -66,7 +66,7 @@ def individual_feedback(
     if attempt == 'first':
         marksheet_type = assessment.marksheet_type
     else:
-        marksheet_type = assessment.marksheet_type_resit
+        marksheet_type = assessment.resit_marksheet_type
     IndividualFeedbackForm = get_individual_feedback_form(marksheet_type)
     if request.method == 'POST':
         form = IndividualFeedbackForm(instance=feedback, data=request.POST)
@@ -154,7 +154,7 @@ def group_feedback(
     if attempt == 'first':
         marksheet_type = assessment.marksheet_type
     else:
-        marksheet_type = assessment.marksheet_type_resit
+        marksheet_type = assessment.resit_marksheet_type
     IndividualFeedbackForm = get_individual_feedback_form_for_group(
         marksheet_type)
     GroupFeedbackForm = get_group_feedback_form(marksheet_type)
@@ -243,6 +243,7 @@ def group_feedback(
             'split': split,
         }
     )
+
 
 # Functions for Reportlab stuff
 
@@ -398,7 +399,7 @@ def individual_marksheet(assessment, student, attempt):
     if attempt == 'first':
         marksheet_type = CATEGORIES[assessment.marksheet_type]
     else:
-        marksheet_type = CATEGORIES[assessment.marksheet_type_resit]
+        marksheet_type = CATEGORIES[assessment.resit_marksheet_type]
     if assessment.marksheet_type == 'MEDIATION_ROLE_PLAY':  # Other marksheets
         data = [
             [last_name, first_name],
@@ -717,7 +718,7 @@ def group_presentation_marksheet(assessment, student, attempt):
     if attempt == 'first':
         marksheet_type = CATEGORIES[assessment.marksheet_type]
     else:
-        marksheet_type = CATEGORIES[assessment.marksheet_type_resit]
+        marksheet_type = CATEGORIES[assessment.resit_marksheet_type]
     if attempt == 'first':
         mark = str(assessment_result.mark)
     elif attempt == 'resit':
@@ -972,7 +973,7 @@ def export_feedback(
     if attempt == 'first':
         assessment_type = assessment.marksheet_type
     else:
-        assessment_type = assessment.marksheet_type_resit
+        assessment_type = assessment.resit_marksheet_type
     if student_id == 'all':
         if is_staff(request.user):
             response = HttpResponse(content_type='application/pdf')
