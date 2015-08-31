@@ -1314,6 +1314,111 @@ class MarkAllAssessmentsTest(TeacherUnitTest):
         self.assertContains(response, student3.name())
         self.assertNotContains(response, other_student.name())
 
+    def test_only_students_who_need_resit_show_in_mark_all_resit_page(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        assessment1 = Assessment.objects.create(
+            module=module, title="Essay", value=50)
+        assessment2 = Assessment.objects.create(
+            module=module, title="Exam", value=50)
+        performance1 = Performance.objects.get(
+            module=module,
+            student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module,
+            student=student2
+        )
+        performance3 = Performance.objects.get(
+            module=module,
+            student=student3
+        )
+        performance4 = Performance.objects.get(
+            module=module,
+            student=student4
+        )
+        result_1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60
+        )
+        performance1.assessment_results.add(result_1_1)
+        result_1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=60
+        )
+        performance1.assessment_results.add(result_1_2)
+        # Student 1 clearly passed and should not be in either
+        result_2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=30
+        )
+        performance2.assessment_results.add(result_2_1)
+        result_2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=30
+        )
+        performance2.assessment_results.add(result_2_2)
+        # Student 2 clearly failed and should be in both
+        result_3_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=35
+        )
+        performance3.assessment_results.add(result_3_1)
+        result_3_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=40
+        )
+        performance3.assessment_results.add(result_3_2)
+        # Student 3 failed (not so clearly) and should be in 1 only
+        request = self.factory.get(
+            assessment1.get_mark_all_url(attempt='resit')
+        )
+        result_4_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60,
+            concessions='G'
+        )
+        performance4.assessment_results.add(result_4_1)
+        result_4_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=60
+        )
+        performance4.assessment_results.add(result_4_2)
+        # Student 4 has concessions for the passed essay and should be in 1
+
+        request.user = self.user
+        response1 = mark_all(
+            request,
+            module.code,
+            module.year,
+            'essay',
+            'resit'
+        )
+        self.assertNotContains(response1, student1.name()) 
+        self.assertContains(response1, student2.name()) 
+        self.assertContains(response1, student3.name()) 
+        self.assertContains(response1, student4.name()) 
+        request = self.factory.get(
+            assessment2.get_mark_all_url(attempt='resit')
+        )
+        request.user = self.user
+        response2 = mark_all(
+            request,
+            module.code,
+            module.year,
+            'exam',
+            'resit'
+        )
+        self.assertNotContains(response2, student1.name()) 
+        self.assertContains(response2, student2.name()) 
+        self.assertNotContains(response2, student3.name()) 
+        self.assertNotContains(response2, student4.name()) 
+
+
     def test_existing_results_show_up_in_mark_all_page(self):
         stuff = set_up_stuff()
         module = stuff[0]
@@ -3073,3 +3178,15 @@ class ConcessionsTest(AdminUnitTest):
         self.assertEqual(assessment_result_1_2_out.concessions, 'P')
         self.assertEqual(assessment_result_2_1_out.concessions, 'N')
         self.assertEqual(assessment_result_2_2_out.concessions, 'G')
+
+
+class NextYearTest(AdminUnitTest):
+    """Testing the switch to the next year with all its complications"""
+
+    def populate_db_with_students():
+        pass
+        
+
+    def test_form_for_resits_and_repeats_shows_correct_students(self):
+        pass
+

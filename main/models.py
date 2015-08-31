@@ -343,6 +343,22 @@ class Module(models.Model):
                 ' anonymously</a></li>'
             )
             returnlist.append(html)
+            html = (
+                '<li><a href="' +
+                assessment.get_mark_all_url(attempt="resit") +
+                '">Enter all marks for ' +
+                assessment.title +
+                ' Resit</a></li>'
+            )
+            returnlist.append(html)
+            html = (
+                '<li><a href="' +
+                assessment.get_mark_all_url(attempt="resit", anonymous=True) +
+                '">Enter all marks for ' +
+                assessment.title +
+                ' Resit anonymously</a></li>'
+            )
+            returnlist.append(html)
             link = assessment.get_blank_marksheet_url()
             link += 'all/first/'
             if assessment.marksheet_type:

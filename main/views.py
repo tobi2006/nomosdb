@@ -1897,7 +1897,18 @@ def mark_all(request, code, year, slug, attempt):
             tpl = (a.slug, a.value)
             slugs.append(tpl)
         rows = []
-        for performance in Performance.objects.filter(module=module):
+        if attempt == 'first':
+            performances = Performance.objects.filter(module=module)
+        elif attempt == 'resit':
+            performances = []
+            for performance in Performance.objects.filter(module=module):
+                keep = False
+                for result in performance.results_eligible_for_resit():
+                    if result.assessment == assessment:
+                        keep = True
+                if keep:
+                    performances.append(performance)
+        for performance in performances:
             if performance.student.active:
                 row = [performance.student.name(), ]
                 for this_assessment in module.all_assessments():
