@@ -404,7 +404,6 @@ class Module(models.Model):
                 returnlist.append(html)
             if assessment.resit_marksheet_type:
                 if assessment.resit_available:
-                    print("available")
                     html = (
                         '<li><a href="' +
                         assessment.get_toggle_availability_url('resit') +
@@ -413,7 +412,6 @@ class Module(models.Model):
                         ' Resit from students</a></li>'
                     )
                 else:
-                    print("not available")
                     html = (
                         '<li><a href="' +
                         assessment.get_toggle_availability_url('resit') +
@@ -847,10 +845,21 @@ class AssessmentResult(models.Model):
     def eligible_for_resit(self):
         eligible = False
         performance = self.part_of.first()
-        if self in performance.results_eligible_for_resit():
-            return True
-        else:
-            return False
+        all_results = performance.results_eligible_for_resit()
+        if self in all_results:
+            if all_results[self] == 'r':
+                eligible = True
+        return eligible
+
+    def eligible_for_qld_resit(self):
+        eligible = False
+        performance = self.part_of.first()
+        all_results = performance.results_eligible_for_resit()
+        if self in all_results:
+            if all_results[self] == 'q':
+                eligible = True
+        return eligible
+
         #        if self.mark:
         #            if self.mark < PASSMARK:
         #                eligible = True
@@ -918,17 +927,31 @@ class AssessmentResult(models.Model):
             resit = (self.resit_mark, edit, marksheet)
             if edit or self.resit_mark:
                 returndict['resit'] = resit
+        if self.eligible_for_qld_resit():
+            ms = self.assessment.resit_marksheet_type
+            if any(ms in x for x in AVAILABLE_MARKSHEETS):
+                edit = (
+                    self.assessment.get_blank_feedback_url() +
+                    student_id +
+                    '/qld_resit/'
+                )
+            else:
+                edit = None
+            marksheet = None
+            try:
+                feedback = self.feedback.get(attempt='qld_resit')
+                if feedback.completed:
+                    marksheet = (
+                        self.assessment.get_blank_marksheet_url() +
+                        student_id +
+                        '/qld_resit/'
+                    )
+            except:
+                pass
+            qld_resit = (self.qld_resit, edit, marksheet)
+            if edit or self.qld_resit:
+                returndict['qld_resit'] = qld_resit
         return returndict
-
-    def module_needs_to_be_capped(self):
-        cap = False
-        if self.resit_mark:
-            if self.concessions in [self.no_concessions, self.pending]:
-                cap = true
-        if self.second_resit_mark:
-            if self.second_concessions in [self.no_concessions, self.pending]:
-                cap = true
-        return cap
 
     def result(self):
         result = self.mark
@@ -1171,26 +1194,31 @@ class Performance(models.Model):
         return return_list
 
     def results_eligible_for_resit(self):
-        eligible_results = []
+        eligible_results = {}
         average = self.average_from_first_attempt()
         for result in self.assessment_results.all():
             try:
                 if average < PASSMARK:
                     if result.mark < PASSMARK:
-                        eligible_results.append(result)
+                        eligible_results[result] = 'r'
+                        # eligible_results.append(result)
             except TypeError:
                 pass
             if result.concessions in ['G', 'P']:
                 if result not in eligible_results:
-                    eligible_results.append(result)
+                    eligible_results[result] = 'r'
+                    # eligible_results.append(result)
             if self.module.foundational and self.student.qld:
                 try:
                     if result not in eligible_results:
                         if result.mark < PASSMARK:
-                            eligible_results.append(result)
+                            eligible_results[result] = 'q'
+                            # eligible_results.append(result)
                 except TypeError:
                     pass
         return eligible_results
+
+
 
     def all_results_as_slug_tpls(self):
         return self.all_assessment_results_as_tpls(only_result=True, slug=True)
@@ -1435,6 +1463,19 @@ class Performance(models.Model):
 
     def all_second_concessions(self):
         return self.all_concessions('second')
+
+    def capped_mark(self):
+        mark = None
+        pm = str(PASSMARK)
+        if self.average:
+            mark = str(self.average)
+            for result in self.assessment_results.all():
+                if self.average_from_first_attempt() < PASSMARK:
+                    if result.mark < PASSMARK:
+                        if result.concessions not in ['G', 'P']:
+                            if self.average > PASSMARK:
+                                mark += ' (capped at ' + pm + ')'
+        return mark
 
 
 class TuteeSession(models.Model):

@@ -148,10 +148,21 @@
                             {% endif %}
                             )
                         {% endif %}
+                        {% if result.qld_resit %}
+                            (QLD Resit:
+                            {% if result.qld_resit.1 %}
+                                <a href="{{ result.qld_resit.1 }}"><span class="glyphicon glyphicon-pencil"></span></a>
+                            {% endif %}
+                            {{ result.qld_resit.0|default_if_none:"" }}
+                            {% if result.qld_resit.2 %}
+                                <a href="{{ result.qld_resit.2 }}"><span class="glyphicon glyphicon-file"></span></a>
+                            {% endif %}
+                            )
+                        {% endif %}
                     </td>
                 {% endfor %}
                 <td>
-                    {{ performance.average|default_if_none:"" }}
+                    {{ performance.capped_mark|default_if_none:"" }}
                 </td>
                 <td>
                     <a href="#" class="remove"><span class="glyphicon glyphicon-remove" id="{{ performance.student.student_id }}"></span></a>

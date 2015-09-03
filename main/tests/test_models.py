@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
 from .base import *
+from main.unisettings import PASSMARK
 
 
 class SubjectAreaTest(AdminUnitTest):
@@ -1213,24 +1214,131 @@ class PerformanceTest(TeacherUnitTest):
         performance5.calculate_average()
         self.assertEqual(
             performance1.results_eligible_for_resit(),
-            []
+            # []
+            {}
         )
         self.assertEqual(
             performance2.results_eligible_for_resit(),
-            [result2_1]
+            # [result2_1]
+            {result2_1: 'r'}
         )
         self.assertEqual(
             performance3.results_eligible_for_resit(),
-            []
+            # []
+            {}
         )
         self.assertEqual(
             performance4.results_eligible_for_resit(),
-            [result4_1]
+            {result4_1: 'q'}
+            # [result4_1]
         )
         self.assertEqual(
             performance5.results_eligible_for_resit(),
-            [result5_1, result5_2]
+            # [result5_1, result5_2]
+            {result5_1: 'r', result5_2: 'r'}
         )
+
+    def test_mark_needs_to_be_capped_gives_proper_result(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        student3 = stuff[3]
+        student4 = stuff[4]
+        student5 = stuff[5]
+        assessment1 = Assessment.objects.create(
+            module=module, title="Essay", value=50)
+        assessment2 = Assessment.objects.create(
+            module=module, title="Exam", value=50)
+        performance1 = Performance.objects.get(
+            module=module,
+            student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module,
+            student=student2
+        )
+        performance3 = Performance.objects.get(
+            module=module,
+            student=student3
+        )
+        performance4 = Performance.objects.get(
+            module=module,
+            student=student4
+        )
+        performance5 = Performance.objects.get(
+            module=module,
+            student=student5
+        )
+        result_1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60
+        )
+        performance1.assessment_results.add(result_1_1)
+        result_1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=60
+        )
+        performance1.assessment_results.add(result_1_2)
+        performance1.calculate_average()
+        # Student 1 clearly passed and should not be capped
+        result_2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=30,
+            resit_mark=50,
+            concessions='G'
+        )
+        performance2.assessment_results.add(result_2_1)
+        result_2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=30,
+            resit_mark=50,
+        )
+        performance2.assessment_results.add(result_2_2)
+        performance2.calculate_average()
+        # Student 2 failed both, got no concessions for 2 and should be capped
+        result_3_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=20,
+            resit_mark=60,
+            concessions='G'
+        )
+        performance3.assessment_results.add(result_3_1)
+        result_3_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=40
+        )
+        performance3.assessment_results.add(result_3_2)
+        performance3.calculate_average()
+        # Student 3 failed and got concessions for the failed part, no cap
+        request = self.factory.get(
+            assessment1.get_mark_all_url(attempt='resit')
+        )
+        result_4_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=30,
+            resit_mark = 60,
+            concessions='G'
+        )
+        performance4.assessment_results.add(result_4_1)
+        result_4_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=30,
+            resit_mark = 60,
+            concessions='G'
+        )
+        performance4.assessment_results.add(result_4_2)
+        performance4.calculate_average()
+        # Student 4 has concessions for both and should not be capped
+
+        # Student 5 has no marks yet, result should be None
+
+        self.assertEqual(performance1.capped_mark(), '60')
+        st_2_string = '50 (capped at ' + str(PASSMARK) + ')'
+        self.assertEqual(performance2.capped_mark(), st_2_string)
+        self.assertEqual(performance3.capped_mark(), '50')
+        self.assertEqual(performance4.capped_mark(), '60')
+        self.assertEqual(performance5.capped_mark(), None)
 
 
 class AssessmentResultTest(TeacherUnitTest):
@@ -1354,7 +1462,7 @@ class AssessmentResultTest(TeacherUnitTest):
             mark=50
         )
         performance1.assessment_results.add(result1_3)
-        self.assertTrue(result1_1.eligible_for_resit())
+        self.assertFalse(result1_1.eligible_for_resit())
         self.assertFalse(result1_2.eligible_for_resit())
         self.assertFalse(result1_3.eligible_for_resit())
         student2 = stuff[2]
@@ -1401,6 +1509,73 @@ class AssessmentResultTest(TeacherUnitTest):
         self.assertTrue(result3_1.eligible_for_resit())
         self.assertFalse(result3_2.eligible_for_resit())
         self.assertTrue(result3_3.eligible_for_resit())
+
+    def test_eligible_for_qld_resit_function(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        module.foundational = True
+        module.save()
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Assessment 1',
+            value=25
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Assessment 2',
+            value=25
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title='Assessment 3',
+            value=50
+        )
+        student1 = stuff[1]
+        student1.qld = True
+        student1.save()
+        performance1 = Performance.objects.get(module=module, student=student1)
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=25
+        )
+        performance1.assessment_results.add(result1_1)
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=50
+        )
+        performance1.assessment_results.add(result1_2)
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=50
+        )
+        performance1.assessment_results.add(result1_3)
+        performance1.calculate_average()
+        self.assertTrue(result1_1.eligible_for_qld_resit())
+        self.assertFalse(result1_2.eligible_for_qld_resit())
+        self.assertFalse(result1_3.eligible_for_qld_resit())
+        student2 = stuff[2]
+        student2.qld = False
+        student2.save()
+        performance2 = Performance.objects.get(module=module, student=student2)
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=25
+        )
+        performance2.assessment_results.add(result2_1)
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=50
+        )
+        performance2.assessment_results.add(result2_2)
+        result2_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=50
+        )
+        performance2.assessment_results.add(result2_3)
+        performance2.calculate_average()
+        self.assertFalse(result2_1.eligible_for_qld_resit())
+        self.assertFalse(result2_2.eligible_for_qld_resit())
+        self.assertFalse(result2_3.eligible_for_qld_resit())
 
     def test_result_with_feedback_function(self):
         stuff = set_up_stuff()
