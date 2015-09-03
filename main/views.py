@@ -202,7 +202,6 @@ def home(request):
                         this_result['qld_resit'] = url_dict['qld_resit']
                         add_this_result = True
                     if add_this_result:
-                        print(this_result)
                         this_performance['results'].append(this_result)
                         add = True
                 year = performance.module.year
@@ -2496,7 +2495,6 @@ def export_tier_4_attendance(request, slug, year):
         if subject_area in student.course.subject_areas.all():
             students.append(student)
     for student in students:
-        print(student.name())
         modules = {}
         performances = Performance.objects.filter(
             student=student,

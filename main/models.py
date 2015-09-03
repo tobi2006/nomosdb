@@ -810,6 +810,7 @@ class AssessmentResult(models.Model):
             returnstring = None
         else:
             returnstring = str(self.mark)
+            add = ''
             if self.resit_mark:
                 if self.concessions == self.GRANTED:
                     if self.assessment.title == 'exam':
@@ -821,7 +822,7 @@ class AssessmentResult(models.Model):
                         resit_type = 'Resit'
                     else:
                         resit_type = 'Resubmission'
-                returnstring += " (%s: %s" % (resit_type, self.resit_mark)
+                add += "%s: %s" % (resit_type, self.resit_mark)
                 if self.second_resit_mark:
                     if self.second_concessions == self.GRANTED:
                         if self.assessment.title == 'exam':
@@ -833,13 +834,16 @@ class AssessmentResult(models.Model):
                             resit_type = 'Resit'
                         else:
                             resit_type = 'Resubmission'
-                    returnstring += ", Second %s: %s" % (
+                    add += ", Second %s: %s" % (
                         resit_type, self.second_resit_mark)
-                elif self.qld_resit:
-                    returnstring += (
-                        ", qld resit: %s" % (self.qld_resit)
-                    )
-                returnstring += ")"
+            if self.qld_resit:
+                if add:
+                    add += ', '
+                add += (
+                    "QLD Resit: %s" % (self.qld_resit)
+                )
+            if add:
+                returnstring += ' (' + add + ')'
         return returnstring
 
     def eligible_for_resit(self):

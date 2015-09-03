@@ -1577,6 +1577,54 @@ class AssessmentResultTest(TeacherUnitTest):
         self.assertFalse(result2_2.eligible_for_qld_resit())
         self.assertFalse(result2_3.eligible_for_qld_resit())
 
+    def test_result_with_string_function(self):
+        #        stuff = set_up_stuff()
+        #        module = stuff[0]
+        #        student1 = stuff[1]
+        #        student2 = stuff[2]
+        #        student3 = stuff[3]
+        #        student4 = stuff[4]
+        module = create_module()
+        module.teachers.add(self.user.staff)
+        assessment = Assessment.objects.create(
+            module=module,
+            title="Essay",
+            value=100,
+        )
+        #        performance = Performance.objects.get(
+        #            module=module, student=student1)
+        result1 = AssessmentResult.objects.create(
+                assessment=assessment,
+                mark=60
+        )
+        self.assertEqual(result1.result_as_string(), '60')
+        result2 = AssessmentResult.objects.create(
+                assessment=assessment,
+                mark=30,
+                resit_mark=40
+        )
+        self.assertEqual(result2.result_as_string(), '30 (Resubmission: 40)')
+        result3 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=20,
+            resit_mark=30,
+            qld_resit=40
+        )
+        self.assertEqual(
+            result3.result_as_string(),
+            '20 (Resubmission: 30, QLD Resit: 40)'
+        )
+        result4 = AssessmentResult.objects.create(
+            assessment=assessment,
+            mark=20,
+            qld_resit=40
+        )
+        self.assertEqual(
+            result4.result_as_string(),
+            '20 (QLD Resit: 40)'
+        )
+
+
     def test_result_with_feedback_function(self):
         stuff = set_up_stuff()
         module = stuff[0]
