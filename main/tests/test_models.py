@@ -363,6 +363,49 @@ class ModuleTest(TeacherUnitTest):
         self.assertFalse(performance2 in all_nines)
         self.assertFalse(performance3 in all_nines)
 
+    def test_resits_required(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student2 = stuff[2]
+        performance1 = Performance.objects.get(
+            module=module, student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module, student=student2
+        )
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Essay',
+            value=50
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Presentation',
+            value=50
+        )
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=42
+        )
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=40
+        )
+        performance1.assessment_results.add(result1_1)
+        performance1.assessment_results.add(result1_2)
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60,
+        )
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=80
+        )
+        performance2.assessment_results.add(result2_1)
+        performance2.assessment_results.add(result2_2)
+        self.assertFalse(module.resits_required())
+
 
 class PerformanceTest(TeacherUnitTest):
     """Tests for the Performance class"""

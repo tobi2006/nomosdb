@@ -423,6 +423,9 @@ class Module(models.Model):
             returnlist.append('<li class="divider"></li>')
         return returnlist
 
+    def resits_required(self):
+        pass
+
     def all_group_assessments(self):
         returnlist = []
         for assessment in self.assessments.all():
