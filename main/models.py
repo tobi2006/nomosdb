@@ -1255,8 +1255,9 @@ class Performance(models.Model):
                     sum_of_marks += this
             except AssessmentResult.DoesNotExist:
                 pass
+        sum_of_marks = float(sum_of_marks)
         average = sum_of_marks / 100
-        return int(average)
+        return int(round(average))
 
     def set_assessment_result(self, assessment_slug, mark, attempt='first'):
         assessment = Assessment.objects.get(
