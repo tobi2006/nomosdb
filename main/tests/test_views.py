@@ -668,6 +668,85 @@ class ModuleViewTest(TeacherUnitTest):
             'Show Exam to students'
         )
 
+    def test_resit_menu_shows_when_required(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        module.foundational = True
+        module.save()
+        student1 = stuff[1]
+        student1.qld = True
+        student1.save()
+        student2 = stuff[2]
+        student2.qld = True
+        student2.save()
+        performance1 = Performance.objects.get(
+            module=module, student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module, student=student2
+        )
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Essay',
+            value=50
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Presentation',
+            value=50
+        )
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=42
+        )
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=40
+        )
+        performance1.assessment_results.add(result1_1)
+        performance1.assessment_results.add(result1_2)
+        result2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60,
+        )
+        result2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=80
+        )
+        performance2.assessment_results.add(result2_1)
+        performance2.assessment_results.add(result2_2)
+        request = self.factory.get(module.get_absolute_url())
+        request.user = self.user
+        response = module_view(request, module.code, module.year)
+        resit_string = (
+            '<a class = "btn btn-default dropdown-toggle" data-toggle' +
+            '="dropdown">Resits <span class="caret"></span></a>'
+        )
+        self.assertNotContains(
+            response,
+            resit_string
+        )
+        result1_1.mark = 0
+        result1_1.save()
+        request = self.factory.get(module.get_absolute_url())
+        request.user = self.user
+        response = module_view(request, module.code, module.year)
+        self.assertContains(
+            response,
+            resit_string
+        )
+        result1_1.mark = 50
+        result1_1.save()
+        result2_1.mark = 39
+        result2_1.save()
+        request = self.factory.get(module.get_absolute_url())
+        request.user = self.user
+        response = module_view(request, module.code, module.year)
+        self.assertContains(
+            response,
+            resit_string
+        )
+
 
 class AddStudentsToModuleTest(TeacherUnitTest):
     """Tests for the function to add students to a module"""

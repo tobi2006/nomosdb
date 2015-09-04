@@ -1194,7 +1194,15 @@ def module_view(request, code, year):
     performances = Performance.objects.filter(
         module=module, student__active=True)
     seminar_groups = []
+    resit_required = False
+    qld_resit_required = False
     for performance in performances:
+        if not resit_required:
+            if 'r' in performance.results_eligible_for_resit().values():
+                resit_required = True
+        if not qld_resit_required:
+            if 'q' in performance.results_eligible_for_resit().values():
+                qld_resit_required = True
         if performance.seminar_group:
             if performance.seminar_group not in seminar_groups:
                 seminar_groups.append(performance.seminar_group)
@@ -1221,6 +1229,8 @@ def module_view(request, code, year):
             'performances': performances,
             'seminar_group_links': seminar_group_links,
             'admin_or_instructor': admin_or_instructor,
+            'resit_required': resit_required,
+            'qld_resit_required': qld_resit_required,
         }
     )
 
@@ -1903,9 +1913,22 @@ def mark_all(request, code, year, slug, attempt):
             performances = []
             for performance in Performance.objects.filter(module=module):
                 keep = False
-                for result in performance.results_eligible_for_resit():
-                    if result.assessment == assessment:
-                        keep = True
+                eligible = performance.results_eligible_for_resit()
+                for result in eligible:
+                    if eligible[result] == 'r':
+                        if result.assessment == assessment:
+                            keep = True
+                if keep:
+                    performances.append(performance)
+        elif attempt == 'qld_resit':
+            performances = []
+            for performance in Performance.objects.filter(module=module):
+                keep = False
+                eligible = performance.results_eligible_for_resit()
+                for result in eligible:
+                    if eligible[result] == 'q':
+                        if result.assessment == assessment:
+                            keep = True
                 if keep:
                     performances.append(performance)
         for performance in performances:

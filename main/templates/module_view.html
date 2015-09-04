@@ -51,7 +51,7 @@
             <li><a href="{{ module.get_assessment_url }}">Set/Edit assessments for the module</a></li>
         </ul>
     </div>
-    {% if module.resit_assessment_sub_menu %}
+    {% if resit_required or qld_resit_required %}
     <div class="btn-group dropdown">
         <a class = "btn btn-default dropdown-toggle" data-toggle="dropdown">Resits <span class="caret"></span></a>
         <ul class="dropdown-menu" role="menu">

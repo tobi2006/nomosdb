@@ -343,22 +343,6 @@ class Module(models.Model):
                 ' anonymously</a></li>'
             )
             returnlist.append(html)
-            html = (
-                '<li><a href="' +
-                assessment.get_mark_all_url(attempt="resit") +
-                '">Enter all marks for ' +
-                assessment.title +
-                ' Resit</a></li>'
-            )
-            returnlist.append(html)
-            html = (
-                '<li><a href="' +
-                assessment.get_mark_all_url(attempt="resit", anonymous=True) +
-                '">Enter all marks for ' +
-                assessment.title +
-                ' Resit anonymously</a></li>'
-            )
-            returnlist.append(html)
             link = assessment.get_blank_marksheet_url()
             link += 'all/first/'
             if assessment.marksheet_type:
@@ -402,29 +386,153 @@ class Module(models.Model):
                         ' to students</a></li>'
                     )
                 returnlist.append(html)
-            if assessment.resit_marksheet_type:
-                if assessment.resit_available:
-                    html = (
-                        '<li><a href="' +
-                        assessment.get_toggle_availability_url('resit') +
-                        '">Hide ' +
-                        assessment.title +
-                        ' Resit from students</a></li>'
-                    )
-                else:
-                    html = (
-                        '<li><a href="' +
-                        assessment.get_toggle_availability_url('resit') +
-                        '">Show ' +
-                        assessment.title +
-                        ' Resit to students</a></li>'
-                    )
-                returnlist.append(html)
             returnlist.append('<li class="divider"></li>')
         return returnlist
 
-    def resits_required(self):
-        pass
+    def resit_assessment_sub_menu(self):
+        returnlist = []
+        resit = []
+        qld = []
+        for performance in self.performances.all():
+            eligible = performance.results_eligible_for_resit()
+            for result in eligible:
+                if eligible[result] == 'r':
+                    if result.assessment not in resit:
+                        resit.append(result.assessment)
+                if eligible[result] == 'q':
+                    if result.assessment not in qld:
+                        qld.append(result.assessment)
+                if result.assessment in resit and result.assessment in qld:
+                    break
+        if len(resit) > 0:
+            returnlist.append('<li><b>Resit</b></li>')
+            for assessment in resit:
+                html = (
+                    '<li><a href="' +
+                    assessment.get_mark_all_url(attempt="resit") +
+                    '">Enter all marks for ' +
+                    assessment.title +
+                    ', First Resit</a></li>'
+                )
+                returnlist.append(html)
+                html = (
+                    '<li><a href="' +
+                    assessment.get_mark_all_url(attempt="resit", anonymous=True) +
+                    '">Enter all marks for ' +
+                    assessment.title +
+                    ', First Resit anonymously</a></li>'
+                )
+                returnlist.append(html)
+                link = assessment.get_blank_marksheet_url()
+                link += 'all/resit/'
+                if assessment.marksheet_type:
+                    html = (
+                        '<li><a href="' +
+                        link +
+                        '">All Marksheets for ' +
+                        assessment.title +
+                        ', First Resit</a></li>'
+                    )
+                    returnlist.append(html)
+                # if assessment.resit_group_assessment:
+                #     html = (
+                #         '<li><a href="' +
+                #         assessment.get_assessment_groups_url() +
+                #         '">Set assessment groups for ' +
+                #         assessment.title +
+                #         '</a></li>' +
+                #         '<li><a href="' +
+                #         assessment.get_assessment_group_overview_url() +
+                #         '">Assessment group overview for ' +
+                #         assessment.title +
+                #         '</a></li>'
+                #     )
+                #     returnlist.append(html)
+                if assessment.resit_marksheet_type:
+                    if assessment.resit_available:
+                        html = (
+                            '<li><a href="' +
+                            assessment.get_toggle_availability_url('resit') +
+                            '">Hide ' +
+                            assessment.title +
+                            ' Resit from students</a></li>'
+                        )
+                    else:
+                        html = (
+                            '<li><a href="' +
+                            assessment.get_toggle_availability_url('resit') +
+                            '">Show ' +
+                            assessment.title +
+                            ' Resit to students</a></li>'
+                        )
+                    returnlist.append(html)
+                returnlist.append('<li class="divider"></li>')
+        if len(qld) > 0:
+            returnlist.append('<li><b>QLD Resit</b></li>')
+            for assessment in qld:
+                html = (
+                    '<li><a href="' +
+                    assessment.get_mark_all_url(attempt="qld_resit") +
+                    '">Enter all marks for ' +
+                    assessment.title +
+                    '</a></li>'
+                )
+                returnlist.append(html)
+                html = (
+                    '<li><a href="' +
+                    assessment.get_mark_all_url(
+                        attempt="qld_resit",
+                        anonymous=True) +
+                    '">Enter all marks for ' +
+                    assessment.title +
+                    ' anonymously</a></li>'
+                )
+                returnlist.append(html)
+                link = assessment.get_blank_marksheet_url()
+                link += 'all/qld_resit/'
+                if assessment.marksheet_type:
+                    html = (
+                        '<li><a href="' +
+                        link +
+                        '">All Marksheets for ' +
+                        assessment.title +
+                        '</a></li>'
+                    )
+                    returnlist.append(html)
+            # if assessment.resit_group_assessment:
+            #     html = (
+            #         '<li><a href="' +
+            #         assessment.get_assessment_groups_url() +
+            #         '">Set assessment groups for ' +
+            #         assessment.title +
+            #         '</a></li>' +
+            #         '<li><a href="' +
+            #         assessment.get_assessment_group_overview_url() +
+            #         '">Assessment group overview for ' +
+            #         assessment.title +
+            #         '</a></li>'
+            #     )
+            #     returnlist.append(html)
+            # if assessment.qld_resit_marksheet_type:
+            #     if assessment.resit_available:
+            #         html = (
+            #             '<li><a href="' +
+            #             assessment.get_toggle_availability_url('qld_resit') +
+            #             '">Hide ' +
+            #             assessment.title +
+            #             ' from students</a></li>'
+            #         )
+            #     else:
+            #         html = (
+            #             '<li><a href="' +
+            #             assessment.get_toggle_availability_url('resit') +
+            #             '">Show ' +
+            #             assessment.title +
+            #             ' to students</a></li>'
+            #         )
+            #     returnlist.append(html)
+                returnlist.append('<li class="divider"></li>')
+        return returnlist
 
     def all_group_assessments(self):
         returnlist = []
