@@ -1583,6 +1583,7 @@ class Performance(models.Model):
     def capped_mark(self):
         mark = None
         pm = str(PASSMARK)
+        cap = False
         if self.average:
             mark = str(self.average)
             for result in self.assessment_results.all():
@@ -1590,7 +1591,9 @@ class Performance(models.Model):
                     if result.mark < PASSMARK:
                         if result.concessions not in ['G', 'P']:
                             if self.average > PASSMARK:
-                                mark += ' (capped at ' + pm + ')'
+                                cap = True
+        if cap:
+            mark += ' (capped at ' + pm + ')'
         return mark
 
 
