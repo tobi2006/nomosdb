@@ -2025,7 +2025,31 @@ def mark_all_anonymously(request, code, year, slug, attempt):
     rows = []
     students_without_id = []
     admin_email = Setting.objects.get(name='admin_email').value
-    for performance in Performance.objects.filter(module=module):
+    if attempt == 'first':
+        performances = Performance.objects.filter(module=module)
+    elif attempt == 'resit':
+        performances = []
+        for performance in Performance.objects.filter(module=module):
+            keep = False
+            eligible = performance.results_eligible_for_resit()
+            for result in eligible:
+                if eligible[result] == 'r':
+                    if result.assessment == assessment:
+                        keep = True
+            if keep:
+                performances.append(performance)
+    elif attempt == 'qld_resit':
+        performances = []
+        for performance in Performance.objects.filter(module=module):
+            keep = False
+            eligible = performance.results_eligible_for_resit()
+            for result in eligible:
+                if eligible[result] == 'q':
+                    if result.assessment == assessment:
+                        keep = True
+            if keep:
+                performances.append(performance)
+    for performance in performances:
         if performance.student.active:
             if performance.student.exam_id:
                 row = [performance.student.exam_id, ]

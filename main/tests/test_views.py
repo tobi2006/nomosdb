@@ -1497,7 +1497,6 @@ class MarkAllAssessmentsTest(TeacherUnitTest):
         self.assertNotContains(response2, student3.name()) 
         self.assertNotContains(response2, student4.name()) 
 
-
     def test_existing_results_show_up_in_mark_all_page(self):
         stuff = set_up_stuff()
         module = stuff[0]
@@ -1759,6 +1758,128 @@ class MarkAllAssessmentsAnonymouslyTest(TeacherUnitTest):
             performance2_out.get_assessment_result('essay-1', 'first'),
             40
         )
+
+    def test_only_students_who_need_resit_show_in_mark_all_resit_a_page(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        student1 = stuff[1]
+        student1.exam_id = '1234'
+        student1.save()
+        student2 = stuff[2]
+        student2.exam_id = '2345'
+        student2.save()
+        student3 = stuff[3]
+        student3.exam_id = '3456'
+        student3.save()
+        student4 = stuff[4]
+        student4.exam_id = '4567'
+        student4.save()
+        assessment1 = Assessment.objects.create(
+            module=module, title="Essay", value=50)
+        assessment2 = Assessment.objects.create(
+            module=module, title="Exam", value=50)
+        performance1 = Performance.objects.get(
+            module=module,
+            student=student1
+        )
+        performance2 = Performance.objects.get(
+            module=module,
+            student=student2
+        )
+        performance3 = Performance.objects.get(
+            module=module,
+            student=student3
+        )
+        performance4 = Performance.objects.get(
+            module=module,
+            student=student4
+        )
+        result_1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60
+        )
+        performance1.assessment_results.add(result_1_1)
+        result_1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=60
+        )
+        performance1.assessment_results.add(result_1_2)
+        # Student 1 clearly passed and should not be in either
+        result_2_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=30
+        )
+        performance2.assessment_results.add(result_2_1)
+        result_2_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=30
+        )
+        performance2.assessment_results.add(result_2_2)
+        # Student 2 clearly failed and should be in both
+        result_3_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=35
+        )
+        performance3.assessment_results.add(result_3_1)
+        result_3_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=40
+        )
+        performance3.assessment_results.add(result_3_2)
+        # Student 3 failed (not so clearly) and should be in 1 only
+        request = self.factory.get(
+            assessment1.get_mark_all_url(attempt='resit')
+        )
+        result_4_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=60,
+            concessions='G'
+        )
+        performance4.assessment_results.add(result_4_1)
+        result_4_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=60
+        )
+        performance4.assessment_results.add(result_4_2)
+        # Student 4 has concessions for the passed essay and should be in 1
+
+        request.user = self.user
+        request = self.factory.get(
+            assessment1.get_mark_all_url(
+                anonymous=True,
+                attempt='resit'
+            )
+        )
+        request.user = self.user
+        response1 = mark_all_anonymously(
+            request,
+            module.code,
+            module.year,
+            'essay',
+            'resit',
+        )
+        self.assertNotContains(response1, student1.exam_id) 
+        self.assertContains(response1, student2.exam_id) 
+        self.assertContains(response1, student3.exam_id) 
+        self.assertContains(response1, student4.exam_id) 
+        request = self.factory.get(
+            assessment2.get_mark_all_url(
+                anonymous=True,
+                attempt='resit'
+            )
+        )
+        request.user = self.user
+        response2 = mark_all_anonymously(
+            request,
+            module.code,
+            module.year,
+            'exam',
+            'resit'
+        )
+        self.assertNotContains(response2, student1.exam_id) 
+        self.assertContains(response2, student2.exam_id) 
+        self.assertNotContains(response2, student3.exam_id) 
+        self.assertNotContains(response2, student4.exam_id) 
 
 
 class AddEditStaffTest(AdminUnitTest):
