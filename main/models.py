@@ -448,24 +448,6 @@ class Module(models.Model):
                 #         '</a></li>'
                 #     )
                 #     returnlist.append(html)
-                if assessment.resit_marksheet_type:
-                    if assessment.resit_available:
-                        html = (
-                            '<li><a href="' +
-                            assessment.get_toggle_availability_url('resit') +
-                            '">Hide ' +
-                            assessment.title +
-                            ' Resit from students</a></li>'
-                        )
-                    else:
-                        html = (
-                            '<li><a href="' +
-                            assessment.get_toggle_availability_url('resit') +
-                            '">Show ' +
-                            assessment.title +
-                            ' Resit to students</a></li>'
-                        )
-                    returnlist.append(html)
                 returnlist.append('<li class="divider"></li>')
         if len(qld) > 0:
             returnlist.append('<li><b>QLD Resit</b></li>')
@@ -532,6 +514,25 @@ class Module(models.Model):
             #         )
             #     returnlist.append(html)
                 returnlist.append('<li class="divider"></li>')
+        if len(qld) > 0 or len(resit) > 0:
+            if assessment.resit_marksheet_type:
+                if assessment.resit_available:
+                    html = (
+                        '<li><a href="' +
+                        assessment.get_toggle_availability_url('resit') +
+                        '">Hide all ' +
+                        assessment.title +
+                        ' resits from students</a></li>'
+                    )
+                else:
+                    html = (
+                        '<li><a href="' +
+                        assessment.get_toggle_availability_url('resit') +
+                        '">Show all ' +
+                        assessment.title +
+                        ' resits to students</a></li>'
+                    )
+                returnlist.append(html)
         return returnlist
 
     def all_group_assessments(self):
