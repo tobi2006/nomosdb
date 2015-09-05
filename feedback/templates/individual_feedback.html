@@ -20,7 +20,7 @@
 
 {% block content %}
 <h1>{{ module }}</h1>
-<h2>{{ assessment }} Feedback for {{ student.name }}</h2>
+<h2>{{ assessment }} {% if resit %}(Resit) {% endif %}Feedback for {{ student.name }}</h2>
 <br>
 {% crispy form %}
 {% endblock %}
@@ -42,7 +42,11 @@
         });
 
         {% if assessment.submission_date %}
-            var deadline = new Date("{{ assessment.submission_date }}");
+            {% if resit %}
+                var deadline = new Date("{{ assessment.resit_submission_date }}");
+            {% else %}
+                var deadline = new Date("{{ assessment.submission_date }}");
+            {% endif %}
             $('#id_submission_date').change(function() {
                 var datestring = $(this).val();
                 var datearray = datestring.split('/');

@@ -65,7 +65,9 @@ def individual_feedback(
     mark = assessment_result.get_one_mark(attempt)
     if attempt == 'first':
         marksheet_type = assessment.marksheet_type
+        resit = False
     else:
+        resit = True
         marksheet_type = assessment.resit_marksheet_type
     IndividualFeedbackForm = get_individual_feedback_form(marksheet_type)
     if request.method == 'POST':
@@ -93,6 +95,7 @@ def individual_feedback(
             'module': module,
             'assessment': assessment,
             'marksheet_type': marksheet_type,
+            'resit': resit
         }
     )
 
