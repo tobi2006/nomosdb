@@ -3651,10 +3651,7 @@ def export_problem_students_after_resits(request, subject_slug, year, level):
             style = [
                 ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
                 ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                ('SPAN', (1, -1), (-1, -1))
             ]
-            if no_of_assessments > 1:
-                style.append(('SPAN', (1, -2), (-1, -2)))
             t.setStyle(TableStyle(style))
             elements.append(t)
             elements.append(Spacer(1, 25))
