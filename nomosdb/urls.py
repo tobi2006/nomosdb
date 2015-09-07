@@ -157,6 +157,11 @@ urlpatterns += patterns(
         name='export_exam_board_overview'
     ),
     url(
+        r'^export_resit_exam_board_overview/([-\w]+)/(\d{4})/(\d{1})/$',
+        'export_resit_exam_board_overview',
+        name='export_resit_exam_board_overview'
+    ),
+    url(
         r'^export_examiner_pack/(\w+)/(\d{4})/$',
         'export_examiner_pack',
         name='export_examiner_pack'
@@ -175,6 +180,11 @@ urlpatterns += patterns(
         r'^export_problem_students/([-\w]+)/(\d{4})/(\w+)/$',
         'export_problem_students',
         name='export_problem_students'
+    ),
+    url(
+        r'^export_problem_students_after_resits/([-\w]+)/(\d{4})/(\w+)/$',
+        'export_problem_students_after_resits',
+        name='export_problem_students_after_resits'
     ),
     url(
         r'^export_tier_4_attendance/([-\w]+)/(\d{4})/$',

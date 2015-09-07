@@ -1334,8 +1334,6 @@ class Performance(models.Model):
                     pass
         return eligible_results
 
-
-
     def all_results_as_slug_tpls(self):
         return self.all_assessment_results_as_tpls(only_result=True, slug=True)
 
