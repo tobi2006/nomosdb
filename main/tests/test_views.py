@@ -3384,8 +3384,85 @@ class NextYearTest(AdminUnitTest):
     """Testing the switch to the next year with all its complications"""
 
     def populate_db_with_students():
-        pass
-        
+        subject_area_1 = SubjectArea.objects.create(name="Cartoon Studies")
+        subject_area_2 = SubjectArea.objects.create(name="Evil Plotting")
+        course_1 = Course.objects.create(
+            title='BA in Cartoon Studies',
+            short_title='Cartoon Studies',
+        )
+        course_1.subject_areas.add(subject_area_1)
+        course_2 = Course.objects.create(
+            title='BA in Evil Plotting',
+            short_title='Evil Plotting',
+        )
+        course_2.subject_areas.add(subject_area_2)
+        course_3 = Course.objects.create(
+            title='BA in Cartoon Studies with Evil Plotting',
+            short_title='Cartoon Studies / Evil Plotting',
+        )
+        course_3.subject_areas.add(subject_area_1)
+        course_3.subject_areas.add(subject_area_2)
+        students = {}
+        student1_1 = Student.objects.create(
+            first_name='Bugs',
+            last_name='Bunny',
+            student_id='bb23',
+            year=1,
+            course=course_1
+        )
+        students['1-2'] = student1_1
+        student1_2 = Student.objects.create(
+            first_name='Daffy',
+            last_name='Duck',
+            student_id='dd42',
+            year=1,
+            is_part_time=True,
+            course=course_1
+        )
+        students['1-spty'] = student1_2
+        student1_3 = Student.objects.create(
+            first_name='Silvester',
+            last_name='Cat',
+            student_id='sc23',
+            year=1,
+            is_part_time=True,
+            second_part_time_year=True,
+            course=course_1
+        )
+        students['spty-2'] = student1_3
+        student1_4 = Student.objects.create(
+            first_name='While E',
+            last_name='Coyote',
+            student_id='wec23',
+            year=1,
+            course=course_3
+        )
+        students['mixed course'] = student1_4
+        student2_1 = Student.objects.create(
+            first_name='Tweety',
+            last_name='Bird',
+            student_id='tb23',
+            year=2,
+            course=course_1
+        )
+        students['2-3'] = student2_1
+        student3_1 = Student.objects.create(
+            first_name='Tasmanian',
+            last_name='Devil',
+            student_id='td23',
+            year=3,
+            course=course_1
+        )
+        students['3-4'] = student3_1
+        student4_1 = Student.objects.create(
+            first_name='Marvin',
+            last_name='Martian'
+            student_id='mm23',
+            year=1,
+            course=course_2
+        )
+        students['different course'] = student4_1
+        return students
 
     def test_form_for_resits_and_repeats_shows_correct_students(self):
         pass
