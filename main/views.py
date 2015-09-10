@@ -2606,7 +2606,7 @@ def export_tier_4_attendance(request, slug, year):
 
 
 def elements_for_module_mark_overview(
-        module, highlight=False, give_comments=False):
+        module, highlight=False, give_comments=False, resits_only=False):
     """Creates the elements necessary to create a mark overview of a module"""
     elements = []
     styles = getSampleStyleSheet()
@@ -2657,7 +2657,13 @@ def elements_for_module_mark_overview(
     all_performances = []
     for performance in module.performances.all():
         if performance.student.active:
-            all_performances.append(performance)
+            if resits_only:
+                if performance.results_eligible_for_resit():
+                    all_performances.append(performance)
+            else:
+                all_performances.append(performance)
+    if len(all_performances) == 0:
+        return False
     for performance in all_performances:
         linecounter += 1
         line = [
@@ -2666,9 +2672,13 @@ def elements_for_module_mark_overview(
             performance.student.course.short_title
         ]
         for assessment in all_assessments:
-            result = performance.get_assessment_result(
-                assessment.slug, 'first'
-            )
+            if resits_only:
+                result = performance.get_assessment_result(
+                    assessment.slug, attempt='string')
+            else:
+                result = performance.get_assessment_result(
+                    assessment.slug, 'first'
+                )
             if result:
                 line.append(str(result))
             else:
@@ -2676,7 +2686,10 @@ def elements_for_module_mark_overview(
         if performance.average is None:
             performance.calculate_average()
         if len(all_assessments) > 1:
-            line.append(performance.average)
+            if resits_only:
+                line.append(performance.capped_mark())
+            else:
+                line.append(performance.average)
         if highlight:
             if performance.average < PASSMARK:
                 highlight_yellow.append(linecounter)
@@ -2881,6 +2894,84 @@ def export_exam_board_overview(request, subject_slug, year, level):
             for element in processed_module:
                 elements.append(element)
             elements.append(PageBreak())
+    doc.build(elements)
+    return response
+
+
+
+@login_required
+@user_passes_test(is_staff)
+def export_resit_exam_board_overview(request, subject_slug, year, level):
+    """Exports all marks for all modules in a given year for resit boards"""
+    response = HttpResponse(content_type='application/pdf')
+    levelstr = str(int(level) + 3)
+    now = timezone.now()
+    today = formatted_date(now)
+    minute = str(now.minute)
+    if len(minute) == 1:
+        minute = '0'+ minute
+    today = (
+        today +
+        ', ' +
+        str(now.hour) +
+        ':' +
+        minute
+    )
+    filename = (
+        'Resit_Exam_Board_Module_Overview_Year_' +
+        academic_year_string(year) +
+        '_Level_' +
+        levelstr +
+        '.pdf'
+    )
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    doc.pagesize = landscape(A4)
+    elements = []
+    styles = getSampleStyleSheet()
+    problem_performances = []
+    # Title Page
+    elements.append(Spacer(1, 60))
+    elements.append(logo())
+    elements.append(Spacer(1, 60))
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    titlestring = (
+        'Resit Exam Boards ' +
+        subject_area.name +
+        ' (' +
+        academic_year_string(year) +
+        ')'
+    )
+    tmp = '<para alignment = "center">' + titlestring + '</para>'
+    title = Paragraph(tmp, styles['Heading1'])
+    elements.append(title)
+    elements.append(Spacer(1, 40))
+    levelstring = 'Level ' + levelstr
+    tmp = '<para alignment = "center">' + levelstring + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading2'])
+    elements.append(subtitle)
+    elements.append(Spacer(1, 40))
+    tmp = '<para alignment = "center">Exported ' + today + '</para>'
+    subtitle = Paragraph(tmp, styles['Heading3'])
+    elements.append(subtitle)
+    elements.append(PageBreak())
+    modules = Module.objects.filter(year=year)
+    for module in modules:
+        if (
+                str(level) in module.eligible and
+                subject_area in module.subject_areas.all()
+        ):
+            tmp = '<para alignment = "center">' + module.title + '</para>'
+            title = Paragraph(tmp, styles['Heading2'])
+            processed_module = elements_for_module_mark_overview(
+                module, highlight=False, give_comments=False, resits_only=True)
+            if processed_module:
+                elements.append(title)
+                for element in processed_module:
+                    elements.append(element)
+                elements.append(Spacer(1, 20))
+                # elements.append(PageBreak())
     doc.build(elements)
     return response
 
@@ -3458,6 +3549,117 @@ def export_examiner_pack(request, code, year):
 
 
 @login_required
+@user_passes_test(is_staff)
+def export_problem_students_after_resits(request, subject_slug, year, level):
+    """Gives an overview of all problematic students
+    
+    This includes everyone with a failed module, a concession or a QLD fail.
+    """
+    response = HttpResponse(content_type='application/pdf')
+    levelstr = str(int(level) + 3)
+    filename = (
+        'Problem_Results after Resits ' +
+        academic_year_string(year) +
+        '_Level_' +
+        levelstr +
+        '.pdf'
+    )
+    responsestring = 'attachment; filename=' + filename
+    response['Content-Disposition'] = responsestring
+    doc = SimpleDocTemplate(response)
+    elements = []
+    problem_performances = {}
+    current_year = int(Setting.objects.get(name="current_year").value)
+    subject_area = SubjectArea.objects.get(slug=subject_slug)
+    students = []
+    if int(year) < current_year:
+        difference = current_year - int(year)
+        level = int(level) - difference
+    else:
+        level = int(level)
+    all_students = Student.objects.filter(active=True, year=level)
+    for student in all_students:
+        if (
+                student.course and
+                subject_area in student.course.subject_areas.all()
+        ):
+            students.append(student)
+    problem_students = []
+    for student in students:
+        for performance in student.performances.all():
+            if performance.module.year == int(year):
+                resit_required = performance.results_eligible_for_resit()
+                if resit_required:
+                    if student in problem_performances:
+                        problem_performances[student].append(performance)
+                    else:
+                        problem_performances[student] = [performance,]
+                    if student not in problem_students:
+                        problem_students.append(student)
+    if problem_students:
+        headerstr = 'Problematic Results Level ' + levelstr
+        elements.append(make_headline(headerstr))
+        now = timezone.now()
+        today = formatted_date(now)
+        datestring = 'Exported on ' + today
+        elements.append(make_headline(datestring, 'Heading4'))
+    problem_students.sort(key=lambda x: x.last_name)
+    for student in problem_students:
+        header = student.short_name() + ' (' + student.student_id + ')'
+        elements.append(make_headline(header, 'Heading3'))
+        for performance in problem_performances[student]:
+            no_of_assessments = 0
+            header = performance.module.__str__()
+            elements.append(make_headline(header, 'Heading4'))
+            data = [['Title', 'First', 'Resit', 'QLD Resit', 'Concessions']]
+            for result in performance.assessment_results.all():
+                assessment = result.assessment
+                title = assessment.title + ' (' + str(assessment.value) + ' %)'
+                line = [title, ]
+                if result in performance.results_eligible_for_resit():
+                    if result.mark:
+                        line.append(result.mark)
+                    else:
+                        line.append('0')
+                    if result.resit_mark:
+                        line.append(result.resit_mark)
+                    else:
+                        line.append('')
+                    if result.qld_resit:
+                        line.append(result.qld_resit)
+                    else:
+                        line.append('')
+                    if result.concessions == 'G':
+                        line.append('Granted')
+                    elif result.concessions == 'P':
+                        line.append('Pending')
+                    else:
+                        line.append('')
+                else:
+                    line.append(result.mark)
+                    line.append('')
+                    line.append('')
+                    line.append('')
+                no_of_assessments += 1
+                data.append(line)
+            if no_of_assessments > 1:
+                avg_h = paragraph('Average', bold=True)
+                avg = paragraph(str(performance.capped_mark()), bold=True)
+                data.append([avg_h, avg, ''])
+            data.append(['Attendance', performance.count_attendance(), ''])
+            t = Table(data)
+            style = [
+                ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+            ]
+            t.setStyle(TableStyle(style))
+            elements.append(t)
+            elements.append(Spacer(1, 25))
+    doc.build(elements)
+    return response
+
+
+@login_required
 @user_passes_test(is_admin)
 def export_nors(request, subject_slug, year, level):
     """Exports letters to notify students of their results"""
@@ -3856,7 +4058,7 @@ def export_nors(request, subject_slug, year, level):
     doc.build(elements)
     return response
 
-        
+
 def cause_error(request):
     """Can be called to test whether the sysadmin gets the error mail"""
     a = 5/0

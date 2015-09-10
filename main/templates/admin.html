@@ -117,7 +117,6 @@
     </div>
     {% endfor %}
 </div>
-
 <br><br>
 <h5>Export Problematic Performances Overview</h5>
 
@@ -135,8 +134,8 @@
     </div>
     {% endfor %}
 </div>
-
 <br><br>
+
 <h5>Notification of Results</h5>
 
 <div class="btn-group">
@@ -153,6 +152,44 @@
     </div>
     {% endfor %}
 </div>
+
+
+<br><br>
+<h5>Resit Boards</h5>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+            <li><a href="{% url "export_resit_exam_board_overview" subject_area.slug current_year year.0 %}">{{ year.1 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
+
+<h5>Export Problematic Performances After Resits</h5>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+            <li><a href="{% url "export_problem_students_after_resits" subject_area.slug current_year year.0 %}">{{ year.1 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
 
 <br><br>
 <h4>Anonymous marking</h4>
