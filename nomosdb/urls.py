@@ -132,6 +132,11 @@ urlpatterns += patterns(
     url(r'^edit_staff/(\w+)/$', 'add_or_edit_staff', name='edit_staff'),
     url(r'^edit_student/(\w+)/$', 'add_or_edit_student', name='edit_student'),
     url(
+        r'^enter_student_progression/([-\w]+)/(\d{1})/$',
+        'enter_student_progression',
+        name='enter_student_progression'
+    ),
+    url(
         r'^tutee_meeting/(\w+)/([-\w]+)/$',
         'student_view',
         name='tutee_meeting'

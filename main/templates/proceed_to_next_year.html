@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+
+{% block formstart %}
+    <form action="" method="post" accept-charset="utf-8" role="form" id="form">
+    {% csrf_token %}
+{% endblock %} 
+
+{% block content %}
+
+<h1>Proceed to {{ academic_year }}</h1>
+
+<table id ="sortable_table" class="table table-striped table-sortable">
+    <thead>
+        <tr>
+            <th>
+                Student
+            </th>
+            <th>
+                ID
+            </th>
+            {% for assessment in module.all_assessment_titles %}
+                <th>
+                    {{ assessment.0 }}{% if assessment.1 %} ({{ assessment.1 }} %){% endif %}
+                </th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for performance in performances %}
+            <tr>
+                <td>
+                    {{ performance.student.short_name }}
+                </td>
+                <td>
+                    {{ performance.student.student_id }}
+                </td>
+                {% if attempt == 'first' %}
+                    {% for concessions in performance.all_first_concessions %}
+                    <td>
+                        <select class="form-control" name="{{ performance.student.student_id }}_{{ concessions.0 }}" id="{{ performance.student.student_id }}_{{ concessions.0 }}">
+                            <option value="N"{% if concessions.1 == "N" %} selected{% endif %}>None</options>
+                            <option value="P"{% if concessions.1 == "P" %} selected{% endif %}>Pending</options>
+                            <option value="G"{% if concessions.1 == "G" %} selected{% endif %}>Granted</options>
+                        </select>
+                    </td>
+                    {% endfor %}
+                {% else %}
+                    {% for concessions in performance.all_second_concessions %}
+                    <td>
+                        <select class="form-control" name="{{ performance.student.student_id }}_{{ concessions.0 }}" id="{{ performance.student.student_id }}_{{ concessions.0 }}">
+                            <option value="N"{% if concessions.1 == "N" %} selected{% endif %}>None</options>
+                            <option value="P"{% if concessions.1 == "P" %} selected{% endif %}>Pending</options>
+                            <option value="G"{% if concessions.1 == "G" %} selected{% endif %}>Granted</options>
+                        </select>
+                    </td>
+                    {% endfor %}
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<input type="submit" value="Save" class="btn btn-primary" align=right>
+
+{% endblock %}
+
+{% block formend %}
+</form>
+{% endblock %}
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+
+    $(document).ready(function(){
+
+        $('#sortable_table').tablesorter();
+
+    });
+</script>
+
+{% endblock %}

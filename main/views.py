@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.datastructures import OrderedDict
 from feedback.views import group_presentation_marksheet, individual_marksheet
 from main.forms import *
 from main.functions import (
@@ -1125,6 +1126,119 @@ def all_tutee_meetings(request, subject_area, year):
             'rows': rows
         }
     )
+
+
+@login_required
+@user_passes_test(is_pd)
+def enter_student_progression(request, subject_area, year):
+    """Allows to set the student's path into the next year"""
+    subject_area = SubjectArea.objects.get(slug=subject_area)
+    all_students = Student.objects.filter(active=True, year=year)
+    students = []
+    for student in all_students:
+        if student.active:
+            if subject_area in student.course.subject_areas.all():
+                students.append(student)
+    if request.method == 'POST':
+        for student in students:
+            if student.student_id in request.POST:
+                student.next_year = request.POST[student.student_id]
+                student.save()
+        return redirect(reverse('admin'))
+    current_year = int(Setting.objects.get(name="current_year").value)
+    next_year = current_year + 1
+    next_academic_year = academic_year_string(next_year)
+    student_dict = OrderedDict()
+    for student in students:
+        this_dict = {}
+        if student.repeat_year == year:
+            this_dict['repeat'] = True
+        this_dict['good'] = []
+        this_dict['bad'] = []
+        for performance in student.performances.all():
+            if str(performance.belongs_to_year) == year:
+                if performance.average < PASSMARK:
+                    this_dict['bad'].append(performance)
+                    print(performance.module, performance.student)
+                else:
+                    this_dict['good'].append(performance)
+        default = False
+        student_options = ['<option>Please choose one</option>']
+        if student.next_year:
+            default = student.next_year
+        elif this_dict['bad']:
+            student_options = ['<option selected>Please choose one</option>']
+        else:
+            default = 'PP'
+        for option in student.NEXT_YEAR_OPTIONS:
+            use = False
+            if year == '1':
+                if option[0] not in ['1', '21', '22', '3']:
+                    use = True
+            elif year == '2':
+                if option[0] not in ['1', '21', '22', '3', 'D']:
+                    use = True
+            elif year == '3':
+                if option[0] not in ['PP', 'PT', 'PC', 'C']:
+                    use = True
+            if use:
+                option_string = '<option value="'
+                option_string += option[0]
+                if option[0] == default:
+                    option_string += '" selected'
+                else:
+                    option_string += '"'
+                option_string += (
+                        '>' +
+                        option[1] +
+                        '</option>'
+                )
+                student_options.append(option_string)
+        this_dict['options'] = student_options
+        student_dict[student] = this_dict
+    level = int(year) + 3
+    return render(
+        request,
+        'enter_student_progression.html',
+        {
+            'student_dict': student_dict,
+            'next_academic_year': next_academic_year,
+            'level': level
+        }
+    )
+            
+
+# @login_required
+# @user_passes_test(is_pd)
+# def proceed_to_next_year(request, subject_area):
+#     current_year = int(Setting.objects.get(name="current_year").value)
+#     next_year = current_year + 1
+#     next_academic_year = academic_year_string(next_year)
+#     subject_area = SubjectArea.objects.get(slug=subject_area)
+#     all_students = Student.objects.filter(active=True, year=year)
+#     students = {}
+#     for student in all_students:
+#         if student.active:
+#             if subject_area in student.course.subject_areas.all():
+#                 if student.year in [1, 2, 3]:
+#                     if students[year]:
+#                         students[year].append(student)
+#                     else:
+#                         students[year] = [student]
+#     if request.method == 'POST':
+#         for student in students[3]:
+#             pass
+#         for student in students[2]:
+#             pass
+#         for student in students[1]:
+#             pass
+#         # Change current year!
+#     else:
+#         return render(
+#             request,
+#             'proceed_to_next_year.html',
+#             {'students': students, 'next_academic_year': next_academic_year}
+#         )
 
 
 # Module views

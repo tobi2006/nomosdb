@@ -753,6 +753,20 @@ class Student(models.Model):
         (8, 'PhD'),
         (9, 'Alumni')
     )
+    NEXT_YEAR_OPTIONS = (
+        ('PP', 'Pass and Proceed'),
+        ('PQ', 'Pass and Proceed with QLD Resit'),
+        ('PT', 'Proceed and Trail Failed Module'),
+        ('PC', 'Pass and Proceed with Compensation'),
+        ('R', 'Repeat Year or Failed Modules'),
+        ('1', 'Graduate with First'),
+        ('21', 'Graduate with 2:1'),
+        ('22', 'Graduate with 2:2'),
+        ('3', 'Graduate with 3rd'),
+        ('C', 'Award Certificate of Higher Education'),
+        ('D', 'Award Diploma of Higher Education'),
+        ('WD', 'Withdrawal with no Award')
+    )
 
     student_id = models.CharField(
         verbose_name="Student ID",
@@ -826,6 +840,17 @@ class Student(models.Model):
         null=True,
         related_name="tutees"
     )
+    next_year = models.CharField(
+        max_length=2, 
+        choices=NEXT_YEAR_OPTIONS,
+        blank=True,
+        null=True
+    )
+    repeat_year = models.IntegerField(
+        choices=POSSIBLE_YEARS, blank=True, null=True
+    )
+
+        
 
     class Meta:
         ordering = ['last_name', 'first_name']

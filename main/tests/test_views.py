@@ -3383,7 +3383,7 @@ class ConcessionsTest(AdminUnitTest):
 class NextYearTest(AdminUnitTest):
     """Testing the switch to the next year with all its complications"""
 
-    def populate_db_with_students():
+    def populate_db_with_students(self):
         subject_area_1 = SubjectArea.objects.create(name="Cartoon Studies")
         subject_area_2 = SubjectArea.objects.create(name="Evil Plotting")
         course_1 = Course.objects.create(
@@ -3408,7 +3408,7 @@ class NextYearTest(AdminUnitTest):
             last_name='Bunny',
             student_id='bb23',
             year=1,
-            course=course_1
+            course=course_1,
         )
         students['1-2'] = student1_1
         student1_2 = Student.objects.create(
@@ -3456,14 +3456,36 @@ class NextYearTest(AdminUnitTest):
         students['3-4'] = student3_1
         student4_1 = Student.objects.create(
             first_name='Marvin',
-            last_name='Martian'
+            last_name='Martian',
             student_id='mm23',
             year=1,
             course=course_2
         )
-        students['different course'] = student4_1
+        students['different_course'] = student4_1
         return students
 
-    def test_form_for_resits_and_repeats_shows_correct_students(self):
-        pass
+    def test_enter_student_progression_uses_correct_template(self):
+        students = self.populate_db_with_students()
+        request = self.factory.get(
+            '/enter_student_progression/cartoon-studies/1/'
+        )
+        request.user = self.user
+        response = enter_student_progression(
+            request, 'cartoon-studies', '1')
+        self.assertTemplateUsed(response, 'enter_student_progression.html')
 
+    def test_enter_student_progression_shows_correct_students(self):
+        students = self.populate_db_with_students()
+        request = self.factory.get(
+            '/enter_student_progression/cartoon-studies/1/'
+        )
+        request.user = self.user
+        response = enter_student_progression(
+            request, 'cartoon-studies', '1')
+#        self.assertContains(response, students['1-2'].student_id)
+#        self.assertContains(response, students['1-spty'].student_id)
+#        self.assertContains(response, students['mixed_course'].student_id)
+#        self.assertNotContains(
+#            response, students['different_course'].student_id)
+#        self.assertNotContains(response, students['2-3'].student_id)
+#        self.assertNotContains(response, students['3-4'].student_id)

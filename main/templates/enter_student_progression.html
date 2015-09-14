@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block formstart %}
+    <form id="ProgressionForm" method="post"> 
+    {% csrf_token %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Progression into {{ next_academic_year }} - Level {{ level }}</h1>
+
+{% for student, entries in student_dict.items %}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <table width="100%">
+            <tr>
+                <td width="70%">
+                    <h3 class="panel-title">
+                        <a role="button" data-toggle="collapse" href="#collapse_{{ student.student_id }}" aria-expanded="true" aria-controls="collapse_{{ student.student_id }}">
+                            {{ student.last_name }}, {{ student.first_name }} ({{ student.course.short_title }}, {{ student.student_id }})
+                        </a>
+                    </h3>
+                </td>
+                <td>
+                    <select name="{{ student.student_id }}" class="form-control">
+                        {% for option in entries.options %}
+                            {{ option|safe }}
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="panel-collapse collapse{% if entries.bad or student.notes %} in{% endif %}" id="collapse_{{ student.student_id }}" role="tabpanel" aria-labelledby="headingOne">
+        <div class="panel-body">
+            {% if student.notes %}
+                {{ student.notes }}
+                <br><br><br>
+            {% endif %}
+            <table class="table" width="100%">
+                {% for performance in entries.bad %}
+                    <tr>
+                        <td width="80%" class="bg-warning">{{ performance.module }}</td>
+                        <td class="bg-warning">{{ performance.capped_mark|default_if_none:"0" }}</td>
+                    </tr>
+                {% endfor %}
+                {% for performance in entries.good %}
+                    <tr>
+                        <td width="80%">{{ performance.module }}</td>
+                        <td>{{ performance.capped_mark|default_if_none:"0" }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endfor %}
+            
+<input type="submit" name="save" value="Save Progression" id="save" class="btn btn-primary" data-loading-text="Please wait">
+
+{% endblock %}
+
+{% block formend %}
+</form>
+{% endblock %}
