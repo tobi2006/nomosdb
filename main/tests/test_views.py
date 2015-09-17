@@ -3380,7 +3380,7 @@ class ConcessionsTest(AdminUnitTest):
         self.assertEqual(assessment_result_2_2_out.concessions, 'G')
 
 
-class NextYearTest(AdminUnitTest):
+class NextYearTest(MainAdminUnitTest):
     """Testing the switch to the next year with all its complications"""
 
     def populate_db_with_students(self):
@@ -3437,7 +3437,7 @@ class NextYearTest(AdminUnitTest):
             year=1,
             course=course_3
         )
-        students['mixed course'] = student1_4
+        students['mixed_course'] = student1_4
         student2_1 = Student.objects.create(
             first_name='Tweety',
             last_name='Bird',
@@ -3482,10 +3482,403 @@ class NextYearTest(AdminUnitTest):
         request.user = self.user
         response = enter_student_progression(
             request, 'cartoon-studies', '1')
-#        self.assertContains(response, students['1-2'].student_id)
-#        self.assertContains(response, students['1-spty'].student_id)
-#        self.assertContains(response, students['mixed_course'].student_id)
-#        self.assertNotContains(
-#            response, students['different_course'].student_id)
-#        self.assertNotContains(response, students['2-3'].student_id)
-#        self.assertNotContains(response, students['3-4'].student_id)
+        self.assertContains(response, students['1-2'].student_id)
+        self.assertContains(response, students['1-spty'].student_id)
+        self.assertContains(response, students['mixed_course'].student_id)
+        self.assertNotContains(
+            response, students['different_course'].student_id)
+        self.assertNotContains(response, students['2-3'].student_id)
+        self.assertNotContains(response, students['3-4'].student_id)
+
+    def test_pass_and_proceed(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=1,
+            next_year='PP'
+        )
+        this_year = int(Setting.objects.get(name="current_year").value)
+        next_year = str(this_year + 1)
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 2)
+        new_year = Setting.objects.get(name="current_year").value
+        self.assertEqual(new_year, next_year)
+
+    def test_pass_and_proceed_for_part_time_student(self):
+        student1 = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=1,
+            is_part_time=True,
+            next_year='PP'
+        )
+        student2 = Student.objects.create(
+            first_name="Daffy",
+            last_name="Duck",
+            student_id="dd23",
+            year=1,
+            is_part_time=True,
+            second_part_time_year=True,
+            next_year='PP'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student1_out = Student.objects.get(first_name="Bugs")
+        student2_out = Student.objects.get(first_name="Daffy")
+        self.assertEqual(student1_out.year, 1)
+        self.assertTrue(student1_out.second_part_time_year)
+        self.assertEqual(student2_out.year, 2)
+        self.assertFalse(student2_out.second_part_time_year)
+
+    def test_pass_and_proceed_with_qld_resit(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=1,
+            qld=True,
+            next_year='PQ'
+        )
+        this_year = int(Setting.objects.get(name="current_year").value)
+        module = Module.objects.create(
+            title="Carrot Eating",
+            code="CE23",
+            year=this_year,
+            foundational=True
+        )
+        assessment1 = Assessment.objects.create(
+            title="Essay",
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            title="Exam",
+            value=80
+        )
+        result1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+            resit_mark=38
+        )
+        result2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=80,
+        )
+        performance = Performance.objects.create(
+            student=student,
+            module=module,
+            belongs_to_year=1
+        )
+        performance.assessment_results.add(result1)
+        performance.assessment_results.add(result2)
+        self.assertEqual(performance.qld_failures_after_resit(), [result1])
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 2)
+        comment_str = (
+            'In Year 2, Bugs will have to resit Carrot Eating ' +
+            '(Essay) for QLD purposes'
+        )
+        self.assertEqual(student_out.notes, comment_str)
+
+    def test_pass_and_proceed_with_trailed_resits(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=1,
+            qld=True,
+            next_year='PT'
+        )
+        this_year = int(Setting.objects.get(name="current_year").value)
+        module = Module.objects.create(
+            title="Carrot Eating",
+            code="CE23",
+            year=this_year,
+            foundational=True
+        )
+        assessment1 = Assessment.objects.create(
+            title="Essay",
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            title="Exam",
+            value=80
+        )
+        result1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+        )
+        result2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=35,
+        )
+        performance = Performance.objects.create(
+            student=student,
+            module=module,
+            belongs_to_year=1
+        )
+        performance.assessment_results.add(result1)
+        performance.assessment_results.add(result2)
+        performance.calculate_average()
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 2)
+        comment_str = (
+            'In Year 2, Bugs will have to resit Carrot Eating ' +
+            '(Essay); Carrot Eating (Exam) (trailed)'
+        )
+        self.assertEqual(student_out.notes, comment_str)
+
+    def test_pass_and_proceed_with_compensation(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=1,
+            qld=True,
+            next_year='PC'
+        )
+        this_year = int(Setting.objects.get(name="current_year").value)
+        module = Module.objects.create(
+            title="Carrot Eating",
+            code="CE23",
+            year=this_year,
+            foundational=True
+        )
+        assessment1 = Assessment.objects.create(
+            title="Essay",
+            value=20
+        )
+        assessment2 = Assessment.objects.create(
+            title="Exam",
+            value=80
+        )
+        result1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+        )
+        result2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=35,
+        )
+        performance = Performance.objects.create(
+            student=student,
+            module=module,
+            belongs_to_year=1
+        )
+        performance.assessment_results.add(result1)
+        performance.assessment_results.add(result2)
+        performance.calculate_average()
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 2)
+        comment_str = 'Failure in %s (%s) has been compensated' %(
+                module.title, performance.real_average)
+        self.assertEqual(student_out.notes, comment_str)
+
+    def test_repeat_year_works(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=1,
+            next_year='R'
+        )
+        this_year = int(Setting.objects.get(name="current_year").value)
+        next_year = str(this_year + 1)
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 1)
+        new_year = Setting.objects.get(name="current_year").value
+        self.assertEqual(new_year, next_year)
+        self.assertEqual(student_out.notes, 'Repeated Year 1')
+
+    def test_repeat_year_absj_works(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=1,
+            next_year='ABSJ'
+        )
+        this_year = int(Setting.objects.get(name="current_year").value)
+        next_year = str(this_year + 1)
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 1)
+        new_year = Setting.objects.get(name="current_year").value
+        self.assertEqual(new_year, next_year)
+        self.assertEqual(student_out.notes, 'Repeated Year 1 ABSJ')
+
+    def test_graduate_with_first(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=3,
+            next_year='1'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 9)
+        self.assertFalse(student_out.active)
+        self.assertEqual(student_out.achieved_degree, 1)
+
+    def test_graduate_with_21(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=3,
+            next_year='21'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 9)
+        self.assertFalse(student_out.active)
+        self.assertEqual(student_out.achieved_degree, 21)
+
+    def test_graduate_with_22(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=3,
+            next_year='22'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 9)
+        self.assertFalse(student_out.active)
+        self.assertEqual(student_out.achieved_degree, 22)
+
+    def test_graduate_with_3rd(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=3,
+            next_year='3'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 9)
+        self.assertFalse(student_out.active)
+        self.assertEqual(student_out.achieved_degree, 3)
+
+    def test_graduate_with_cert_he(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=3,
+            next_year='C'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 9)
+        self.assertFalse(student_out.active)
+        self.assertEqual(student_out.achieved_degree, 7)
+
+    def test_graduate_with_dipl_he(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=3,
+            next_year='D'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 9)
+        self.assertFalse(student_out.active)
+        self.assertEqual(student_out.achieved_degree, 6)
+
+    def test_graduate_with_ordinary_degree(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=3,
+            next_year='O'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 9)
+        self.assertFalse(student_out.active)
+        self.assertEqual(student_out.achieved_degree, 5)
+
+    def test_withdraw_student(self):
+        student = Student.objects.create(
+            first_name="Bugs",
+            last_name="Bunny",
+            student_id="bb23",
+            year=3,
+            next_year='WD'
+        )
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_out = Student.objects.first()
+        self.assertEqual(student_out.year, 9)
+        self.assertFalse(student_out.active)
+        self.assertEqual(student_out.achieved_degree, 8)
+
+    def test_proceed_to_next_year_with_multiple_students(self):
+        students = self.populate_db_with_students()
+        for student in students:
+            students[student].next_year = 'PP'
+            students[student].save()
+        students['3-4'].next_year = '1'
+        students['3-4'].save()
+        request = self.factory.get(reverse('proceed_to_next_year'))
+        request.user = self.user
+        response = proceed_to_next_year(request)
+        student_1_2 = Student.objects.get(
+            student_id=students['1-2'].student_id)
+        self.assertEqual(student_1_2.year, 2)
+        student_1_spty = Student.objects.get(
+            student_id=students['1-spty'].student_id)
+        self.assertEqual(student_1_spty.year, 1)
+        self.assertTrue(student_1_spty.second_part_time_year)
+        student_spty_2 = Student.objects.get(
+            student_id=students['spty-2'].student_id)
+        self.assertEqual(student_spty_2.year, 2)
+        self.assertFalse(student_spty_2.second_part_time_year)
+        student_2_3 = Student.objects.get(
+            student_id=students['2-3'].student_id)
+        self.assertEqual(student_2_3.year, 3)
+        student_3_4 = Student.objects.get(
+            student_id=students['3-4'].student_id)
+        self.assertEqual(student_3_4.year, 9)
+        self.assertEqual(student_3_4.achieved_degree, 1)

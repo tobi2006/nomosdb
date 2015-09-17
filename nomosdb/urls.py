@@ -137,6 +137,11 @@ urlpatterns += patterns(
         name='enter_student_progression'
     ),
     url(
+        r'^enter_student_progression/([-\w]+)/$',
+        'enter_student_progression',
+        name='enter_student_progression'
+    ),
+    url(
         r'^tutee_meeting/(\w+)/([-\w]+)/$',
         'student_view',
         name='tutee_meeting'
@@ -219,6 +224,11 @@ urlpatterns += patterns(
         r'^remove_student_from_module/(\w+)/(\d{4})/(\w+)/$',
         'remove_student_from_module',
         name='remove_student_from_module'
+    ),
+    url(
+        r'^proceed_to_next_year/$',
+        'proceed_to_next_year',
+        name='proceed_to_next_year'
     ),
     url(r'^reset_password/$', 'reset_password', name='reset_password'),
     url(

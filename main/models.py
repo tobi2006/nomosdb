@@ -743,7 +743,11 @@ class Student(models.Model):
         (21, '2:1'),
         (22, '2:2'),
         (3, 'Third'),
-        (4, 'Fail')
+        (4, 'Fail'),
+        (5, 'Ordinary Degree'),
+        (6, 'Diploma of Higher Education'),
+        (7, 'Certificate of Higher Education'),
+        (8, 'No award given')
     )
     POSSIBLE_YEARS = (
         (1, '1'),
@@ -755,16 +759,18 @@ class Student(models.Model):
     )
     NEXT_YEAR_OPTIONS = (
         ('PP', 'Pass and Proceed'),
-        ('PQ', 'Pass and Proceed with QLD Resit'),
+        ('PQ', 'Pass and Proceed with QLD Resit(s)'),
         ('PT', 'Proceed and Trail Failed Module'),
         ('PC', 'Pass and Proceed with Compensation'),
         ('R', 'Repeat Year or Failed Modules'),
+        ('ABSJ', 'Repeat ABSJ'),
         ('1', 'Graduate with First'),
         ('21', 'Graduate with 2:1'),
         ('22', 'Graduate with 2:2'),
         ('3', 'Graduate with 3rd'),
         ('C', 'Award Certificate of Higher Education'),
         ('D', 'Award Diploma of Higher Education'),
+        ('O', 'Award Ordinary Degree'),
         ('WD', 'Withdrawal with no Award')
     )
 
@@ -846,9 +852,7 @@ class Student(models.Model):
         blank=True,
         null=True
     )
-    repeat_year = models.IntegerField(
-        choices=POSSIBLE_YEARS, blank=True, null=True
-    )
+    graduated_in = models.IntegerField(blank=True, null=True)
 
         
 
@@ -1358,6 +1362,30 @@ class Performance(models.Model):
                 except TypeError:
                     pass
         return eligible_results
+
+    def failures_after_resit(self):
+        failures = []
+        if self.average < PASSMARK:
+            for result in self.assessment_results.all():
+                if result.mark < PASSMARK:
+                    if result.resit_mark:
+                        if result.resit_mark < PASSMARK:
+                            failures.append(result)
+                    else:
+                        failures.append(result)
+        return failures
+
+    def qld_failures_after_resit(self):
+        failures = []
+        if self.module.foundational and self.student.qld:
+            for result in self.assessment_results.all():
+                if result.mark < PASSMARK:
+                    if result.resit_mark:
+                        if result.resit_mark < PASSMARK:
+                            failures.append(result)
+                    else:
+                        failures.append(result)
+        return failures
 
     def all_results_as_slug_tpls(self):
         return self.all_assessment_results_as_tpls(only_result=True, slug=True)

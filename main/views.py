@@ -1130,15 +1130,21 @@ def all_tutee_meetings(request, subject_area, year):
 
 @login_required
 @user_passes_test(is_pd)
-def enter_student_progression(request, subject_area, year):
+def enter_student_progression(request, subject_area, year=None):
     """Allows to set the student's path into the next year"""
     subject_area = SubjectArea.objects.get(slug=subject_area)
-    all_students = Student.objects.filter(active=True, year=year)
     students = []
-    for student in all_students:
-        if student.active:
+    if year:
+        all_students = Student.objects.filter(active=True, year=year)
+        for student in all_students:
             if subject_area in student.course.subject_areas.all():
                 students.append(student)
+    else:
+         for student in Student.objects.all():
+             if student.year in [1, 2, 3] and student.next_year is None:
+                 students.append(student)
+                 if student.next_year is None:
+                     students.append(student)
     if request.method == 'POST':
         for student in students:
             if student.student_id in request.POST:
@@ -1151,8 +1157,6 @@ def enter_student_progression(request, subject_area, year):
     student_dict = OrderedDict()
     for student in students:
         this_dict = {}
-        if student.repeat_year == year:
-            this_dict['repeat'] = True
         this_dict['good'] = []
         this_dict['bad'] = []
         for performance in student.performances.all():
@@ -1173,7 +1177,7 @@ def enter_student_progression(request, subject_area, year):
         for option in student.NEXT_YEAR_OPTIONS:
             use = False
             if year == '1':
-                if option[0] not in ['1', '21', '22', '3']:
+                if option[0] not in ['1', '21', '22', '3', 'C', 'D']:
                     use = True
             elif year == '2':
                 if option[0] not in ['1', '21', '22', '3', 'D']:
@@ -1196,7 +1200,10 @@ def enter_student_progression(request, subject_area, year):
                 student_options.append(option_string)
         this_dict['options'] = student_options
         student_dict[student] = this_dict
-    level = int(year) + 3
+    if year:
+        level = int(year) + 3
+    else:
+        level = None
     return render(
         request,
         'enter_student_progression.html',
@@ -1208,37 +1215,126 @@ def enter_student_progression(request, subject_area, year):
     )
             
 
-# @login_required
-# @user_passes_test(is_pd)
-# def proceed_to_next_year(request, subject_area):
-#     current_year = int(Setting.objects.get(name="current_year").value)
-#     next_year = current_year + 1
-#     next_academic_year = academic_year_string(next_year)
-#     subject_area = SubjectArea.objects.get(slug=subject_area)
-#     all_students = Student.objects.filter(active=True, year=year)
-#     students = {}
-#     for student in all_students:
-#         if student.active:
-#             if subject_area in student.course.subject_areas.all():
-#                 if student.year in [1, 2, 3]:
-#                     if students[year]:
-#                         students[year].append(student)
-#                     else:
-#                         students[year] = [student]
-#     if request.method == 'POST':
-#         for student in students[3]:
-#             pass
-#         for student in students[2]:
-#             pass
-#         for student in students[1]:
-#             pass
-#         # Change current year!
-#     else:
-#         return render(
-#             request,
-#             'proceed_to_next_year.html',
-#             {'students': students, 'next_academic_year': next_academic_year}
-#         )
+
+@login_required
+@user_passes_test(is_main_admin)
+def proceed_to_next_year(request):
+    """Transfers all UG students into the next year
+    
+    The decisions per students need to be taken within
+    enter_student_progression.
+    """
+    db_year = Setting.objects.get(name="current_year")
+    current_year = int(db_year.value)
+    for year in [3, 2, 1]:
+        for student in Student.objects.filter(active=True, year=year):
+            if student.next_year in ['1', '21', '22', '3', 'D', 'C', 'O', 'WD']:
+                if student.next_year == '1':
+                    student.achieved_degree = 1
+                elif student.next_year == '21':
+                    student.achieved_degree = 21
+                elif student.next_year == '22':
+                    student.achieved_degree = 22
+                elif student.next_year == '3':
+                    student.achieved_degree = 3
+                elif student.next_year == 'D':
+                    student.achieved_degree = 6
+                elif student.next_year == 'C':
+                    student.achieved_degree = 7
+                elif student.next_year == 'O':
+                    student.achieved_degree = 5
+                elif student.next_year == 'WD':
+                    student.achieved_degree = 8
+                student.year = 9
+                student.graduated_in = current_year
+                student.active = False
+            elif student.next_year in ['PP', 'PQ', 'PT', 'PC']:
+                if student.is_part_time:
+                    if student.second_part_time_year:
+                        student.year = student.year + 1
+                        student.second_part_time_year = False
+                    else:
+                        student.second_part_time_year = True
+                else:
+                    student.year = student.year + 1
+                comment = ''
+                if student.next_year == 'PQ':
+                    qld_failures = []
+                    for performance in student.performances.filter(
+                            belongs_to_year=year):
+                        if performance.module.foundational:
+                            eligible = performance.qld_failures_after_resit()
+                            for result in eligible:
+                                assessment = result.assessment
+                                module = performance.module
+                                resit_str = (
+                                    module.title +
+                                    ' (' +
+                                    assessment.title +
+                                    ')'
+                                )
+                                qld_failures.append(resit_str)
+                    if qld_failures:
+                        comment += (
+                            'In Year ' +
+                            str(student.year) +
+                            ', ' +
+                            student.first_name +
+                            ' will have to resit '
+                        )
+                        qld_str = '; '.join(qld_failures)
+                        comment += qld_str
+                        comment += ' for QLD purposes'
+                elif student.next_year == 'PT':
+                    failures = []
+                    for performance in student.performances.filter(
+                            belongs_to_year=year):
+                        for result in performance.failures_after_resit():
+                            resit_str = (
+                                performance.module.title +
+                                ' (' +
+                                result.assessment.title +
+                                ')'
+                            )
+                            failures.append(resit_str)
+                    if failures:
+                        comment += (
+                            'In Year ' +
+                            str(student.year) +
+                            ', ' +
+                            student.first_name +
+                            ' will have to resit '
+                        )
+                        failure_str = '; '.join(failures)
+                        comment += failure_str
+                        comment += ' (trailed)'
+                elif student.next_year == 'PC':
+                    for performance in student.performances.filter(
+                            belongs_to_year=year):
+                        if performance.average < PASSMARK:
+                            comment += (
+                                'Failure in ' +
+                                performance.module.title +
+                                ' (' +
+                                str(performance.real_average) +
+                                ') has been compensated'
+                            )
+                if student.notes:
+                    student.notes += "\n\n"
+                student.notes += comment
+            elif student.next_year in ['R', 'ABSJ']:
+                if student.next_year == 'R':
+                    comments = 'Repeated Year %s' %(year)
+                else:
+                    comments = 'Repeated Year %s ABSJ' %(year)
+                if student.notes:
+                    student.notes += "\n\n"
+                student.notes += comments
+            student.next_year = None
+            student.save()
+    db_year.value = str(current_year + 1)
+    db_year.save()
+    return redirect(reverse('home'))
 
 
 # Module views

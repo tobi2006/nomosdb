@@ -7,7 +7,8 @@
 
 {% block content %}
 
-<h1>Progression into {{ next_academic_year }} - Level {{ level }}</h1>
+<h1>Progression into {{ next_academic_year }}{% if level %} - Level {{ level }}{% endif %}</h1>
+
 
 {% for student, entries in student_dict.items %}
 <div class="panel panel-default">

@@ -193,6 +193,23 @@ class AdminUnitTest(TestCase):
         self.user = user
 
 
+class MainAdminUnitTest(TestCase):
+    """Sets up the testing environment for an admin"""
+
+    def setUp(self):
+        set_initial_values()
+        self.factory = RequestFactory()
+        user = User.objects.create_user(
+            username="cj123",
+            email="chuck.jones@acme.edu",
+            password="cartoongod",
+            first_name="Chuck",
+            last_name="Jones",
+        )
+        admin = Staff.objects.create(user=user, role='admin', main_admin=True)
+        self.user = user
+
+
 class NotYetLoggedInUnitTest(TestCase):
     """For functions before logging in"""
 
