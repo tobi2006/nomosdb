@@ -1163,7 +1163,6 @@ def enter_student_progression(request, subject_area, year=None):
             if str(performance.belongs_to_year) == year:
                 if performance.average < PASSMARK:
                     this_dict['bad'].append(performance)
-                    print(performance.module, performance.student)
                 else:
                     this_dict['good'].append(performance)
         default = False
