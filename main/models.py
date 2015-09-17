@@ -1335,7 +1335,7 @@ class Performance(models.Model):
             else:
                 return_list.append(('Exam', exam))
         if not only_result:
-            return_list.append(('<strong>Result</strong>', self.average))
+            return_list.append(('<strong>Result</strong>', self.capped_mark()))
         return return_list
 
     def results_eligible_for_resit(self):

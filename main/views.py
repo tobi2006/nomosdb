@@ -1143,8 +1143,6 @@ def enter_student_progression(request, subject_area, year=None):
          for student in Student.objects.all():
              if student.year in [1, 2, 3] and student.next_year is None:
                  students.append(student)
-                 if student.next_year is None:
-                     students.append(student)
     if request.method == 'POST':
         for student in students:
             if student.student_id in request.POST:
@@ -1160,7 +1158,7 @@ def enter_student_progression(request, subject_area, year=None):
         this_dict['good'] = []
         this_dict['bad'] = []
         for performance in student.performances.all():
-            if str(performance.belongs_to_year) == year:
+            if performance.belongs_to_year == student.year:
                 if performance.average < PASSMARK:
                     this_dict['bad'].append(performance)
                 else:
