@@ -69,8 +69,13 @@ td {
                 <span class="glyphicon glyphicon-sort"></span> Course
             </th>
             <th>
+            {% if year == '9' %}
+                <span class="glyphicon glyphicon-sort"></span> Degree
+            {% else %}
                 <span class="glyphicon glyphicon-sort"></span> Tutor
+            {% endif %}
             </th>
+
         </tr>
     </thead>
     <tbody>
@@ -94,7 +99,11 @@ td {
                     {{ student.course }}
                 </td>
                 <td>
+                    {% if year == '9' %}
+                    {{ student.show_degree }}
+                    {% else %}
                     <a href="mailto:{{ student.tutor.user.email }}?subject={{ student.short_first_name }} {{ student.last_name }}">{{ student.tutor.name }}</a>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}

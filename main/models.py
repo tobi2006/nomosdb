@@ -739,15 +739,15 @@ class Student(models.Model):
     """The class representing a student"""
 
     DEGREES = (
-        (1, 'First'),
+        (1, '1st'),
         (21, '2:1'),
         (22, '2:2'),
-        (3, 'Third'),
+        (3, '3rd'),
         (4, 'Fail'),
-        (5, 'Ordinary Degree'),
-        (6, 'Diploma of Higher Education'),
-        (7, 'Certificate of Higher Education'),
-        (8, 'No award given')
+        (5, 'Ord. Degree'),
+        (6, 'Dip HE'),
+        (7, 'Cert HE'),
+        (8, 'No Degree')
     )
     POSSIBLE_YEARS = (
         (1, '1'),
@@ -847,7 +847,7 @@ class Student(models.Model):
         related_name="tutees"
     )
     next_year = models.CharField(
-        max_length=2, 
+        max_length=40, 
         choices=NEXT_YEAR_OPTIONS,
         blank=True,
         null=True
@@ -895,6 +895,12 @@ class Student(models.Model):
     def html_home_address(self):
         address = self.home_address.replace("\n", "<br>")
         return address
+
+    def show_degree(self):
+        for entry in self.DEGREES:
+            if entry[0] == self.achieved_degree:
+                return entry[1]
+        return None
 
 
 class AssessmentResult(models.Model):

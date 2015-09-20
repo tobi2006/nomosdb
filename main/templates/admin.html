@@ -252,6 +252,23 @@
     {% endfor %}
 </div>
 
+<h4>List all Tutees</h4>
+
+<div class="btn-group">
+    {% for subject_area, years in subject_areas.items %}
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            {{ subject_area.name }} <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            {% for year in years %}
+                <li><a href="{% url "tutor_list" subject_area.slug year.0 %}">{{ year.1 }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+
 <h2>Staff</h2>
 
 <div class="btn-group">
@@ -303,7 +320,7 @@
 <br><br>
 <h3>Proceed into next year</h3>
 
-<a href="#" id="proceed_to_next_year" class="btn btn-default">Proceed into next year</a>
+<a href="{% url "proceed_to_next_year" %}" id="proceed_to_next_year" class="btn btn-default">Proceed into next year</a>
 
 <br><br>
 <a href="{% url "cause_error" %}">Cause an Error</a>
@@ -342,12 +359,12 @@
             });
         });
 
-        $(document).on("click", "#proceed_to_next_year", function(e) {
-            bootbox.confirm("Are you sure you want to proceed to the next year? This cannot be reversed, so be sure to make a backup before doing this!", function(confirm) {
-                if (confirm){
-                    window.location.replace("{% url "proceed_to_next_year" %}");
-                }
-            });
+//        $(document).on("click", "#proceed_to_next_year", function(e) {
+//            bootbox.confirm("Are you sure you want to proceed to the next year? This cannot be reversed, so be sure to make a backup before doing this!", function(confirm) {
+//                if (confirm){
+//                    window.location.replace("{% url "proceed_to_next_year" %}");
+//                }
+//            });
 
     });
 

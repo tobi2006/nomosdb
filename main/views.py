@@ -909,6 +909,7 @@ def year_view(request, year):
             'academic_years': academic_years,
             'courses': courses,
             'edit': edit,
+            'year': year,
             'number_of_students': number_of_students
         }
     )
@@ -945,10 +946,14 @@ def assign_tutors(request, subject_area, year):
             teachers = []
             for teacher in all_teachers:
                 if subject_area in teacher.subject_areas.all():
+                    y_1 = teacher.tutees.filter(year=1).count()
+                    y_2 = teacher.tutees.filter(year=2).count()
+                    y_3 = teacher.tutees.filter(year=3).count()
+                    number = y_1 + y_2 + y_3
                     teacher_tpl = (
                         teacher.user.username,
                         teacher.name(),
-                        teacher.tutees.count()
+                        number
                     )
                     teachers.append(teacher_tpl)
             return render(
@@ -1129,6 +1134,46 @@ def all_tutee_meetings(request, subject_area, year):
 
 
 @login_required
+@user_passes_test(is_admin)
+def tutor_list(request, subject_area, year):
+    subject_area = SubjectArea.objects.get(slug=subject_area)
+    tutor_list = []
+    for staff in Staff.objects.all():
+        if subject_area in staff.subject_areas.all():
+            print(staff)
+            tutees = []
+            for student in staff.tutees.all():
+                if year:
+                    if student.year == int(year):
+                        tutees.append(student)
+                else:
+                    if student.year in [1, 2, 3]:
+                        tutees.append(student)
+            if tutees:
+                name = staff.user.first_name + ' ' + staff.user.last_name
+                sort_name = staff.user.last_name + ', ' + staff.user.first_name
+                number_across_years = staff.tutees.filter(year=1).count()
+                number_across_years += staff.tutees.filter(year=2).count()
+                number_across_years += staff.tutees.filter(year=3).count()
+                staff_dict = {
+                    'sort_name': sort_name,
+                    'name': name,
+                    'tutees': tutees,
+                    'number': len(tutees),
+                    'all': number_across_years
+                }
+                tutor_list.append(staff_dict)
+    sorted_list = sorted(tutor_list, key=lambda k: k['sort_name']) 
+
+    return render(
+        request,
+        'tutor_list.html',
+        {'tutor_list': sorted_list, 'year': year}
+    )
+
+
+
+@login_required
 @user_passes_test(is_pd)
 def enter_student_progression(request, subject_area, year=None):
     """Allows to set the student's path into the next year"""
@@ -1173,13 +1218,13 @@ def enter_student_progression(request, subject_area, year=None):
             default = 'PP'
         for option in student.NEXT_YEAR_OPTIONS:
             use = False
-            if year == '1':
+            if student.year == 1:
                 if option[0] not in ['1', '21', '22', '3', 'C', 'D']:
                     use = True
-            elif year == '2':
+            elif student.year == 2:
                 if option[0] not in ['1', '21', '22', '3', 'D']:
                     use = True
-            elif year == '3':
+            elif student.year == 3:
                 if option[0] not in ['PP', 'PT', 'PC', 'C']:
                     use = True
             if use:
@@ -1210,7 +1255,6 @@ def enter_student_progression(request, subject_area, year=None):
             'level': level
         }
     )
-            
 
 
 @login_required
@@ -1244,7 +1288,6 @@ def proceed_to_next_year(request):
                     student.achieved_degree = 8
                 student.year = 9
                 student.graduated_in = current_year
-                student.active = False
             elif student.next_year in ['PP', 'PQ', 'PT', 'PC']:
                 if student.is_part_time:
                     if student.second_part_time_year:
@@ -1920,7 +1963,11 @@ def attendance(request, code, year, group):
                         if week == check:
                             performance.save_attendance(week, presence)
         return redirect(module.get_absolute_url())
-    this_week = week_number()
+    current_year = int(Setting.objects.get(name="current_year").value)
+    if module.year == current_year:
+        this_week = week_number()
+    else:
+        this_week = False
     return render(
         request,
         'attendance.html',

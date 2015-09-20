@@ -30,16 +30,19 @@ def week_number(chosen_date=False):
         else:
             today = datetime.date.today()
         previous_monday = today - datetime.timedelta(days=today.weekday())
-        day = FIRST_WEEK_STARTS[current_year]
-        week_number = None
-        for week in range(1, 53):
-            if day == previous_monday:
-                week_number = week
-                break
-            else:
-                day += datetime.timedelta(days=7)
+        try:
+            day = FIRST_WEEK_STARTS[current_year]
+            week_number = False
+            for week in range(1, 53):
+                if day == previous_monday:
+                    week_number = week
+                    break
+                else:
+                    day += datetime.timedelta(days=7)
+        except KeyError:
+            week_number = False
     except Setting.DoesNotExist:
-        week_number = None
+        week_number = False
     return week_number
 
 

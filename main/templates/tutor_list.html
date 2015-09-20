@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block style %}
+
+.sl{
+    list-style-type: none;
+}
+
+{% endblock %}
+
+{% block content %}
+{% if year == 'all' %}
+<h1>All Tutors for Years 1 - 3</h1>
+{% else %}
+<h1>All Tutors for Year {{ year }}</h1>
+{% endif %}
+
+{% if tutor_list %}
+
+{% for entry in tutor_list %}
+
+<h2>{{ entry.name }}</h2>
+
+<ul>
+    {% for student in entry.tutees %}
+
+    <li>{{ student.name }} ({{ student.course }})</li>
+
+    {% endfor %}
+
+</ul>
+
+<p>Total: {{ entry.number }} students{% if year != 'all' %} ({{ entry.all }} across Years 1-3){% endif %}
+
+{% endfor %}
+
+
+{% else %}
+
+You did not assign any tutors yet. Go to the Admin Page to do so.
+
+{% endif %}
+
+{% endblock %}

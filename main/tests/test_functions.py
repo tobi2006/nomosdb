@@ -15,6 +15,11 @@ class WeekFunctionsTest(TestCase):
         test_day = datetime.date(1900, 10, 11)
         self.assertEqual(week_number(test_day), 6)
 
+    def test_no_year_entered_in_week_dict_returns_false(self):
+        year = self.set_up_year()
+        test_day = datetime.date(1955, 10, 11)
+        self.assertEqual(week_number(test_day), False)
+
 class AcademicYearStringTest(TestCase):
     """Testing the simple academic year function"""
     

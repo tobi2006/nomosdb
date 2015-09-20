@@ -3739,7 +3739,7 @@ class NextYearTest(MainAdminUnitTest):
         response = proceed_to_next_year(request)
         student_out = Student.objects.first()
         self.assertEqual(student_out.year, 9)
-        self.assertFalse(student_out.active)
+        self.assertTrue(student_out.active)
         self.assertEqual(student_out.achieved_degree, 1)
 
     def test_graduate_with_21(self):
@@ -3755,7 +3755,7 @@ class NextYearTest(MainAdminUnitTest):
         response = proceed_to_next_year(request)
         student_out = Student.objects.first()
         self.assertEqual(student_out.year, 9)
-        self.assertFalse(student_out.active)
+        self.assertTrue(student_out.active)
         self.assertEqual(student_out.achieved_degree, 21)
 
     def test_graduate_with_22(self):
@@ -3771,7 +3771,7 @@ class NextYearTest(MainAdminUnitTest):
         response = proceed_to_next_year(request)
         student_out = Student.objects.first()
         self.assertEqual(student_out.year, 9)
-        self.assertFalse(student_out.active)
+        self.assertTrue(student_out.active)
         self.assertEqual(student_out.achieved_degree, 22)
 
     def test_graduate_with_3rd(self):
@@ -3787,7 +3787,7 @@ class NextYearTest(MainAdminUnitTest):
         response = proceed_to_next_year(request)
         student_out = Student.objects.first()
         self.assertEqual(student_out.year, 9)
-        self.assertFalse(student_out.active)
+        self.assertTrue(student_out.active)
         self.assertEqual(student_out.achieved_degree, 3)
 
     def test_graduate_with_cert_he(self):
@@ -3803,7 +3803,7 @@ class NextYearTest(MainAdminUnitTest):
         response = proceed_to_next_year(request)
         student_out = Student.objects.first()
         self.assertEqual(student_out.year, 9)
-        self.assertFalse(student_out.active)
+        self.assertTrue(student_out.active)
         self.assertEqual(student_out.achieved_degree, 7)
 
     def test_graduate_with_dipl_he(self):
@@ -3819,7 +3819,7 @@ class NextYearTest(MainAdminUnitTest):
         response = proceed_to_next_year(request)
         student_out = Student.objects.first()
         self.assertEqual(student_out.year, 9)
-        self.assertFalse(student_out.active)
+        self.assertTrue(student_out.active)
         self.assertEqual(student_out.achieved_degree, 6)
 
     def test_graduate_with_ordinary_degree(self):
@@ -3835,7 +3835,7 @@ class NextYearTest(MainAdminUnitTest):
         response = proceed_to_next_year(request)
         student_out = Student.objects.first()
         self.assertEqual(student_out.year, 9)
-        self.assertFalse(student_out.active)
+        self.assertTrue(student_out.active)
         self.assertEqual(student_out.achieved_degree, 5)
 
     def test_withdraw_student(self):
@@ -3851,7 +3851,7 @@ class NextYearTest(MainAdminUnitTest):
         response = proceed_to_next_year(request)
         student_out = Student.objects.first()
         self.assertEqual(student_out.year, 9)
-        self.assertFalse(student_out.active)
+        self.assertTrue(student_out.active)
         self.assertEqual(student_out.achieved_degree, 8)
 
     def test_proceed_to_next_year_with_multiple_students(self):
