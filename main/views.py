@@ -1143,7 +1143,7 @@ def tutor_list(request, subject_area, year):
             print(staff)
             tutees = []
             for student in staff.tutees.all():
-                if year:
+                if year != 'all':
                     if student.year == int(year):
                         tutees.append(student)
                 else:

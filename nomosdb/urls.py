@@ -147,7 +147,7 @@ urlpatterns += patterns(
         name='tutee_meeting'
     ),
     url(
-        r'^tutor_list/([-\w]+)/(\d{1})/$',
+        r'^tutor_list/([-\w]+)/(\w+)/$',
         'tutor_list',
         name='tutor_list'
     ),

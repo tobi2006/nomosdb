@@ -24,7 +24,7 @@
 <ul>
     {% for student in entry.tutees %}
 
-    <li>{{ student.name }} ({{ student.course }})</li>
+    <li>{{ student.name }} ({% if year == 'all' %}Year {{ student.year }}, {% endif %}{{ student.course.short_title }})</li>
 
     {% endfor %}
 
