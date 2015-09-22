@@ -37,6 +37,11 @@
                         <td>{% if student.lsp %}This student has an LSP/IRAP{% else %}No LSP/IRAP{% endif %}</td>
                     </tr>
                 </table>
+                {% if student.notes %}
+                <h4>Notes</h4>
+                {{ student.notes }}
+                <br>
+                {% endif %}
                 <p align="right">
                      <a class="btn btn-default btn-sm" id="edit" href="{{ student.get_edit_url }}">
                         Edit

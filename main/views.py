@@ -1142,7 +1142,7 @@ def tutor_list(request, subject_area, year):
         if subject_area in staff.subject_areas.all():
             print(staff)
             tutees = []
-            for student in staff.tutees.all():
+            for student in staff.tutees.filter(active=True):
                 if year != 'all':
                     if student.year == int(year):
                         tutees.append(student)
@@ -1152,9 +1152,12 @@ def tutor_list(request, subject_area, year):
             if tutees:
                 name = staff.user.first_name + ' ' + staff.user.last_name
                 sort_name = staff.user.last_name + ', ' + staff.user.first_name
-                number_across_years = staff.tutees.filter(year=1).count()
-                number_across_years += staff.tutees.filter(year=2).count()
-                number_across_years += staff.tutees.filter(year=3).count()
+                number_across_years = staff.tutees.filter(
+                    year=1, active=True).count()
+                number_across_years += staff.tutees.filter(
+                    year=2, active=True).count()
+                number_across_years += staff.tutees.filter(
+                    year=3, active=True).count()
                 staff_dict = {
                     'sort_name': sort_name,
                     'name': name,
