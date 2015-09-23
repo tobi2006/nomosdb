@@ -23,6 +23,7 @@
 <h2>{{ assessment }} {% if resit %}(Resit) {% endif %}Feedback for {{ student.name }}</h2>
 <br>
 {% crispy form %}
+
 {% endblock %}
 
 {% block loadscripts %}
@@ -224,6 +225,15 @@
             var wordCount = value.trim().replace(regex, ' ').split(' ').length;
             $('#wc').html(wordCount);
         };
+
+        $('#id_mark').change(function(){
+                if (parseInt($('#id_mark').val())>39) {
+                    $('#last_sentence').text('For further feedback, please see {% if more_than_one_marker %}one of us in their {% else %}me in my {% endif %}office hour.');
+                }
+                else {
+                    $('#last_sentence').text('Please make sure to see {% if more_than_one_marker %}one of us in their {% else %}me in my {% endif %}office hour.');
+                }
+        });
 
         counter();
         $('#id_comments').click(counter);
