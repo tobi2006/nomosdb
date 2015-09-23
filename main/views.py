@@ -217,7 +217,12 @@ def home(request):
                 {'student': student, 'years': years}
             )
         elif is_staff(request.user):
-            return render(request, 'home.html', {})
+            staff = request.user.staff
+            if staff.modules.count() == 1:
+                module = staff.modules.first()
+                return redirect(module.get_absolute_url())
+            else:
+                return render(request, 'home.html', {})
     else:
         return redirect(reverse('main_settings'))
 
