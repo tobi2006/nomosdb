@@ -32,11 +32,12 @@
                     </tr>
                     <tr>
                         <td><strong>Year</strong></td>
-                        <td>{{ student.year }} {% if student.since %} (Studying since {{ student.since }}/{{ student.since|add:"1" }}) {% endif %}</td>
+                        <td>{{ student.get_year_display }} {% if student.since %} (Studying since {{ student.since }}/{{ student.since|add:"1" }}) {% endif %}</td>
                         <td><strong>LSP</strong></td>
                         <td>{% if student.lsp %}This student has an LSP/IRAP{% else %}No LSP/IRAP{% endif %}</td>
                     </tr>
                 </table>
+                {% if student.achieved_degree %}<p align="center"><strong>Graduated in {{ student.get_graduated_in_display }} with a {{ student.get_achieved_degree_display }}.</strong></p>{% endif %}
                 {% if student.notes %}
                 <h4>Notes</h4>
                 {{ student.notes }}

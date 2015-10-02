@@ -840,6 +840,8 @@ class Student(models.Model):
     )
     achieved_degree = models.IntegerField(
         choices=DEGREES, blank=True, null=True)
+    graduated_in = models.IntegerField(
+        choices=ACADEMIC_YEARS, blank=True, null=True)
     tutor = models.ForeignKey(
         Staff,
         blank=True,
@@ -852,9 +854,6 @@ class Student(models.Model):
         blank=True,
         null=True
     )
-    graduated_in = models.IntegerField(blank=True, null=True)
-
-        
 
     class Meta:
         ordering = ['last_name', 'first_name']
@@ -895,12 +894,6 @@ class Student(models.Model):
     def html_home_address(self):
         address = self.home_address.replace("\n", "<br>")
         return address
-
-    def show_degree(self):
-        for entry in self.DEGREES:
-            if entry[0] == self.achieved_degree:
-                return entry[1]
-        return None
 
 
 class AssessmentResult(models.Model):

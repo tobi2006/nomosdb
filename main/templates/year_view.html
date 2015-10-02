@@ -100,7 +100,7 @@ td {
                 </td>
                 <td>
                     {% if year == '9' %}
-                    {{ student.show_degree }}
+                    {{ student.get_achieved_degree_display }}
                     {% else %}
                     <a href="mailto:{{ student.tutor.user.email }}?subject={{ student.short_first_name }} {{ student.last_name }}">{{ student.tutor.name }}</a>
                     {% endif %}

@@ -22,7 +22,7 @@
         {% for student in students %}
             <tr>
                 <td>{{ student.short_name }}</td>
-                <td><a href="mailto:{{ student.tutor.user.email }}?subject={{ student.short_first_name }} {{ student.last_name }}">{{ student.tutor.name }}</a></td>
+                <td>{{ student.tutor.name }}</td>
             </tr>
         {% endfor %}
     </tbody>
