@@ -12,14 +12,21 @@ class TeacherMenubarTest(TeacherUnitTest):
             code="pht23",
             year=1900
         )
+        module3 = Module.objects.create(
+            title="Portable Hole Techniques 2",
+            code="pht232",
+            year=1900
+        )
         self.user.staff.modules.add(module1)
+        self.user.staff.modules.add(module2)
         request = self.factory.get('/')
         request.user = self.user
         response = home(request)
         soup = BeautifulSoup(response.content)
         modules = str(soup.select('#menu-module-list'))
         self.assertTrue(module1.get_absolute_url() in modules)
-        self.assertFalse(module2.get_absolute_url() in modules)
+        self.assertTrue(module2.get_absolute_url() in modules)
+        self.assertFalse(module3.get_absolute_url() in modules)
 
     def test_programme_directors_see_all_modules_in_subject_areas(self):
         subject_area1 = SubjectArea.objects.create(name="Cartoon Studies")
@@ -38,7 +45,13 @@ class TeacherMenubarTest(TeacherUnitTest):
             year=1900
         )
         module3.subject_areas.add(subject_area2)
+        module4 = Module.objects.create(
+            title="Piano Dropping",
+            code="pd23",
+            year=1900
+        )
         self.user.staff.modules.add(module1)
+        self.user.staff.modules.add(module4)
         self.user.staff.programme_director = True
         self.user.staff.subject_areas.add(subject_area1)
         self.user.staff.save()
@@ -50,6 +63,7 @@ class TeacherMenubarTest(TeacherUnitTest):
         self.assertTrue(module1.get_absolute_url() in modules)
         self.assertTrue(module2.get_absolute_url() in modules)
         self.assertFalse(module3.get_absolute_url() in modules)
+        self.assertTrue(module4.get_absolute_url() in modules)
 
     def test_teachers_see_students_categories_for_their_areas(self):
         stuff = set_up_stuff()

@@ -37,14 +37,17 @@ def menubar(request):
         try:
             current_year = int(Setting.objects.get(name="current_year").value)
         except Setting.DoesNotExist:
-            current_year = 2014
+            current_year = 2015
         staff_subject_areas = staff.subject_areas.all().values('name')
+        modules = []
         if staff.role == 'teacher':
             if staff.programme_director:
-                modules = Module.objects.filter(
-                    subject_areas__name__in=staff_subject_areas)
-            else:
-                modules = staff.modules.all()
+                for module in Module.objects.filter(
+                        subject_areas__name__in=staff_subject_areas):
+                    modules.append(module)
+            for module in staff.modules.all():
+                if module not in modules:
+                    modules.append(module)
         else:
             if staff.main_admin:
                 modules = Module.objects.all()
