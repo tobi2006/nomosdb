@@ -1135,6 +1135,16 @@ def all_tutee_meetings(request, subject_area, year):
 
 @login_required
 @user_passes_test(is_admin)
+def tutor_list_by_student(request, subject_area, year):
+    subject_area = SubjectArea.objects.get(slug=subject_area)
+    students = []
+    for student in Student.objects.filter(year=year, active=True):
+        if subject_area in student.course.subject_areas.all():
+            students.append(student)
+    return render(request, 'tutor_list_by_student.html', {'students': students})
+
+@login_required
+@user_passes_test(is_admin)
 def tutor_list(request, subject_area, year):
     subject_area = SubjectArea.objects.get(slug=subject_area)
     tutor_list = []

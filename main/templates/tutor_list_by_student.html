@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block style %}
+
+.sl{
+    list-style-type: none;
+}
+
+{% endblock %}
+
+{% block content %}
+<h1>All Tutors for Year {{ year }}</h1>
+
+<table id="sortable_table" class="table table-hover">
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Tutor</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+            <tr>
+                <td>{{ student.short_name }}</td>
+                <td><a href="mailto:{{ student.tutor.user.email }}?subject={{ student.short_first_name }} {{ student.last_name }}">{{ student.tutor.name }}</a></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block loadscripts %}
+<script src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('#sortable_table').tablesorter();
+    });
+</script>
+{% endblock %}

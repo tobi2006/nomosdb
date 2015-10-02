@@ -35,7 +35,7 @@ def fieldname(marksheet_type, number, group=False):
     return field_string
 
 
-def get_individual_feedback_form(marksheet_type, more_than_one):
+def get_individual_feedback_form(marksheet_type, more_than_one=False):
 
     feedback_type = CATEGORIES[marksheet_type]
     number = int(feedback_type['number_of_categories'])

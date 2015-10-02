@@ -669,6 +669,7 @@ def individual_marksheet(assessment, student, attempt):
                 p = paragraph(line)
                 comments.append(p)
                 comments.append(Spacer(1, 4))
+        # if 
         for comment in comments:
             elements.append(comment)
     markers = feedback.markers.all()
