@@ -69,7 +69,8 @@ def individual_feedback(
     else:
         resit = True
         marksheet_type = assessment.resit_marksheet_type
-    IndividualFeedbackForm = get_individual_feedback_form(marksheet_type)
+    IndividualFeedbackForm = get_individual_feedback_form(
+        marksheet_type, assessment.co_marking)
     if request.method == 'POST':
         form = IndividualFeedbackForm(instance=feedback, data=request.POST)
         if form.is_valid():
@@ -159,7 +160,7 @@ def group_feedback(
     else:
         marksheet_type = assessment.resit_marksheet_type
     IndividualFeedbackForm = get_individual_feedback_form_for_group(
-        marksheet_type)
+        marksheet_type, assessment.co_marking)
     GroupFeedbackForm = get_group_feedback_form(marksheet_type)
     marksheet_type = CATEGORIES[assessment.marksheet_type]
     split = marksheet_type['split']
@@ -668,6 +669,7 @@ def individual_marksheet(assessment, student, attempt):
                 p = paragraph(line)
                 comments.append(p)
                 comments.append(Spacer(1, 4))
+        # if 
         for comment in comments:
             elements.append(comment)
     markers = feedback.markers.all()

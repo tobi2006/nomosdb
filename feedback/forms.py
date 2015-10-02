@@ -35,7 +35,7 @@ def fieldname(marksheet_type, number, group=False):
     return field_string
 
 
-def get_individual_feedback_form(marksheet_type):
+def get_individual_feedback_form(marksheet_type, more_than_one=False):
 
     feedback_type = CATEGORIES[marksheet_type]
     number = int(feedback_type['number_of_categories'])
@@ -46,11 +46,25 @@ def get_individual_feedback_form(marksheet_type):
         'For the sake of consistency, please stick ' +
         'to the following general guidelines:<br> Your feedback should be ' +
         'between 150 and 250 words long (currently: <b><span id="wc">0' +
-        '</span> words</b>) and ' +
-        'divided into 3 paragraphs:<br><ol><li>Summary of the content</li>' +
-        '<li>Areas the student did well in</li><li>Areas for Improvement' +
-        '</li></ol></div>'
+        '</span> words</b>).<br>' +
+        'Make sure you address the following issues:<br>' +
+        '<ol><li><strong>C</strong>ontent</li>' +
+        '<li><strong>R</strong>esearch</li>' +
+        '<li><strong>A</strong>nalysis</li>' +
+        '<li><strong>A</strong>pplication</li>' +
+        '<li><strong>P</strong>resentation</li></ol></div>'
     )
+    last_sentence = (
+        '<div class="col-lg-4 col-md-2 col-sm-2"></div><div ' +
+        'class="col-lg-6 col-md-8 col-sm-10">' +
+        'The following sentence will be added at the end of the feedback:' +
+        ' <div id="last_sentence">For further feedback, please see '
+    )
+    if more_than_one:
+        last_sentence += 'one of us in their '
+    else:
+        last_sentence += 'me in my '
+    last_sentence += 'office hour.</div></div><br>'
 
     class IndividualFeedbackForm(forms.ModelForm):
         mark = forms.IntegerField(
@@ -99,6 +113,7 @@ def get_individual_feedback_form(marksheet_type):
                                 'class="text-warning"></p></div>'
                         ),
                         'mark',
+                        HTML(last_sentence),
                         FormActions(
                             Submit(
                                 'save', 'Save', css_class="btn btn-primary")
@@ -141,6 +156,7 @@ def get_individual_feedback_form(marksheet_type):
                                 'class="text-warning"></p></div>'
                         ),
                         'mark',
+                        HTML(last_sentence),
                         FormActions(
                             Submit(
                                 'save', 'Save', css_class="btn btn-primary")
@@ -179,6 +195,7 @@ def get_individual_feedback_form(marksheet_type):
                             'class="text-warning"></p></div>'
                     ),
                     'mark',
+                    HTML(last_sentence),
                     FormActions(
                         Submit(
                             'save', 'Save', css_class="btn btn-primary")
@@ -220,6 +237,7 @@ def get_individual_feedback_form(marksheet_type):
                             'class="text-warning"></p></div>'
                     ),
                     'mark',
+                    HTML(last_sentence),
                     FormActions(
                         Submit(
                             'save', 'Save', css_class="btn btn-primary")
