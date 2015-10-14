@@ -1039,7 +1039,10 @@ def delete_tutee_meeting(request, session_id):
 @user_passes_test(is_staff)
 def my_tutees(request):
     staff = request.user.staff
-    tutees = Student.objects.filter(tutor=staff)
+    tutees = []
+    for tutee in Student.objects.filter(tutor=staff, active=True):
+        if tutee.year in [1,2,3]:
+            tutees.append(tutee)
     email_addresses = ''
     no_email_addresses = []
     rows = []
