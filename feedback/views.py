@@ -486,7 +486,7 @@ def individual_marksheet(assessment, student, attempt):
                 paragraph('Marks Awarded')
             ],
             [
-                bold_paragraph('Part 1: Assessed Negotiation 6 January 2015'),
+                bold_paragraph('Part 1: Assessed Negotiation'),
                 '',
                 ''
             ],
@@ -497,7 +497,7 @@ def individual_marksheet(assessment, student, attempt):
             ],
             [
                 bold_paragraph(
-                    'Part 2: Critical Reflection submitted 27 January 2015'),
+                    'Part 2: Critical Reflection submitted'),
                 '',
                 ''
             ],
@@ -528,8 +528,8 @@ def individual_marksheet(assessment, student, attempt):
                     ('SPAN', (0, 1), (-1, 1)),
                     ('SPAN', (0, 3), (-1, 3)),
                     ('SPAN', (0, 5), (-1, 5)),
-                    #                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                    #                    ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                    #  ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    #  ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
                     ('ALIGN', (-1, 1), (-1, -1), 'RIGHT'),
                 ]
             )
@@ -669,7 +669,30 @@ def individual_marksheet(assessment, student, attempt):
                 p = paragraph(line)
                 comments.append(p)
                 comments.append(Spacer(1, 4))
-        # if 
+        if int(mark) > 39:
+            if feedback.markers.count() > 1:
+                mark_comment = (
+                    'For further feedback, please see ' +
+                    'one of us in their office hour.'
+                )
+            else:
+                mark_comment = (
+                    'For further feedback, please see ' +
+                    'me in my office hour.'
+                )
+        else:
+            if feedback.markers.count() > 1:
+                mark_comment = (
+                    'Please make sure to see ' +
+                    'one of us in their office hour.'
+                )
+            else:
+                mark_comment = (
+                    'Please make sure to see ' +
+                    'me in my office hour.'
+                )
+        comments.append(paragraph(mark_comment))
+        comments.append(Spacer(1, 4))
         for comment in comments:
             elements.append(comment)
     markers = feedback.markers.all()
