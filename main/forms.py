@@ -142,6 +142,7 @@ class StudentForm(forms.ModelForm):
                 'email',
                 'course',
                 'year',
+                'tutor',
                 'is_part_time',
                 'second_part_time_year',
                 'since',
