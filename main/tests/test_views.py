@@ -43,15 +43,11 @@ class HomePageTest(TeacherUnitTest):
     """Simple tests for the home page"""
 
     def test_home_page_renders_home_template(self):
-        request = self.factory.get('/')
-        request.user = self.user
-        response = home(request)
+        response = self.client.get('/')
         self.assertTemplateUsed(response, 'home.html')
 
     def test_home_page_title_contains_uni_name(self):
-        request = self.factory.get('/')
-        request.user = self.user
-        response = home(request)
+        response = self.client.get('/')
         self.assertContains(response, 'Acme University')
 
 
@@ -59,9 +55,7 @@ class HomePageForStudentTest(StudentUnitTest):
     """Student homepage is shown"""
 
     def test_student_home_shows_student_template(self):
-        request = self.factory.get('/')
-        request.user = self.user
-        response = home(request)
+        response = self.client.get('/')
         self.assertTemplateUsed(response, 'student_home.html')
 
     def test_student_sees_links_to_all_marksheets(self):
@@ -204,9 +198,7 @@ class HomePageForStudentTest(StudentUnitTest):
             student.student_id +
             '/first/'
         )
-        request = self.factory.get('/')
-        request.user = self.user
-        response = home(request)
+        response = self.client.get('/')
         self.assertContains(response, link1_1)
         self.assertContains(response, link1_2)
         self.assertContains(response, link2_1)
@@ -219,14 +211,11 @@ class AdminDashboardTest(AdminUnitTest):
     """Checks the Admin Dashboard"""
 
     def test_admin_page_uses_right_template(self):
-        request = self.factory.get('/admin_dashboard/')
-        request.user = self.user
-        response = admin(request)
+        response = self.client.get('/admin_dashboard/')
         self.assertNotContains(response, 'Main Settings')
         self.user.staff.main_admin = True
-        request = self.factory.get('/admin_dashboard/')
-        request.user = self.user
-        response = admin(request)
+        self.user.staff.save()
+        response = self.client.get('/admin_dashboard/')
         self.assertContains(response, 'Main Settings')
 
     def test_admin_page_shows_all_subjects_and_years_for_main_admin(self):
@@ -263,9 +252,7 @@ class AdminDashboardTest(AdminUnitTest):
         student_3.course = course_3
         student_3.year = 3
         student_3.save()
-        request = self.factory.get('/admin_dashboard/')
-        request.user = self.user
-        response = admin(request)
+        response = self.client.get('/admin_dashboard/')
         url = (
             '<a href="/assign_tutors/' +
             subject_area_1.slug +
@@ -336,9 +323,7 @@ class AdminDashboardTest(AdminUnitTest):
         student_3.course = course_3
         student_3.year = 3
         student_3.save()
-        request = self.factory.get('/admin_dashboard/')
-        request.user = self.user
-        response = admin(request)
+        response = self.client.get('/admin_dashboard/')
         url = (
             '<a href="/assign_tutors/' +
             subject_area_1.slug +
@@ -382,9 +367,7 @@ class StudentViewTest(TeacherUnitTest):
 
     def test_student_view_renders_student_view_template(self):
         student = create_student()
-        request = self.factory.get(student.get_absolute_url())
-        request.user = self.user
-        response = student_view(request, student.student_id)
+        response = self.client.get(student.get_absolute_url())
         self.assertTemplateUsed(response, 'student_view.html')
         self.assertContains(response, "bb23")
         self.assertContains(response, "Bunny")
@@ -395,7 +378,7 @@ class AddEditStudentTest(TeacherUnitTest):
     """Tests for the student form function"""
 
     def send_form(self):
-        request = self.factory.post(
+        response = self.client.post(
             '/add_student/',
             data={
                 'student_id': 'bb23',
@@ -403,14 +386,10 @@ class AddEditStudentTest(TeacherUnitTest):
                 'first_name': 'Bugs Middle Names'
             }
         )
-        request.user = self.user
-        response = add_or_edit_student(request)
         return response
 
     def test_add_edit_student_renders_right_template(self):
-        request = self.factory.get('/add_student/')
-        request.user = self.user
-        response = add_or_edit_student(request)
+        response = self.client.get('/add_student/')
         self.assertTemplateUsed(response, 'student_form.html')
 
     def test_add_student_adds_student_to_database(self):
@@ -422,9 +401,7 @@ class AddEditStudentTest(TeacherUnitTest):
 
     def test_edit_student_shows_correct_data(self):
         student = create_student()
-        request = self.factory.get(student.get_edit_url())
-        request.user = self.user
-        response = add_or_edit_student(request, student.student_id)
+        response = self.client.get(student.get_edit_url())
         self.assertTemplateUsed(response, 'student_form.html')
         self.assertContains(response, 'Bunny')
         self.assertContains(response, 'Bugs')
@@ -549,9 +526,7 @@ class ModuleViewTest(TeacherUnitTest):
             code="hp23",
             year=1900
         )
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         self.assertTemplateUsed(response, 'module_view.html')
 
     def test_performances_in_a_module_are_shown(self):
@@ -567,15 +542,11 @@ class ModuleViewTest(TeacherUnitTest):
             student_id="pp2323",
             year=2
         )
-        request = self.factory.post(
+        response = self.client.post(
             module.get_add_students_url(),
             data={'student_ids': [student.student_id]}
         )
-        request.user = self.user
-        response = add_students_to_module(request, module.code, module.year)
-        out_request = self.factory.get(module.get_absolute_url())
-        out_request.user = self.user
-        out_response = module_view(out_request, module.code, module.year)
+        out_response = self.client.get(module.get_absolute_url())
         self.assertContains(out_response, "Pig, Porky")
 
     def test_only_active_students_appear_in_module_view(self):
@@ -593,9 +564,7 @@ class ModuleViewTest(TeacherUnitTest):
         performance2 = Performance.objects.create(
             student=student2, module=module)
         student2.modules.add(module)
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         self.assertContains(response, 'Bunny, Bugs')
         self.assertNotContains(response, 'Pig, Porky')
 
@@ -612,9 +581,7 @@ class ModuleViewTest(TeacherUnitTest):
             marksheet_type="Something"
         )
         module.assessments.add(assessment)
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         self.assertContains(
             response,
             '<span class="glyphicon glyphicon-eye-close">'
@@ -625,9 +592,7 @@ class ModuleViewTest(TeacherUnitTest):
         )
         assessment.available = True
         assessment.save()
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         self.assertContains(
             response,
             '<span class="glyphicon glyphicon-eye-open">'
@@ -656,9 +621,7 @@ class ModuleViewTest(TeacherUnitTest):
         )
         module.assessments.add(assessment1)
         module.assessments.add(assessment2)
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         self.assertContains(
             response,
             'Show Essay to students'
@@ -715,9 +678,7 @@ class ModuleViewTest(TeacherUnitTest):
         )
         performance2.assessment_results.add(result2_1)
         performance2.assessment_results.add(result2_2)
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         resit_string = (
             '<a class = "btn btn-default dropdown-toggle" data-toggle' +
             '="dropdown">Resits <span class="caret"></span></a>'
@@ -728,9 +689,7 @@ class ModuleViewTest(TeacherUnitTest):
         )
         result1_1.mark = 0
         result1_1.save()
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         self.assertContains(
             response,
             resit_string
@@ -739,9 +698,7 @@ class ModuleViewTest(TeacherUnitTest):
         result1_1.save()
         result2_1.mark = 39
         result2_1.save()
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         self.assertContains(
             response,
             resit_string
@@ -753,9 +710,7 @@ class AddStudentsToModuleTest(TeacherUnitTest):
 
     def test_add_students_to_module_uses_right_template(self):
         module = create_module()
-        request = self.factory.get(module.get_add_students_url())
-        request.user = self.user
-        response = add_students_to_module(request, module.code, module.year)
+        response = self.client.get(module.get_add_students_url())
         self.assertTemplateUsed(response, 'add_students_to_module.html')
 
     def test_only_students_from_same_subject_areas_and_year_are_shown(self):
@@ -797,9 +752,7 @@ class AddStudentsToModuleTest(TeacherUnitTest):
             year=1,
             active=False
         )
-        request = self.factory.get(module.get_add_students_url())
-        request.user = self.user
-        response = add_students_to_module(request, module.code, module.year)
+        response = self.client.get(module.get_add_students_url())
         self.assertContains(response, 'Bunny')
         self.assertNotContains(response, 'Duck')
         self.assertNotContains(response, 'Pig')
@@ -807,12 +760,10 @@ class AddStudentsToModuleTest(TeacherUnitTest):
 
     def test_submitting_an_empty_form_does_not_break_it(self):
         module = create_module()
-        request = self.factory.post(
+        response = self.client.post(
             '/add_students_to_module/%s/%s' % (module.code, module.year),
             data={}
         )
-        request.user = self.user
-        response = add_students_to_module(request, module.code, module.year)
         self.assertTrue(response.status_code in [301, 302])
 
 
@@ -862,10 +813,7 @@ class RemoveStudentFromModuleTest(TeacherUnitTest):
             student.student_id +
             '/'
         )
-        request = self.factory.get(url)
-        request.user = self.user
-        response = remove_student_from_module(
-            request, module.code, module.year, student.student_id)
+        response = self.client.get(url)
         self.assertEqual(AssessmentResult.objects.count(), 0)
 
     def test_feedback_gets_deleted(self):
@@ -893,10 +841,7 @@ class RemoveStudentFromModuleTest(TeacherUnitTest):
             student.student_id +
             '/'
         )
-        request = self.factory.get(url)
-        request.user = self.user
-        response = remove_student_from_module(
-            request, module.code, module.year, student.student_id)
+        response = self.client.get(url)
         self.assertEqual(IndividualFeedback.objects.count(), 0)
 
 
@@ -920,9 +865,7 @@ class DeleteModuleTest(TeacherUnitTest):
             mark=60
         )
         performance.assessment_results.add(result)
-        request = self.factory.get(module.get_delete_self_url())
-        request.user = self.user
-        delete_module(request, module.code, module.year)
+        response = self.client.get(module.get_delete_self_url())
         self.assertEqual(Module.objects.count(), 0)
         self.assertEqual(Student.objects.count(), 1)
         self.assertEqual(Performance.objects.count(), 0)
@@ -945,9 +888,7 @@ class DeleteModuleTest(TeacherUnitTest):
             mark=60
         )
         performance.assessment_results.add(result)
-        request = self.factory.get(module.get_delete_self_url())
-        request.user = self.user
-        response = delete_module(request, module.code, module.year)
+        response = self.client.get(module.get_delete_self_url())
         self.assertEqual(Module.objects.count(), 1)
         self.assertEqual(Student.objects.count(), 1)
         self.assertEqual(Performance.objects.count(), 1)
@@ -1054,9 +995,7 @@ class SeminarGroupTest(TeacherUnitTest):
 
     def test_seminar_group_overview_uses_correct_template(self):
         module = create_module()
-        request = self.factory.get(module.get_seminar_group_overview_url())
-        request.user = self.user
-        response = seminar_group_overview(request, module.code, module.year)
+        response = self.client.get(module.get_seminar_group_overview_url())
         self.assertTemplateUsed(response, 'seminar_group_overview.html')
 
     def test_seminar_group_overview_is_correct(self):
@@ -1100,9 +1039,7 @@ class AssessmentTest(TeacherUnitTest):
 
     def test_assessments_page_uses_right_template(self):
         module = set_up_stuff()[0]
-        request = self.factory.get(module.get_assessment_url())
-        request.user = self.user
-        response = assessment(request, module.code, module.year)
+        response = self.client.get(module.get_assessment_url())
         self.assertTemplateUsed(response, 'assessment.html')
 
     def test_assessments_can_be_added_to_module(self):
@@ -1197,9 +1134,7 @@ class AttendanceTest(TeacherUnitTest):
 
     def test_attendance_uses_correct_template(self):
         module = set_up_stuff()[0]
-        request = self.factory.get(module.get_attendance_url('all'))
-        request.user = self.user
-        response = attendance(request, module.code, module.year, 'all')
+        response = self.client.get(module.get_attendance_url('all'))
         self.assertTemplateUsed(response, 'attendance.html')
 
     def test_attendance_form_shows_seminar_group(self):
@@ -1355,15 +1290,7 @@ class MarkAllAssessmentsTest(TeacherUnitTest):
         student = stuff[1]
         assessment = Assessment.objects.create(
             module=module, title="Essay", value=100)
-        request = self.factory.get(assessment.get_mark_all_url())
-        request.user = self.user
-        response = mark_all(
-            request,
-            module.code,
-            module.year,
-            'essay',
-            'first'
-        )
+        response = self.client.get(assessment.get_mark_all_url())
         self.assertTemplateUsed(response, 'mark_all.html')
 
     def test_all_students_are_shown_in_mark_all_page(self):
@@ -1948,9 +1875,7 @@ class ViewStaffTest(AdminUnitTest):
     """Tests for Viewing Staff Members"""
 
     def test_staff_view_by_subject_uses_correct_template(self):
-        request = self.factory.get('/view_staff_by_subject/')
-        request.user = self.user
-        response = view_staff_by_subject(request)
+        response = self.client.get('/view_staff_by_subject/')
         self.assertTemplateUsed(response, 'all_staff_by_subject.html')
 
     def test_staff_view_by_subject_contains_staff(self):
@@ -2024,9 +1949,7 @@ class YearViewTest(AdminUnitTest):
     """Tests around the year view function from a teacher's perspective"""
 
     def test_year_view_uses_right_template(self):
-        request = self.factory.get('/year_view/all')
-        request.user = self.user
-        response = year_view(request, 'all')
+        response = self.client.get('/students/all/')
         self.assertTemplateUsed(response, 'year_view.html')
 
     def test_teachers_see_all_students_from_their_only_subject_area(self):
@@ -2333,9 +2256,7 @@ class AssignTutorsTest(AdminUnitTest):
 
     def test_right_template_used(self):
         SubjectArea.objects.create(name="Cartoon Studies")
-        request = self.factory.get('/assign_tutors/cartoon-studies/1')
-        request.user = self.user
-        response = assign_tutors(request, 'cartoon-studies', '1')
+        response = self.client.get('/assign_tutors/cartoon-studies/1/')
         self.assertTemplateUsed(response, 'assign_tutors.html')
 
     def test_assign_tutors_view_shows_right_tutors(self):
@@ -2525,9 +2446,9 @@ class AllTuteeMeetingTest(TeacherUnitTest):
             subject_area.slug +
             '/1/'
         )
-        request = self.factory.get(url)
-        request.user = self.user
-        response = all_tutee_meetings(request, 'cartoon-studies', '1')
+        self.user.staff.programme_director = True
+        self.user.staff.save()
+        response = self.client.get(url)
         self.assertTemplateUsed(response, 'all_tutees.html')
 
     def test_students_in_the_right_year_show_up(self):
@@ -2684,9 +2605,7 @@ class AddressNinesTest(TeacherUnitTest):
 
     def test_address_nines_uses_right_template(self):
         module = create_module()
-        request = self.factory.get(module.get_address_nines_url())
-        request.user = self.user
-        response = address_nines(request, module.code, module.year)
+        response = self.client.get(module.get_address_nines_url())
         self.assertTemplateUsed(response, 'address_nines.html')
 
     def test_address_nines_shows_all_averages_ending_with_nine(self):
@@ -3014,9 +2933,7 @@ class EditExamIDsTest(AdminUnitTest):
             subject_area.slug +
             '/1/'
         )
-        request = self.factory.get(url)
-        request.user = self.user
-        response = edit_exam_ids(request, subject_area.slug, '1')
+        response = self.client.get(url)
         self.assertTemplateUsed(response, 'edit_exam_ids.html')
     
     def test_only_active_students_with_right_SA_and_year_appear_in_form(self):
@@ -3160,9 +3077,7 @@ class ConcessionsTest(AdminUnitTest):
 
     def test_concessions_form_uses_right_template(self):
         module = create_module()
-        request = self.factory.get(module.get_concessions_url('first'))
-        request.user = self.user
-        response = concessions(request, module.code, module.year, 'first')
+        response = self.client.get(module.get_concessions_url('first'))
         self.assertTemplateUsed(response, 'concessions.html')
 
     def test_all_active_students_appear_in_template(self):
@@ -3466,12 +3381,9 @@ class NextYearTest(MainAdminUnitTest):
 
     def test_enter_student_progression_uses_correct_template(self):
         students = self.populate_db_with_students()
-        request = self.factory.get(
+        response = self.client.get(
             '/enter_student_progression/cartoon-studies/1/'
         )
-        request.user = self.user
-        response = enter_student_progression(
-            request, 'cartoon-studies', '1')
         self.assertTemplateUsed(response, 'enter_student_progression.html')
 
     def test_enter_student_progression_shows_correct_students(self):

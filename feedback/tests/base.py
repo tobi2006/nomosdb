@@ -152,6 +152,7 @@ class TeacherUnitTest(TestCase):
         )
         teacher = Staff.objects.create(user=user, role='teacher')
         self.user = user
+        self.client.login(username='mtm23', password='zapp')
 
 
 class AdminUnitTest(TestCase):
@@ -169,3 +170,4 @@ class AdminUnitTest(TestCase):
         )
         admin = Staff.objects.create(user=user, role='admin')
         self.user = user
+        self.client.login(username='bb42', password='ilovecarrots')

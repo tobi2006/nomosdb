@@ -157,6 +157,7 @@ class TeacherUnitTest(TestCase):
         )
         teacher = Staff.objects.create(user=user, role='teacher')
         self.user = user
+        self.client.login(username='mtm23', password='zapp')
 
 
 class StudentUnitTest(TestCase):
@@ -174,6 +175,7 @@ class StudentUnitTest(TestCase):
             user=user
         )
         self.user = user
+        self.client.login(username='bb42', password='ilovecarrots')
 
 
 class AdminUnitTest(TestCase):
@@ -191,6 +193,7 @@ class AdminUnitTest(TestCase):
         )
         admin = Staff.objects.create(user=user, role='admin')
         self.user = user
+        self.client.login(username='cj123', password='cartoongod')
 
 
 class MainAdminUnitTest(TestCase):
@@ -208,6 +211,7 @@ class MainAdminUnitTest(TestCase):
         )
         admin = Staff.objects.create(user=user, role='admin', main_admin=True)
         self.user = user
+        self.client.login(username='cj123', password='cartoongod')
 
 
 class NotYetLoggedInUnitTest(TestCase):

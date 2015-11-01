@@ -36,9 +36,7 @@ class ModuleViewTests(TeacherUnitTest):
             title='Exam',
             value=30
         )
-        request = self.factory.get(module.get_absolute_url())
-        request.user = self.user
-        response = module_view(request, module.code, module.year)
+        response = self.client.get(module.get_absolute_url())
         linktext = (
             '<a href="' +
             assessment1.get_blank_feedback_url() +
@@ -81,16 +79,7 @@ class IndividualFeedbackTest(TeacherUnitTest):
             student.student_id +
             '/first/'
         )
-        request = self.factory.get(url)
-        request.user = self.user
-        response = individual_feedback(
-            request,
-            module.code,
-            module.year,
-            assessment.slug,
-            student.student_id,
-            'first'
-        )
+        response = self.client.get(url)
         self.assertTemplateUsed(response, 'individual_feedback.html')
 
     def test_form_view_shows_with_or_without_existing_feedback_object(self):
@@ -108,29 +97,11 @@ class IndividualFeedbackTest(TeacherUnitTest):
             student.student_id +
             '/first/'
         )
-        request = self.factory.get(url)
-        request.user = self.user
-        response = individual_feedback(
-            request,
-            module.code,
-            module.year,
-            assessment.slug,
-            student.student_id,
-            'first'
-        )
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         # Now, an individual feedback object should be created
         self.assertEqual(IndividualFeedback.objects.count(), 1)
-        request = self.factory.get(url)
-        request.user = self.user
-        response = individual_feedback(
-            request,
-            module.code,
-            module.year,
-            assessment.slug,
-            student.student_id,
-            'first'
-        )
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_submitting_form_saves_feedback_and_mark(self):
@@ -148,7 +119,7 @@ class IndividualFeedbackTest(TeacherUnitTest):
             student.student_id +
             '/first/'
         )
-        request = self.factory.post(
+        response = self.client.post(
             url,
             data={
                 'marking_date': '1/2/1900',
@@ -160,15 +131,6 @@ class IndividualFeedbackTest(TeacherUnitTest):
                 'comments': 'Well done!',
                 'mark': 76,
             }
-        )
-        request.user = self.user
-        response = individual_feedback(
-            request,
-            module.code,
-            module.year,
-            assessment.slug,
-            student.student_id,
-            'first'
         )
         self.assertEqual(IndividualFeedback.objects.count(), 1)
         feedback = IndividualFeedback.objects.first()
