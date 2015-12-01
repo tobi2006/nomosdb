@@ -354,7 +354,7 @@ class Module(models.Model):
                     '</a></li>'
                 )
                 returnlist.append(html)
-            if assessment.group_assessment:
+            if assessment.group_assessment or assessment.same_marksheet_for_all:
                 html = (
                     '<li><a href="' +
                     assessment.get_assessment_groups_url() +
@@ -588,6 +588,14 @@ class Assessment(models.Model):
     )
     group_assessment = models.BooleanField(default=False)
     resit_group_assessment = models.BooleanField(default=False)
+    same_marksheet_for_all = models.BooleanField(
+        default=False,
+        verbose_name="Group Assessment with identical Marksheets"
+    )
+    resit_same_marksheet_for_all = models.BooleanField(
+        default=False,
+        verbose_name="Group Assessment with identical Marksheets in Resit"
+    )
     marksheet_type = models.CharField(
         max_length=50,
         verbose_name="Marksheet Type",
@@ -1366,7 +1374,14 @@ class Performance(models.Model):
         failures = []
         if self.average < PASSMARK:
             for result in self.assessment_results.all():
-                if result.mark < PASSMARK:
+                if result.mark:
+                    if result.mark < PASSMARK:
+                        if result.resit_mark:
+                            if result.resit_mark < PASSMARK:
+                                failures.append(result)
+                        else:
+                            failures.append(result)
+                else:
                     if result.resit_mark:
                         if result.resit_mark < PASSMARK:
                             failures.append(result)
@@ -1639,7 +1654,12 @@ class Performance(models.Model):
             mark = str(self.average)
             for result in self.assessment_results.all():
                 if self.average_from_first_attempt() < PASSMARK:
-                    if result.mark < PASSMARK:
+                    if result.mark is not None:
+                        if result.mark < PASSMARK:
+                            if result.concessions not in ['G', 'P']:
+                                if self.average > PASSMARK:
+                                    cap = True
+                    else:
                         if result.concessions not in ['G', 'P']:
                             if self.average > PASSMARK:
                                 cap = True

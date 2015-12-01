@@ -20,7 +20,11 @@
 
 {% block content %}
 <h1>{{ module }}</h1>
+{% if all_group_members %}
+<h2>{{ assessment }} {% if resit %}(Resit) {% endif %}Feedback for {% for name in all_group_members %} {{ name }} / {% endfor %}</h2>
+{% else %}
 <h2>{{ assessment }} {% if resit %}(Resit) {% endif %}Feedback for {{ student.name }}</h2>
+{% endif %}
 <br>
 {% crispy form %}
 

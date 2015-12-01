@@ -76,6 +76,7 @@ def individual_feedback(
             assessment_group=assessment_result.assessment_group
         )
         for result in results:
+            print(result.part_of.first().student.name())
             all_group_members.append(result.part_of.first().student.name())
     else:
         all_group_members = None
@@ -84,109 +85,14 @@ def individual_feedback(
     if request.method == 'POST':
         form = IndividualFeedbackForm(instance=feedback, data=request.POST)
         if form.is_valid():
-            mark = form.cleaned_data['mark']
             form.save()
+            mark = form.cleaned_data['mark']
             performance.set_assessment_result(
                 assessment.slug, int(mark), attempt)
             feedback.completed = True
             feedback.save()
             if assessment.same_marksheet_for_all:
-                ar = performance.assessment_results.get(
-                    assessment=assessment)
-                results = AssessmentResult.objects.filter(
-                    assessment=assessment,
-                    assessment_group=assessment_result.assessment_group
-                )
-                for result in results:
-                    if result != ar:
-                        performance = result.part_of.first()
-                        performance.set_assessment_result(
-                            assessment.slug, int(mark), attempt)
-                    try:
-                        feedback = IndividualFeedback.objects.get(
-                            assessment_result=result,
-                            attempt=attempt
-                        )
-                    except IndividualFeedback.DoesNotExist:
-                        feedback = IndividualFeedback.objects.create(
-                            assessment_result=result,
-                            attempt=attempt,
-                        )
-                    feedback.completed = True
-                    if 'markers' in form.cleaned_data:
-                        feedback.markers = form.cleaned_data['markers']
-                    if 'second_marker' in form.cleaned_data:
-                        feedback.second_marker = form.cleaned_data[
-                            'second_marker']
-                    if 'marking_date' in form.cleaned_data:
-                        feedback.marking_date = form.cleaned_data[
-                            'marking_date']
-                    if 'category_mark_1' in form.cleaned_data:
-                        feedback.category_mark_1 = form.cleaned_data[
-                            'category_mark_1']
-                    if 'category_mark_2' in form.cleaned_data:
-                        feedback.category_mark_2 = form.cleaned_data[
-                            'category_mark_2']
-                    if 'category_mark_3' in form.cleaned_data:
-                        feedback.category_mark_3 = form.cleaned_data[
-                            'category_mark_3']
-                    if 'category_mark_4' in form.cleaned_data:
-                        feedback.category_mark_4 = form.cleaned_data[
-                            'category_mark_4']
-                    if 'category_mark_5' in form.cleaned_data:
-                        feedback.category_mark_5 = form.cleaned_data[
-                            'category_mark_5']
-                    if 'category_mark_6' in form.cleaned_data:
-                        feedback.category_mark_6 = form.cleaned_data[
-                            'category_mark_6']
-                    if 'category_mark_7' in form.cleaned_data:
-                        feedback.category_mark_7 = form.cleaned_data[
-                            'category_mark_7']
-                    if 'category_mark_8' in form.cleaned_data:
-                        feedback.category_mark_8 = form.cleaned_data[
-                            'category_mark_8']
-                    if 'category_mark_1_free' in form.cleaned_data:
-                        feedback.category_mark_1_free = form.cleaned_data[
-                            'category_mark_1_free']
-                    if 'category_mark_2_free' in form.cleaned_data:
-                        feedback.category_mark_2_free = form.cleaned_data[
-                            'category_mark_2_free']
-                    if 'category_mark_3_free' in form.cleaned_data:
-                        feedback.category_mark_3_free = form.cleaned_data[
-                            'category_mark_3_free']
-                    if 'category_mark_4_free' in form.cleaned_data:
-                        feedback.category_mark_4_free = form.cleaned_data[
-                            'category_mark_4_free']
-                    if 'category_mark_5_free' in form.cleaned_data:
-                        feedback.category_mark_5_free = form.cleaned_data[
-                            'category_mark_5_free']
-                    if 'category_mark_6_free' in form.cleaned_data:
-                        feedback.category_mark_6_free = form.cleaned_data[
-                            'category_mark_6_free']
-                    if 'category_mark_7_free' in form.cleaned_data:
-                        feedback.category_mark_7_free = form.cleaned_data[
-                            'category_mark_7_free']
-                    if 'category_mark_8_free' in form.cleaned_data:
-                        feedback.category_mark_8_free = form.cleaned_data[
-                            'category_mark_8_free']
-                    if 'deduction' in form.cleaned_data:
-                        feedback.deduction = form.cleaned_data['deduction']
-                    if 'deduction_explanation' in form.cleaned_data:
-                        feedback.deduction_explanation = form.cleaned_data[
-                            'deduction_explanation']
-                    if 'part_1_mark' in form.cleaned_data:
-                        feedback.part_1_mark = form.cleaned_data['part_1_mark']
-                    if 'part_2_mark' in form.cleaned_data:
-                        feedback.part_2_mark = form.cleaned_data['part_2_mark']
-                    if 'submission_data' in form.cleaned_data:
-                        feedback.submission_date = form.cleaned_data[
-                            'submission_date']
-                    if 'comments' in form.cleaned_data:
-                        feedback.comments = form.cleaned_data['comments']
-                    if 'comments_2' in form.cleaned_data:
-                        feedback.comments_2 = form.cleaned_data['comments_2']
-                    feedback.save()
-                    
+                pass
             return redirect(module.get_absolute_url())
     else:
         form = IndividualFeedbackForm(

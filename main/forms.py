@@ -89,6 +89,7 @@ class AssessmentForm(forms.ModelForm):
         'marksheet_type',
         'co_marking',
         'group_assessment',
+        'same_marksheet_for_all',
         HTML('<h4>Resits</h4>'),
         Field(
             'resit_submission_date',
@@ -102,7 +103,7 @@ class AssessmentForm(forms.ModelForm):
         'resit_marksheet_type',
         'resit_co_marking',
         'resit_group_assessment',
-
+        'resit_same_marksheet_for_all',
         FormActions(
             Submit('save', 'Save Assessment', css_class="btn btn-primary")
         )
@@ -125,7 +126,9 @@ class AssessmentForm(forms.ModelForm):
             'co_marking',
             'resit_co_marking',
             'group_assessment',
-            'resit_group_assessment'
+            'resit_group_assessment',
+            'same_marksheet_for_all',
+            'resit_same_marksheet_for_all'
         ]
 
 
