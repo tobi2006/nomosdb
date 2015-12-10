@@ -268,7 +268,7 @@ def group_feedback(
     else:
         marksheet_type = assessment.resit_marksheet_type
     IndividualFeedbackForm = get_individual_feedback_form_for_group(
-        marksheet_type, assessment.co_marking)
+        marksheet_type)
     GroupFeedbackForm = get_group_feedback_form(marksheet_type)
     marksheet_type = CATEGORIES[assessment.marksheet_type]
     split = marksheet_type['split']
