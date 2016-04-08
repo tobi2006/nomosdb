@@ -363,7 +363,7 @@ def group_feedback(
 def logo():
     """Returns the university logo, unless it is not available"""
     styles = getSampleStyleSheet()
-    url = "https://cccu.tobiaskliem.de/static/images/cccu.jpg"
+    url = "https://cccu.nomosdb.org/static/img/cccu.jpg"
     try:
         image = Image(url, 2.45*inch, 1*inch)
     except IOError:
