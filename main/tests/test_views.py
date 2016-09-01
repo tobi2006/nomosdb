@@ -704,6 +704,172 @@ class ModuleViewTest(TeacherUnitTest):
             resit_string
         )
 
+    def test_two_resit_with_feedback_symbols_show(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        module.foundational = True
+        module.save()
+        student1 = stuff[1]
+        student1.qld = True
+        student1.save()
+        performance1 = Performance.objects.get(
+            module=module, student=student1
+        )
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Essay',
+            value=50,
+            marksheet_type='ESSAY',
+            resit_marksheet_type='ESSAY',
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Presentation',
+            value=50,
+            marksheet_type='PRESENTATION',
+            resit_marksheet_type='PRESENTATION',
+        )
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=38,
+            resit_mark=80
+        )
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=36,
+            resit_mark=80
+        )
+        performance1.assessment_results.add(result1_1)
+        performance1.assessment_results.add(result1_2)
+
+        resit_string_essay = (
+            '<a href="/individual_feedback/' +
+            stuff[0].code +
+            '/' +
+            str(stuff[0].year) +
+            '/' +
+            assessment1.slug +
+            '/' +
+            stuff[1].student_id +
+            '/resit/">'
+        )
+        resit_string_presentation = (
+            '<a href="/individual_feedback/' +
+            stuff[0].code +
+            '/' +
+            str(stuff[0].year) +
+            '/' +
+            assessment2.slug +
+            '/' +
+            stuff[1].student_id +
+            '/resit/">'
+        )
+
+        response = self.client.get(module.get_absolute_url())
+        self.assertContains(
+            response,
+            resit_string_essay
+        )
+        self.assertContains(
+            response,
+            resit_string_presentation
+        )
+
+    def test_two_resit_with_feedback_symbols_show_with_3_assessments(self):
+        stuff = set_up_stuff()
+        module = stuff[0]
+        module.save()
+        student1 = stuff[1]
+        student1.save()
+        performance1 = Performance.objects.get(
+            module=module, student=student1
+        )
+        assessment1 = Assessment.objects.create(
+            module=module,
+            title='Essay',
+            value=25,
+            marksheet_type='ESSAY',
+            resit_marksheet_type='ESSAY',
+        )
+        assessment2 = Assessment.objects.create(
+            module=module,
+            title='Presentation',
+            value=25,
+            marksheet_type='PRESENTATION',
+            resit_marksheet_type='PRESENTATION',
+        )
+        assessment3 = Assessment.objects.create(
+            module=module,
+            title='Second Essay',
+            value=50,
+            marksheet_type='ESSAY',
+            resit_marksheet_type='ESSAY',
+        )
+        result1_1 = AssessmentResult.objects.create(
+            assessment=assessment1,
+            mark=30,
+            resit_mark=80
+        )
+        result1_2 = AssessmentResult.objects.create(
+            assessment=assessment2,
+            mark=28,
+            resit_mark=80
+        )
+        result1_3 = AssessmentResult.objects.create(
+            assessment=assessment3,
+            mark=40,
+        )
+        performance1.assessment_results.add(result1_1)
+        performance1.assessment_results.add(result1_2)
+        performance1.assessment_results.add(result1_3)
+
+        resit_string_essay = (
+            '<a href="/individual_feedback/' +
+            stuff[0].code +
+            '/' +
+            str(stuff[0].year) +
+            '/' +
+            assessment1.slug +
+            '/' +
+            stuff[1].student_id +
+            '/resit/">'
+        )
+        resit_string_presentation = (
+            '<a href="/individual_feedback/' +
+            stuff[0].code +
+            '/' +
+            str(stuff[0].year) +
+            '/' +
+            assessment2.slug +
+            '/' +
+            stuff[1].student_id +
+            '/resit/">'
+        )
+        resit_string_second_essay = (
+            '<a href="/individual_feedback/' +
+            stuff[0].code +
+            '/' +
+            str(stuff[0].year) +
+            '/' +
+            assessment3.slug +
+            '/' +
+            stuff[1].student_id +
+            '/resit/">'
+        )
+
+        response = self.client.get(module.get_absolute_url())
+        self.assertContains(
+            response,
+            resit_string_essay
+        )
+        self.assertContains(
+            response,
+            resit_string_presentation
+        )
+        self.assertNotContains(
+            response,
+            resit_string_second_essay
+        )
 
 class AddStudentsToModuleTest(TeacherUnitTest):
     """Tests for the function to add students to a module"""

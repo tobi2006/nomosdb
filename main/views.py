@@ -2711,7 +2711,10 @@ def export_attendance_sheet(request, code, year):
                 header.append(strweek)
                 weeklist.append(strweek)
         data.append(header)
-        performances = Performance.objects.filter(module=module)
+        performances = []
+        for performance in Performance.objects.filter(module=module):
+            if performance.student.active:
+                performances.append(performance)
         for performance in performances:
             attendance = performance.attendance_as_dict()
             row = [performance.student]
@@ -2759,8 +2762,12 @@ def export_attendance_sheet(request, code, year):
                     header.append(strweek)
                     weeklist.append(strweek)
             data.append(header)
-            performances = Performance.objects.filter(
+            all_performances = Performance.objects.filter(
                 module=module, seminar_group=counter)
+            performances = []
+            for performance in all_performances:
+                if performance.student.active:
+                    performances.append(performance)
             for performance in performances:
                 attendance = performance.attendance_as_dict()
                 row = [performance.student]
@@ -2903,24 +2910,6 @@ def elements_for_module_mark_overview(
             '%)</b>'
         )
         header.append(Paragraph(headerstr, styles['Normal']))
-    #        resit_1 = False
-    #        resit_2 = False
-    #        resit_q = False
-    #        for result in assessment.assessmentresult_set.all():
-    #          if result.resit_mark and assessment not in resit_marks_required:
-    #                    resit_marks_required.append(assessment)
-    #            if result.second_resit_mark:
-    #                if assessment not in second_resit_marks_required:
-    #                    second_resit_marks_required.append(assessment)
-    #            if result.qld_resit:
-    #                if assessment not in qld_resit_marks_required:
-    #                    qld_resit_marks_required.append(assessment)
-    #        if assessment in resit_marks_required:
-    #            header.append(assessment.title + ', Resit')
-    #        if assessment in second_resit_marks_required:
-    #            header.append(assessment.title + ', Second Resit')
-    #        if assessment in qld_resit_marks_required:
-    #            header.append(assessment.title + ', QLD Resit')
     if len(all_assessments) > 1:
         header.append(Paragraph('<b>Average</b>', styles['Normal']))
     if give_comments:
